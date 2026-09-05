@@ -33,6 +33,28 @@
 - [Named API, schema, protocol, file format, persistence, performance,
   security, platform, compatibility, or migration constraint.]
 
+## Design rationale
+
+**Chosen design**
+
+- [Where the change lives and the existing owner, hook, or interface it
+  extends.]
+
+**Generalization**
+
+- [How the next similar need is served by this change without copying it.]
+
+**Alternatives rejected**
+
+| Alternative | Why not |
+|---|---|
+| [Option] | [Reason] |
+
+**Decision record**
+
+- [Link to `docs/decisions/YYYY-MM-DD-slug.md` when a shared interface
+  changes; otherwise "None: no shared interface changes."]
+
 ## Acceptance criteria
 
 Each **Acceptance ID** is stable for this workspace. Do not renumber an ID
