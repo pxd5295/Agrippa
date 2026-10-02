@@ -7,20 +7,28 @@ This linter checks shape, never truth. A wrong constant, incomplete design
 choice, or incorrect contract can satisfy every static check. Human planning
 and review remain responsible for semantic correctness.
 
-This is the portable version of the linter: it is deliberately free of any
-one project's toolchain assumptions (no hardcoded engine binary, script
-runner, or test working directory). Checks 14-17 in the source repository
-this template was adapted from encoded exactly those project-specific
-invariants; see the "Project-specific extension point" comment below for
-where the target repository should add its own equivalents, if it has any.
+This is the portable version. It recognizes any dotted file extension and any
+URI-style scheme prefix, and it encodes no project's toolchain. Do not edit
+this file per project. Project-specific command invariants (one required test
+binary, an invocation shape per test kind, a prelude that must come first, a
+narrower `$CommandPathExtensions` list) go in the optional
+`validate_plan_workspace.local.ps1` beside it, which this script dot-sources at
+the "Project-specific extension point". A kit upgrade replaces this file and
+never touches the local one.
 
-Assumes installation at `tools/validate_plan_workspace.ps1`, one level below
-the repository root, matching this kit's prescribed destination.
+Install at `tools/validate_plan_workspace.ps1`, one level below the repository
+root. It is coupled to `docs/planning/templates/`: a change to the template
+shape must be reflected here, and the reverse. Keep it Windows PowerShell
+5.1-clean and read-only.
 #>
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
-    [string]$PlanPath
+    [string]$PlanPath,
+
+    # Skip validate_plan_workspace.local.ps1. The kit smoke test uses this,
+    # because its generic fixture cannot satisfy a project's own invariants.
+    [switch]$SkipLocalChecks
 )
 
 $ErrorActionPreference = 'Stop'
@@ -28,6 +36,17 @@ $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $errors = New-Object 'System.Collections.Generic.List[string]'
 $warnings = New-Object 'System.Collections.Generic.List[string]'
 $checks = 0
+
+# Extensions that count as repository source or test paths when they appear
+# inside a validation command (check 13). Other paths, such as an output file a
+# command writes or a path a command proves is absent, are not checked for
+# existence. Ownership, census, and contract-source fields use any dotted
+# extension regardless of this list. The local extension file may replace it.
+$CommandPathExtensions = @(
+    'py', 'ps1', 'psm1', 'sh', 'bash', 'js', 'mjs', 'cjs', 'ts', 'tsx', 'jsx',
+    'go', 'rs', 'java', 'kt', 'cs', 'c', 'cc', 'cpp', 'h', 'hpp', 'rb', 'php',
+    'swift', 'lua', 'sql', 'gd', 'tscn', 'toml', 'yaml', 'yml', 'md'
+)
 
 function Add-Check {
     param([bool]$Condition, [string]$Message)
@@ -171,10 +190,9 @@ function Get-Field {
     return ''
 }
 
-# Generic path-with-extension detector: matches any backtick-quoted token
-# ending in a dot-extension (optionally followed by :line, :line-line, or
-# :symbol). No project-specific file-type allow-list, so this works across
-# languages and toolchains.
+# Generic path detector: any backtick-quoted token ending in a dotted extension,
+# optionally followed by :line, :line-line, or :symbol. There is no
+# project-specific extension allow-list, so this works for any language.
 function Get-CodePaths {
     param([string]$Text)
     $paths = New-Object 'System.Collections.Generic.List[string]'
@@ -203,9 +221,8 @@ function Get-OwnedPathTokens {
 
 function Get-RepoRelativeFile {
     param([string]$OwnedPath)
-    # Strip a generic URI-style scheme prefix (e.g. a game engine's virtual
-    # resource root, or any other project-specific virtual path scheme)
-    # rather than one hardcoded project's exact prefix.
+    # Strip any URI-style scheme prefix (for example an engine's virtual
+    # resource root) rather than one project's exact prefix.
     $path = $OwnedPath -replace '^[A-Za-z][A-Za-z0-9+.-]*://', ''
     $path = $path -replace ':\d+(?:-\d+)?$', ''
     if ($path -match '^(.+\.[A-Za-z0-9]{1,10}):[^/\\]+$') {
@@ -317,7 +334,7 @@ foreach ($stage in $stages) {
             $choiceBlock = $Matches[1]
         }
         if ($choiceBlock) {
-            Add-Check ($choiceBlock -notmatch '\bC\d+\b|(?:^|\s)(?:res://|[\w.-]+/)[^\s,;]+') "[Check 7] $($stage.Id) bounded-choice block contains a Contract ID or bare path."
+            Add-Check ($choiceBlock -notmatch '\bC\d+\b|(?:^|\s)(?:[A-Za-z][A-Za-z0-9+.-]*://|[\w.-]+/)[^\s,;]+') "[Check 7] $($stage.Id) bounded-choice block contains a Contract ID or bare path."
         }
     }
 
@@ -348,7 +365,7 @@ foreach ($stage in $stages) {
     Add-Check ($validationRefs -match '\bV\d+\b') "[Check 22] $($stage.Id) must name at least one Validation ID."
 
     $riskFlags = Get-Field $stage 'Risk flags'
-    if ($profileBase -eq 'haiku' -and $riskFlags -match '(?i)native|persist|security|concurr|perf|layout') {
+    if ($profileBase -eq 'haiku' -and $riskFlags -match '(?i)native|persist|security|concurr|perf|layout|gpu') {
         Add-Check $false "[Check 20] $($stage.Id) risk flags require sonnet or stronger, not haiku."
     }
 
@@ -518,45 +535,62 @@ if ($integration.Count -eq 1) {
     Add-Check $hasIntegrationRow '[Check 22] Integration Validation IDs must include a matrix row scheduled for Integration.'
 }
 
-# 13, 18: validation commands are runnable and honestly classified.
-#
-# Project-specific extension point: the source repository this linter was
-# adapted from also enforced (a) that every game-engine test command used one
-# exact console-binary path rather than a bare launcher on PATH, (b) that a
-# script-style test used one invocation shape and a scene-style test used
-# another, (c) that a required cache-priming command preceded the first such
-# test in a session, and (d) that a Python test suite changed into one exact
-# working directory first. None of that generalizes to an arbitrary project,
-# so it is intentionally omitted here rather than left as dead project-specific
-# logic. If this repository has an analogous invariant -- a required
-# launcher/wrapper binary, a mandatory prelude command, a fixed working
-# directory for a given test runner, or a required invocation flag -- add an
-# `Add-Check` block for it in this loop, following the pattern already used
-# below for referenced-path existence. Leaving this extension point empty is
-# a valid default: it means "no such invariant has been added yet."
+# Project-specific extension point: load the optional local checks. The file
+# may define Test-LocalValidationRow (called once per matrix row) and
+# Test-LocalValidationMatrix (called once with every row), call Add-Check from
+# either, and reassign $CommandPathExtensions. A missing file changes nothing.
+$localChecks = Join-Path $PSScriptRoot 'validate_plan_workspace.local.ps1'
+if (-not $SkipLocalChecks -and (Test-Path -LiteralPath $localChecks -PathType Leaf)) {
+    . $localChecks
+}
+$hasLocalRowCheck = [bool](Get-Command -Name 'Test-LocalValidationRow' -CommandType Function -ErrorAction SilentlyContinue)
+$hasLocalMatrixCheck = [bool](Get-Command -Name 'Test-LocalValidationMatrix' -CommandType Function -ErrorAction SilentlyContinue)
+
+# 13-18: validation commands are runnable and honestly classified.
 $allowedDeterminism = @('deterministic', 'noisy-retry', 'skips-headless', 'manual')
 Add-Check ($validationRows.Count -gt 0) '[Validation] Validation matrix is missing or empty.'
 foreach ($row in $validationRows) {
     $command = [string]$row.'Exact command or check'
     $style = [string]$row.Style
-    $environment = [string]$row.Environment
+    # Current templates name this column Sandbox. Workspaces written from an
+    # earlier kit named it Environment; accept either so older plans still lint.
+    $sandbox = [string]$row.Sandbox
+    if (-not $sandbox) {
+        $sandbox = [string]$row.Environment
+    }
     $determinism = [string]$row.Determinism
     Add-Check ([bool]$style) "[Check 18] $($row.'Validation ID') is missing Style."
-    Add-Check ([bool]$environment) "[Check 18] $($row.'Validation ID') is missing Environment."
+    Add-Check ([bool]$sandbox) "[Check 18] $($row.'Validation ID') is missing Sandbox."
     Add-Check ($determinism -in $allowedDeterminism) "[Check 18] $($row.'Validation ID') has invalid Determinism '$determinism'."
 
-    foreach ($target in [regex]::Matches($command, '(?i)((?:[\w.-]+/)+[\w.-]+\.[A-Za-z0-9]{1,10})')) {
-        $relative = $target.Groups[1].Value.Replace('/', [IO.Path]::DirectorySeparatorChar)
-        Add-Check (Test-Path -LiteralPath (Join-Path $repoRoot $relative) -PathType Leaf) "[Check 13] $($row.'Validation ID') names missing path $relative."
+    # Check 13: every source or test path a command names must exist, relative
+    # to the repository root or to the plan folder (for a file under design/
+    # or another plan-local folder). A URL is not a repository path.
+    foreach ($target in [regex]::Matches($command, '(?i)(?<![\w.-])([A-Za-z][A-Za-z0-9+.-]*://)?((?:[\w.-]+/)+[\w.-]+\.([A-Za-z0-9]{1,10}))(?![\w/-])')) {
+        if ($target.Groups[1].Value -match '(?i)^https?://$') {
+            continue
+        }
+        if ($target.Groups[3].Value.ToLowerInvariant() -notin $CommandPathExtensions) {
+            continue
+        }
+        $relative = $target.Groups[2].Value.Replace('/', [IO.Path]::DirectorySeparatorChar)
+        $exists = (Test-Path -LiteralPath (Join-Path $repoRoot $relative) -PathType Leaf) -or
+            (Test-Path -LiteralPath (Join-Path $planRoot $relative) -PathType Leaf)
+        Add-Check $exists "[Check 13] $($row.'Validation ID') names missing path $relative."
     }
 
-    # Project-specific extension point: add invocation-shape checks for this
-    # row here (for example `Add-Check ($command -match '...') "..."`) if the
-    # target repository has a fixed command shape worth enforcing.
+    # Project-specific extension point, per row (checks 14-17).
+    if ($hasLocalRowCheck) {
+        Test-LocalValidationRow -Row $row -Command $command -Sandbox $sandbox
+    }
+}
+# Project-specific extension point, across rows (ordering invariants).
+if ($hasLocalMatrixCheck) {
+    Test-LocalValidationMatrix -Rows $validationRows
 }
 
-# 24-25: contract source freshness and consumer census resolution.
-foreach ($contractMatch in [regex]::Matches($packets, '(?ms)^###\s+(C\d+):[^\r\n]*\r?\n(.*?)(?=^###\s+|\z)')) {
+# 24-26: contract source freshness, consumer census, and covering-test resolution.
+foreach ($contractMatch in [regex]::Matches($packets, '(?ms)^###\s+(C\d+):[^\r\n]*\r?\n(.*?)(?=^###\s+|^##\s|\z)')) {
     $contractId = $contractMatch.Groups[1].Value
     $body = $contractMatch.Groups[2].Value
     if ($body -match 'Contract source:\s*`?([^`\r\n:]+\.[A-Za-z0-9]+):(\d+)`?\s*\(read\s+(\d{4}-\d{2}-\d{2})\)') {
@@ -575,7 +609,7 @@ foreach ($contractMatch in [regex]::Matches($packets, '(?ms)^###\s+(C\d+):[^\r\n
         Add-Check $false "[Check 24] $contractId lacks Contract source: file:line (read YYYY-MM-DD)."
     }
 
-    if ($body -match '(?ms)Consumer census:\s*(.+?)(?=Pre-authorized ownership expansion:|\z)') {
+    if ($body -match '(?ms)Consumer census:\s*(.+?)(?=Pre-authorized ownership expansion:|Covering tests:|\z)') {
         $census = $Matches[1]
         foreach ($entry in [regex]::Matches($census, '(?m)`([^`:\r\n]+\.[A-Za-z0-9]+):(\d+)`(?:\s*:\s*`([^`\r\n]+)`)?')) {
             $relative = $entry.Groups[1].Value
@@ -593,6 +627,17 @@ foreach ($contractMatch in [regex]::Matches($packets, '(?ms)^###\s+(C\d+):[^\r\n
         }
     } else {
         Add-Check $false "[Check 25] $contractId lacks a Consumer census."
+    }
+
+    if ($body -match '(?ms)Covering tests:\s*(.+?)(?=^-\s|\z)') {
+        $covering = $Matches[1]
+        foreach ($entry in [regex]::Matches($covering, '`([^`\r\n]+\.[A-Za-z0-9]+)(?::\d+)?`')) {
+            $relative = $entry.Groups[1].Value
+            $coveringPath = Join-Path $repoRoot ($relative.Replace('/', [IO.Path]::DirectorySeparatorChar))
+            Add-Check (Test-Path -LiteralPath $coveringPath -PathType Leaf) "[Check 26] $contractId covering test does not exist: $relative."
+        }
+    } else {
+        $warnings.Add("[Check 26] $contractId lacks Covering tests; list the test scripts and scenes that reference the owned files, or None.")
     }
 }
 

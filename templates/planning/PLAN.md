@@ -17,11 +17,20 @@ Wave 2: [Integration]
 Copy runnable commands from `docs/agent_memory/validation-commands.md`. Each
 **Validation ID** is stable and maps to one or more acceptance IDs.
 
-| Validation ID | Acceptance IDs | Exact command or check | Style | Environment | Determinism | When |
+| Validation ID | Acceptance IDs | Exact command or check | Style | Sandbox | Determinism | When |
 |---|---|---|---|---|---|---|
-| V1 | A1 | `[exact prerequisite command or check, if required]` | [prerequisite / build / manual] | [workspace / full-fs / network / gpu / manual] | [deterministic / noisy-retry / skips-headless / manual] | Before implementation checks |
-| V2 | A1 | `[exact command or manual pass condition]` | [unit / integration / build / lint / manual] | [workspace / full-fs / network / gpu / manual] | [deterministic / noisy-retry / skips-headless / manual] | M1 |
-| V3 | A1-A2 | `[full applicable suite]` | [style] | [environment] | [determinism] | Integration |
+| V1 | A1 | `[exact prerequisite command from the catalog, if the toolchain needs one]` | [prerequisite / build] | [sandboxed / outside-sandbox] | deterministic | Before first test |
+| V2 | A1 | `[exact command or manual pass condition]` | [unit / integration / build / lint / benchmark / manual] | [sandboxed / outside-sandbox] | [deterministic / noisy-retry / skips-headless / manual] | M1 |
+| V3 | A1-A2 | `[full applicable suite]` | [style] | [stance] | [determinism] | Integration |
+
+Delete V1 when the catalog names no prerequisite. Style and Sandbox values come
+from `docs/agent_memory/validation-commands.md`.
+
+With a design reference, add the fidelity row for the fidelity criterion: an
+in-app capture of the rendered UI, compared side by side with the frozen render
+at the same width, plus a walk of every visual inventory row; `manual`,
+`skips-headless`. Its When column names the first stage that puts the UI on
+screen and Integration.
 
 ## Ownership matrix
 
@@ -45,7 +54,7 @@ Paths are whole-file ownership in a shared checkout. Concurrent
 | Contract IDs | C1 |
 | Assigned tier | [tier from `docs/planning/ROUTING.md`: lead / haiku / sonnet / opus] |
 | Routing inputs | [long-context; file count; ownership areas; shared interface; risk flags; determinism] |
-| Risk flags | [None / native / persistence / security / concurrency / perf / other project-specific layout risk] |
+| Risk flags | [None / native / persistence / security / concurrency / perf / shared-layout] |
 | Owned files/modules | `path/to/file.ext` |
 | Line-anchored edit sites | `path/to/file.ext:10-30` |
 | Allowed interfaces | [Named interface or `None`] |
@@ -55,7 +64,7 @@ Paths are whole-file ownership in a shared checkout. Concurrent
 | Acceptance IDs | A1 |
 | Validation IDs | V2 |
 | Validation output | Bounded |
-| Parallel safety | [Sequential, or stable upstream contracts, disjoint files/interfaces, independent checks, and material wall-clock benefit.] |
+| Parallel safety | [Sequential, or stable upstream contracts, disjoint files/interfaces, independent checks, and accepted cost multiplier.] |
 | Worktree | [No, or path/branch and merge owner] |
 | Blocks | [M2 or `None`] |
 
@@ -103,6 +112,8 @@ Add one record per substantive milestone. An `Open` stage is invalid.
 - **Wave order:** [Wave 0, then dependency waves; default two writers, three
   only when all stages are Frozen and linter-proven disjoint/independent].
 - **Cheap-tier share:** [N of T implementation stages on haiku/sonnet].
+- **Cost multiplier:** [expected token cost relative to sequential for each
+  wave with more than one writer, or `Sequential`].
 - **Safety:** [ownership, dependency, worktree, and validation rationale].
 - **Launch:** [first packet, required allocation/action, and exact resume prompt
   if confirmation is required].

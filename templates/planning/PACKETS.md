@@ -15,6 +15,7 @@ Contract source: `path/to/source.ext:123` (read YYYY-MM-DD)
 - Consumer census:
   - `path/to/consumer.ext:90`: `[matching call-site text]`
 - Pre-authorized ownership expansion: [enumerated consumer paths, or `None`].
+- Covering tests: `tests/test_owned.ext`, `tests/other_owned_test.ext`, or `None`.
 
 ## Stage packets
 
@@ -48,12 +49,15 @@ Acceptance:
 - A1: [whitespace-normalized exact text copied from SPEC.md]
 
 Validation:
-- V1: [exact command; style; environment; determinism]
+- V1: [exact command; style; sandbox; determinism]
+Covering tests: [copied from the contract, run alongside V#; or None]
 Validation output: Bounded
 
 Relevant references:
 - C1
 - [specific architecture section]
+- [Visible UI with a design reference: plans/YYYY-MM-DD-name/design/[file] and
+  the visual inventory rows this stage builds; otherwise omit]
 
 Dirty/user-owned warnings:
 - [paths and preservation instructions, or None]

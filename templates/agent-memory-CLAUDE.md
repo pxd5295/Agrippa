@@ -1,0 +1,44 @@
+# docs/agent_memory/ — canonical architecture contracts
+
+This is the **stable-contracts** ownership area (root `AGENTS.md`). These
+Markdown files are the repository's own source-of-truth memory. Code and plans
+cite them; they must stay accurate.
+
+## The files
+
+- `project-contracts.md` — ownership areas, architecture owners, shared
+  interfaces, high-risk change classes, and environment boundaries.
+- `validation-commands.md` — the **authoritative** command catalog; every plan
+  copies exact commands, run caps, and determinism from here.
+- [PROJECT: one bullet per further contract file, saying what it owns and
+  whether it is authoritative for a frozen interface. Mark a superseded file
+  as quarantined rather than deleting it.]
+
+## Rules for editing
+
+- **These are contracts, not scratch notes.** A wrong constant here silently
+  poisons every plan that freezes it — the plan-workspace linter checks shape,
+  never truth. When you change one, verify it against the code in the same pass
+  (`git grep` the constant or signature) and update it; don't guess.
+- **Match documentation to reality, both directions.** If the code changed,
+  update the doc; if the doc is authoritative for a frozen interface, changing
+  it means the interface itself changed — that is a shared-contract change
+  requiring every consumer to move together, with a decision record in
+  `docs/decisions/`.
+- **Preserve the frozen numbers exactly.** Do not casually round, reword, or
+  re-derive a frozen value — copy it from the file that owns it.
+- **Prefer dated, append-style additions** over rewriting history. Do not
+  delete a section to save space; quarantine it if it becomes obsolete, and say
+  in this file's list that it must not be cited.
+- Keep `validation-commands.md` in sync with the test tree — a target must be
+  registered there for a plan to cite it.
+- A new hook, base-class API, funnel, or shared interface gets a paragraph in
+  the relevant contract in the same change that adds it (`AGENTS.md`,
+  Engineering standards).
+
+## Note on Claude's separate memory
+
+Do not confuse this directory with Claude's per-user auto-memory under
+`~/.claude/projects/.../memory/` (the `MEMORY.md` index). `docs/agent_memory/`
+is **checked-in repository documentation** shared by everyone working the
+repo; the auto-memory is Claude's private cross-session notes.

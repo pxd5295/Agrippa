@@ -3,17 +3,20 @@
 ## Scope and date
 
 - Date: [YYYY-MM-DD]
-- Kit source/version: [path and revision]
+- Kit source/version: [path and git revision of the kit used]
+- Generation detected: [None / Other / G1 / G2 / G3 with drift; list the
+  markers found, see the kit's `UPGRADING.md`]
 - Existing plans covered: Future workspaces only; historical plans unchanged
 
 ## Existing workflow inventory
 
-- Root/nested agent instructions: [paths, e.g. `AGENTS.md`, `CLAUDE.md`]
-- Named Claude agents and any other toolchain's worker/agent configuration:
-  [paths]
+- Root/nested agent instructions: [paths, e.g. `AGENTS.md`, `CLAUDE.md`,
+  per-directory `CLAUDE.md` files]
+- Named Claude agents, skills, commands, and hooks: [paths]
+- Any other toolchain's agent configuration or worker profiles: [paths]
 - Lifecycle/routing docs, templates, shortcuts, and validators: [paths]
 - Historical plan roots: [paths]
-- Project contracts and validation catalogs: [paths]
+- Project contracts, decision records, and validation catalogs: [paths]
 - Dirty user-owned files: [paths or None]
 
 ## Rule mapping
@@ -24,40 +27,57 @@
 
 ## Methodology migration
 
-- Design states and frozen C# contracts: [result]
-- Changed/deleted-symbol consumer census: [result]
-- A#/V#/C# traceability and PACKETS: [result]
-- Objective tier-routing table and split-first rule: [result]
-- Whole-file ownership and two/three-writer gates: [result]
-- Minimal launch reads and Stage Model Allocation continuity: [result]
-- Targeted/full validation and focused review: [result]
+- Engineering standards, definition of done, and design-reviewer size floor:
+  [result]
+- Design states and frozen `C#` contracts: [result]
+- Changed/deleted-symbol consumer census and covering tests: [result]
+- `A#`/`V#`/`C#` traceability and PACKETS: [result]
+- Objective tier-routing table, split-first rule, and fork-or-fresh rule:
+  [result]
+- Whole-file ownership, two/three-writer gates, and cost multiplier: [result]
+- Planning size gate and single-stage shape: [result]
+- Minimal launch reads, planner read ladder, and Stage Model Allocation
+  continuity: [result]
+- Targeted/full validation, focused review, and review disposition: [result]
+- Decision records and per-directory `CLAUDE.md` files: [result]
 
-## Configuration and agent changes
+## Configuration, agent, skill, and hook changes
 
-- [Removed project-wide model/effort pins, retained unrelated configuration,
-  installed `.claude/agents/*.md` files, local substitutions for any roles
-  the target project does not need.]
+- [Removed project-wide model/effort pins and old toolchain config, retained
+  unrelated configuration, installed `.claude/agents/*.md`, skills, commands,
+  and hooks, and any local substitutions.]
 
 ## Project-specific adaptations
 
 - Ownership/shared interfaces/high-risk classes: [summary]
 - Validation catalog and full-suite inventory: [summary]
-- Workspace-linter extension points filled in for this repository: [summary]
-- `AskUserQuestion` (or equivalent structured-question) availability and
-  fallback: [summary]
+- Local linter checks (`tools/validate_plan_workspace.local.ps1`), or why none:
+  [summary]
+- Install-time placeholders and install notes: [all resolved, or each
+  remaining one and why]
+- `AskUserQuestion` and `engineering:*` skill availability and fallback:
+  [summary]
 
 ## Historical preservation audit
 
-- Audit command/check: [exact read-only command]
+- Audit command/check: [the hash manifest taken before any edit and compared
+  after, or `git status --short plans/` when dated workspaces are tracked; a
+  gitignored `plans/` makes `git status` prove nothing]
 - Result: [No historical dated plan changed, or exact exception]
+
+## Deprecated, awaiting confirmation
+
+- [Old files the mapping deprecates that have not been deleted yet, or None]
 
 ## Validation and residual risks
 
 | Check | Result | Notes |
 |---|---|---|
-| Kit self-check (`validate-kit.ps1`, if run against a local copy) | [Pass/Fail] | [details] |
-| Representative workspace pass fixture | [Pass/Fail] | [details] |
-| Workspace failure fixture | [Pass/Fail] | [details] |
+| Kit self-check (`validate-kit.ps1`) | [Pass/Fail] | [details] |
+| Smoke test (`fixtures/run-smoke-test.ps1 -RepoRoot .`) | [Pass/Fail] | [details] |
+| Install-marker scan (kit README) | [0 hits / list] | [details] |
+| Local linter checks against one real workspace | [Pass/Fail/None installed] | [details] |
+| Validation catalog commands run once | [Pass/Fail] | [details] |
 | Scoped formatting | [Pass/Fail] | [details] |
 | Live planning smoke test | [Pending/Pass] | [details] |
 | Live implementation smoke test | [Pending/Pass] | [details] |

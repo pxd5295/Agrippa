@@ -5,12 +5,16 @@ existing one. On a name collision append `-2`, `-3`, and so on.
 
 ```text
 plans/YYYY-MM-DD-short-change-name/
-  SPEC.md       # stable requirements and Acceptance IDs
+  SPEC.md       # stable requirements, design rationale, and Acceptance IDs
   PLAN.md       # waves, exclusive ownership, and Validation ID matrix
   PACKETS.md    # frozen contracts and verbatim dispatch packets
   STATUS.md     # hot current-state handoff
   EVIDENCE.md   # cold append-only detail
+  design/       # only with a design reference: frozen artboard and render
 ```
+
+`plans/handoff-YYYY-MM-DD-<slug>.md` files are short session handoffs written
+by the `/handoff` command; they link into workspaces and never replace them.
 
 Use `docs/planning/templates/` for future workspaces only. Historical and
 active plan workspaces retain their original schema and provenance.
@@ -18,15 +22,18 @@ active plan workspaces retain their original schema and provenance.
 ## Artifact contract
 
 - `SPEC.md` is authoritative for numbered **Acceptance IDs** (`A1`, `A2`,
-  ...); never renumber a referenced criterion.
+  ...); never renumber a referenced criterion. It also records interview
+  decisions, the design rationale (owner extended, generalization,
+  alternatives rejected, decision-record link), and any design reference with
+  its visual inventory and deviations.
 - `PLAN.md` has one **Validation ID** matrix (`V1`, `V2`, ...) with exact
   commands/checks and acceptance mappings. Milestone records reference those
   IDs and `PACKETS.md` Contract IDs while retaining dependencies, exclusive
   ownership, forbidden scope, design state, assigned tier, wave, and
   parallel-safety conditions.
 - `PACKETS.md` defines sourced frozen contracts (`C1`, `C2`, ...) with consumer
-  censuses and one copy-pasteable packet per stage. `PLAN.md` references the
-  IDs and does not duplicate contract bodies.
+  censuses and covering tests, and one copy-pasteable packet per stage.
+  `PLAN.md` references the IDs and does not duplicate contract bodies.
 - `STATUS.md` contains only current state, recent deltas, blockers/risks, next
   action, and concise gate summaries. Delete obsolete launch fields after
   launch rather than accumulating history.
@@ -56,5 +63,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/validate_plan_workspac
 ```
 
 The linter checks traceability, dispatch shape, routing, ownership, runnable
-command syntax, and freshness metadata. It checks shape, never truth: a wrong
-constant in a syntactically frozen contract can still pass.
+command syntax, covering-test paths, and contract freshness. It checks shape,
+never truth: a wrong constant in a syntactically frozen contract can still
+pass. A workspace's freshness checks start failing once its contract sources
+change after the plan lands; that is expected for a finished plan.

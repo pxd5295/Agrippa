@@ -30,8 +30,29 @@
 
 **Interfaces and constraints**
 
-- [Named API, schema, protocol, file format, persistence, performance,
-  security, platform, compatibility, or migration constraint.]
+- [Named API, schema, protocol, file format, persisted record, shared layout,
+  performance, security, platform, compatibility, or migration constraint.]
+
+## Design reference
+
+[For a plan that starts from a mockup or design canvas, follow "Plans that
+start from a design reference" in `docs/agent-workflow.md`. Otherwise write
+"None: no design reference." and delete the two tables below.]
+
+- Source: [artboard URL and artboard name, read YYYY-MM-DD]
+- Frozen copy: `plans/YYYY-MM-DD-name/design/[file]` and its render.
+
+**Visual inventory**
+
+| Element | Concrete values from the frozen source | Built by |
+|---|---|---|
+| [Region, text, bar, legend, or state] | [Container, text, font, size, color token, height, spacing] | [C# or D#] |
+
+**Deviations from the design**
+
+| ID | Design shows | User will see instead | Why | User decision |
+|---|---|---|---|---|
+| D1 | [Element as drawn] | [Visible result] | [Rule, missing data, reused part, missing token] | [Interview answer] |
 
 ## Design rationale
 
@@ -63,6 +84,9 @@ superseded with its original ID.
 
 - [ ] **A1:** [Observable criterion and unambiguous pass condition.]
 - [ ] **A2:** [Edge case, compatibility, performance, or regression criterion.]
+
+With a design reference, one criterion reads: the built UI matches the frozen
+design in `design/` except for the listed deviations.
 
 ## Handoff gate
 
