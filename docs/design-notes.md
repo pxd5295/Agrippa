@@ -100,6 +100,29 @@ on Windows 11.
 - **GitHub access.** `pxd5295/Agrippa` is public, so installing and updating
   the plugin needs no GitHub credentials.
 
+## Agent tools after Phase 3 (2026-10-18)
+
+The agents used to carry complete `tools:` allowlists, and a project with a
+live-app bridge added that server's read-only tools to the list. A shared
+plugin agent cannot name one project's MCP tools, so the agents now have no
+`tools:` line, and `disallowedTools` removes the editing tools instead.
+
+- **Editing tools.** All four agents lose `Write`, `Edit`, and
+  `NotebookEdit`. Those are the editing tools Phase 0 proved
+  `disallowedTools` removes.
+- **Shells.** `repo-scout` also loses `Bash` and `PowerShell`. It had no shell
+  in its allowlist, and a census needs none, so taking the shells away keeps
+  it a pure reader. The other three agents had `Bash` and keep the shells.
+  Their text limits the shell to reading state or running the packet's
+  commands. They now also get `PowerShell`, which their allowlists did not
+  include, because a project's validation catalog may be written for it.
+- **Authoring tools.** Every tool a project's MCP servers offer now reaches
+  the agents, including a live-app bridge's authoring tools. So
+  `docs/agent_memory/live-app.md` lists the bridge's read-only, run, and
+  authoring tools, and each agent may call only the first two kinds. A bridge
+  tool the file does not list counts as authoring. No check can enforce this,
+  so reviewers watch for it.
+
 ## Core rules injection (2026-10-18)
 
 Phase 2 of `docs/plugin-conversion-plan.md` moved the generic always-loaded

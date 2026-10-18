@@ -8,7 +8,9 @@ under dev/ exists, that every template, script, and hook file is listed in the
 kit README layout table, that the core rules and templates still carry the
 methodology's required clauses, that the core rules stay under the
 10,000-character hook context cap and the injection hook prints them, that
-agent and skill frontmatter is well formed and cross-referenced, that no
+agent and skill frontmatter is well formed and cross-referenced, that the
+agents remove the editing tools with disallowedTools instead of listing an
+allowlist, that no agent or skill contains a [PROJECT: ...] slot, that no
 vocabulary from an older toolchain survives outside UPGRADING.md, that text
 files are clean UTF-8 without trailing whitespace, and that every PowerShell
 script parses. Given a repository that has installed the linter, it also
@@ -84,6 +86,7 @@ $required = @(
     'templates/planning-CLAUDE.md',
     'templates/PROJECT-CONTRACTS.md',
     'templates/VALIDATION-COMMANDS.md',
+    'templates/LIVE-APP.md',
     'templates/agent-memory-CLAUDE.md',
     'templates/decisions-README.md',
     'templates/plans-README.md',
@@ -344,13 +347,38 @@ foreach ($field in $stageFields) {
 
 # --- Agent and skill frontmatter ------------------------------------------
 
+# The agents carry no tools allowlist, so a project's MCP tools reach them.
+# Instead disallowedTools removes every editing tool, and each agent is told
+# to read live-app.md for the bridge tools it must never call.
+$editingTools = @('Write', 'Edit', 'NotebookEdit')
 foreach ($name in $agentNames) {
     $text = Read-KitFile "templates/agents/$name.md"
     Add-Check ($text -match "(?m)^name:\s*$([regex]::Escape($name))\s*$") "$name.md frontmatter name does not match its filename."
     Add-Check ($text -match '(?m)^description:\s*\S') "$name.md is missing a frontmatter description."
-    Add-Check ($text -match '(?m)^tools:\s*\S') "$name.md is missing a frontmatter tools list."
+    Add-Check ($text -notmatch '(?m)^tools:') "$name.md must not have a frontmatter tools allowlist; use disallowedTools."
+    $disallowedLine = [regex]::Match($text, '(?m)^disallowedTools:\s*(.+?)\s*$')
+    Add-Check $disallowedLine.Success "$name.md is missing a frontmatter disallowedTools list."
+    $disallowed = @()
+    if ($disallowedLine.Success) {
+        $disallowed = @($disallowedLine.Groups[1].Value -split ',' | ForEach-Object { $_.Trim() })
+    }
+    foreach ($tool in $editingTools) {
+        Add-Check ($disallowed -contains $tool) "$name.md disallowedTools does not remove the editing tool $tool."
+    }
     Add-Check ($text -match '(?m)^model:\s*(haiku|sonnet|opus)\s*$') "$name.md frontmatter model must be haiku, sonnet, or opus."
+    Add-Check ($text -match 'docs/agent_memory/live-app\.md' -and $text -match '"Authoring tools"') "$name.md must point to the ""Authoring tools"" section of docs/agent_memory/live-app.md."
+    Add-Check ($text -notmatch 'optional live-app block') "$name.md still has an optional live-app block."
     Add-Check ($routing -match "``$([regex]::Escape($name)).md``") "ROUTING roster table does not list $name.md."
+}
+
+# Agents and skills are project-neutral. A project fact belongs in a project
+# document they read, never in a [PROJECT: ...] slot of their own.
+foreach ($folder in @('templates/agents', 'templates/skills')) {
+    foreach ($file in (Get-ChildItem -LiteralPath (Join-Path $kitRoot $folder) -Recurse -File)) {
+        $relative = $file.FullName.Substring($kitRoot.Length).TrimStart('\', '/').Replace('\', '/')
+        $content = [IO.File]::ReadAllText($file.FullName, [Text.Encoding]::UTF8)
+        Add-Check (-not $content.Contains('[PROJECT:')) "$relative must be project-neutral: it contains a [PROJECT: ...] slot."
+    }
 }
 foreach ($name in $skillNames) {
     $text = Read-KitFile "templates/skills/$name/SKILL.md"

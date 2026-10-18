@@ -1,6 +1,6 @@
 # Plan: turn Agrippa into a Claude Code plugin marketplace
 
-Written 2026-10-18. Status: Phases 0, 1, and 2 done on 2026-10-18. Phase 3
+Written 2026-10-18. Status: Phases 0, 1, 2, and 3 done on 2026-10-18. Phase 4
 has not started. Phase 1's second check, that `claude --plugin-dir
 plugins/agrippa` lists the agents and skills, waits until the templates move
 into `agents/` and `skills/` in a later phase.
@@ -331,6 +331,31 @@ Result, 2026-10-18: done. `core-rules.md` is 9,645 characters.
 
 Done when that check passes. A review must also confirm that each removed
 slot's example from nuro-battler has a home in a project document.
+
+Result, 2026-10-18: done. The four agents and three skills had 67 slots, and
+none remain.
+
+- Each slot is now a read of a named section of `project-contracts.md`,
+  `validation-commands.md`, or the new optional `live-app.md`. Each slot's
+  example moved into that section of the project-side template. A script
+  confirmed that every backticked name in the old examples appears in one of
+  the three templates.
+- The agents have no `tools:` line. `disallowedTools` removes `Write`, `Edit`,
+  and `NotebookEdit` from all four. `repo-scout` also loses `Bash` and
+  `PowerShell`, because it had no shell before. `docs/design-notes.md`
+  records why, under "Agent tools after Phase 3".
+- Each agent reads `live-app.md` only when it exists, may call only the tools
+  it lists as read-only or run tools, and never calls an authoring tool.
+- `dev/validate-kit.ps1` now fails on a `[PROJECT:` slot under
+  `templates/agents/` or `templates/skills/`, on a `tools:` line in an agent,
+  on a `disallowedTools` line that keeps an editing tool, and on an agent that
+  does not point to the "Authoring tools" section of `live-app.md`.
+- `claude plugin validate --strict` passed on a scratch copy with the agents
+  and skills moved into `agents/` and `skills/`, so the new frontmatter is
+  valid where the plugin will load it.
+- The README's layout table, placeholder convention, and requirements, the
+  adoption checklist, and the ROUTING roster now describe `disallowedTools`
+  and `live-app.md`. The ROUTING roster's MCP slot is gone too.
 
 ### Phase 4: the linter, wrapper, and hooks
 

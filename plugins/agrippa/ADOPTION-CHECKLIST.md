@@ -55,12 +55,16 @@ named as not done, with the reason.
 ## Agents, skills, commands, hooks
 
 - [ ] Four agents are installed: `repo-scout`, `plan-reviewer`,
-      `design-reviewer`, `validator`, all on `sonnet` by default. Each
-      `tools:` line lists any MCP tool by full name; optional live-app blocks
-      are filled or deleted whole.
+      `design-reviewer`, `validator`, all on `sonnet` by default, unchanged
+      from the kit. If the project has an MCP server that observes the
+      running application, `docs/agent_memory/live-app.md` exists and lists
+      every one of its authoring tools; otherwise that file does not exist.
 - [ ] Four skills are installed (`design-first`, `systematic-debugging`,
-      `verify-before-done`, `receiving-review`) with every placement rule,
-      trap, and command naming this repository's real owners.
+      `verify-before-done`, `receiving-review`), unchanged from the kit.
+      Every section of `docs/agent_memory/project-contracts.md` and
+      `docs/agent_memory/validation-commands.md` that they read names this
+      repository's real owners, traps, and commands, or was deleted because
+      it provably does not apply.
 - [ ] `/handoff` is installed and its transcript path rule fits this machine.
 - [ ] Optional hooks are installed and merged into existing settings, or
       reported as declined. An edit-lint hook follows the rules in

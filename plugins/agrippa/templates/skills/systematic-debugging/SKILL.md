@@ -1,6 +1,6 @@
 ---
 name: systematic-debugging
-description: "Find the root cause of a bug, failing test, crash, or performance regression in this repo before changing code. Use when a test fails, [PROJECT: the project-specific failure surfaces. Example from a Godot repo: a scene errors, the native worker or GPU path misbehaves, a sim capture shows a hitch], or a previous fix attempt did not hold. Produces a reproduction, a single hypothesis, and a fix at the owning site, and stops after three failed fixes."
+description: "Find the root cause of a bug, failing test, crash, or performance regression in this repo before changing code. Use when a test fails, a failure shows up on one of the surfaces listed under Failure surfaces in docs/agent_memory/validation-commands.md (for example a runtime error, a native or GPU path misbehaving, or a performance capture showing a hitch), or a previous fix attempt did not hold. Produces a reproduction, a single hypothesis, and a fix at the owning site, and stops after three failed fixes."
 ---
 
 # Systematic debugging
@@ -16,89 +16,68 @@ especially after one attempt has already failed. Adapted from the
 `systematic-debugging` skill in obra/superpowers, trimmed to this repo's
 tooling.
 
+The project's own toolchain facts are not named here. They are in two
+documents, and each step below names the section to read:
+`docs/agent_memory/validation-commands.md` (the validation catalog) and
+`docs/agent_memory/project-contracts.md` (the project contracts).
+
 ## 1. Establish what actually happened
 
 1. **Read the whole output, not the verdict line.** A runtime can print
    errors, stack traces, and file:line for runtime errors, and the test
    harness can still print a passing verdict after one. Grep the output for
-   the runtime's error marker before trusting any result. [PROJECT: the
-   error marker to grep for and whether the harness enforces it. Example
-   from a Godot repo: grep for `SCRIPT ERROR`; where a test reports through
-   `TestReport.finish()`, that check is automatic, and older tests need it
-   by hand.]
-2. **Know the messages that mean something specific here.** [PROJECT:
-   messages that mean something specific in this toolchain, one bullet
-   each. Example from a Godot repo: `Could not find base class` means the
-   class-name cache is stale; run the cache prelude from
-   `docs/agent_memory/validation-commands.md` and retry before reading
-   anything else into it. `Nonexistent function 'new' in base 'GDScript'`
-   means a script up the preload chain failed to parse, so the error is in
-   a different file from the one named.] Some messages are expected in a
-   headless or CI environment: a run without a GPU or display may fall back
-   to a CPU path, so a headless run may never exercise the GPU path.
-   [PROJECT: the expected headless messages. Example from a Godot repo:
-   `no local RenderingDevice` or `GPU compute unavailable` is expected under
-   `--headless`.]
-3. **Reproduce it on one named target.** Use the exact invocation from
-   `docs/agent_memory/validation-commands.md`. [PROJECT: the invocation
-   forms for each kind of target. Example from a Godot repo: `-s` for
-   `extends SceneTree` scripts, a rendered-frame cap for scenes.] A frame or
-   time cap may count something other than seconds, so a run that "passed
-   for 90 seconds" may have run for one. [PROJECT: the cap and its unit.
-   Example from a Godot repo: `--quit-after N` counts frames, not seconds.]
-   Run targets one at a time when they share a log or output file.
-   [PROJECT: the shared log path. Example from a Godot repo: every run
-   writes the same `user://logs/godot.log`.] If it does not reproduce,
+   the runtime's error marker before trusting any result. "Error grep" in the
+   validation catalog names the marker and whether the harness enforces it.
+2. **Know the messages that mean something specific here.** "Known messages"
+   in the validation catalog lists them, one bullet each. Some messages are
+   expected in a headless or CI environment: a run without a GPU or display
+   may fall back to a CPU path, so a headless run may never exercise the GPU
+   path. The same section lists the expected headless messages.
+3. **Reproduce it on one named target.** Use the exact invocation from the
+   validation catalog; "Run caps" gives the invocation form for each kind of
+   target. A frame or time cap may count something other than seconds, so a
+   run that "passed for 90 seconds" may have run for one; "Run caps" names
+   the cap and its unit. Run targets one at a time when they share a log or
+   output file; "Shared log paths" names them. If it does not reproduce,
    gather more output; do not start guessing.
 4. **Check what changed.** `git diff` and `git status` first. Then the ways
    a change hides:
    - A gitignored local override layer applied after the defaults can
-     silently shadow a default you changed. [PROJECT: the override layer.
-     Example from a Godot repo: `user_properties.cfg` is applied after
-     `default_properties.cfg`.]
+     silently shadow a default you changed. The "Configuration layer" row of
+     "Architecture owners" in the project contracts names it.
    - A native change needs a rebuild and a restart of the running process
-     before the tests mean anything. [PROJECT: the rebuild and restart
-     steps. Example from a Godot repo: a scons rebuild of both configs and a
-     Godot restart before the running DLL reflects it.]
+     before the tests mean anything. "Build" in the validation catalog gives
+     the rebuild and restart steps.
    - A file moved without the companion files the toolchain tracks with it,
-     or a rename the tooling did not see. [PROJECT: companion files and
-     rename traps. Example from a Godot repo: a `.gd` or `.tscn` moved
-     without its `.uid` sidecar, or a rename made outside the editor without
-     reopening the project.]
-   - A file in a sibling worktree that is not on this branch. [PROJECT: where
-     worktrees live. Example: `.claude/worktrees/`.]
+     or a rename the tooling did not see. "Worktree and integration
+     contracts" in the project contracts names the companion files and rename
+     traps.
+   - A file in a sibling worktree that is not on this branch. The same
+     section names where worktrees live.
 5. **Localize across layers.** Use the boundaries the repo already has: an
    equivalence or comparison check at a layer boundary tells you which side
    is wrong, and a temporary probe that prints state at a boundary is
-   cheaper than reasoning about it. Delete probes afterwards. [PROJECT: the
-   layers of the failing path in order, the boundary checks, and the probe
-   naming convention. Example from a Godot repo: the tick path is GDScript
-   world and animal code, then `NuroMovementWorker` in `native/`, then the
-   GPU brain and vision shaders; the serial-versus-pool equivalence gate
-   (`tests/test_native_smoke.gd`, `tests/test_threaded_tick_equivalence.tscn`)
-   tells you whether the native worker agrees with itself; probes are
-   `tests/_probe_*.gd`.]
+   cheaper than reasoning about it. Delete probes afterwards. "Debugging map"
+   in the project contracts lists the layers of the main path in order, the
+   boundary checks, and the probe naming convention.
 6. **For performance problems, a measurement from a real production-like
    run is the evidence.** Headless benchmarks are secondary diagnostics and
-   may not see GPU cost at all. [PROJECT: the authoritative performance
-   evidence. Example from a Godot repo: the perf recorder capture from a
-   real windowed run.] Name the section or counter that moved before
-   proposing a cause.
+   may not see GPU cost at all. "Performance evidence" in the validation
+   catalog names the authoritative measurement. Name the section or counter
+   that moved before proposing a cause.
 
 ## 2. Compare against the working case
 
-1. Find the closest thing that works: [PROJECT: the usual working
-   counterparts. Example from a Godot repo: the other mode's subclass, the
-   other entity type through the same funnel], the same test on `HEAD`. Use
-   a worktree or `git stash` to run the failing target at `HEAD` when you
-   need to prove a failure is pre-existing. Record which it is.
+1. Find the closest thing that works: a working counterpart from "Debugging
+   map" in the project contracts, or the same test on `HEAD`. Use a worktree
+   or `git stash` to run the failing target at `HEAD` when you need to prove
+   a failure is pre-existing. Record which it is.
 2. Read the working path completely, not the first screen of it.
 3. List every difference between the working and failing paths, including
-   configuration values, ordering, and lifecycle state. [PROJECT: kinds of
-   difference that have mattered here before. Example from a Godot repo:
-   spawn order, and whether the object was in the tree when a setter ran.]
-   Known traps of that kind are recorded in `docs/agent_memory/`; check
-   there before assuming a difference cannot matter.
+   configuration values, ordering, and lifecycle state. "Debugging map" lists
+   the kinds of difference that have mattered here before. Known traps of
+   that kind are recorded in `docs/agent_memory/`; check there before
+   assuming a difference cannot matter.
 
 ## 3. One hypothesis, one change
 
@@ -120,17 +99,15 @@ tooling.
    both.
 2. Place the fix with the rules in `.claude/skills/design-first/SKILL.md`.
    A bug found at a call site is usually owned by a base class, a hook, an
-   engine, a funnel, or the configuration layer. [PROJECT: the usual owners
-   by name. Example from a Godot repo: the stat engine, the static-entity
-   funnel, the cfg layer.] Fix the owner. Do not add a conditional at the
-   call site to route around it.
+   engine, a funnel, or the configuration layer; the "Architecture owners"
+   table in the project contracts names them. Fix the owner. Do not add a
+   conditional at the call site to route around it.
 3. One fix per change. No incidental improvements, and no bundled refactor
    beyond the refactor-or-file rule in the core rules.
 4. Verify with `verify-before-done` before reporting. A fix touching a gated
-   subsystem is not done until its gate has run on a fresh build. [PROJECT:
-   the gated subsystems and their gates. Example from a Godot repo: a fix
-   touching native state, geometry, or dispatch is not done until the
-   equivalence gate has run on a fresh build.]
+   subsystem is not done until its gate has run on a fresh build. The "Gated
+   subsystems" row of "Architecture owners" names the subsystems and their
+   gates.
 5. **After three failed fixes, stop.** Three failures on the same symptom
    mean the problem is structural, which in this repo means the planning
    trigger applies. Write down what the three attempts showed, and either

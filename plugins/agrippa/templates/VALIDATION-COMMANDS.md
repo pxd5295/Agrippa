@@ -3,7 +3,9 @@
 > Install note: fill every install-time placeholder with commands verified in
 > this repository by running them, then delete this note. Plans copy commands
 > from this catalog verbatim. A representative command establishes syntax
-> only; it is never the complete suite by implication.
+> only; it is never the complete suite by implication. The Agrippa agents and
+> skills read the sections of this file by name, so keep the section headings
+> as they are and delete a section only when it provably does not apply.
 
 Run commands from `[PROJECT: repository root / named working directory]` using
 `[PROJECT: shell]` unless a row states otherwise.
@@ -14,16 +16,9 @@ Run commands from `[PROJECT: repository root / named working directory]` using
   rule; never a bare name on PATH when more than one version can be installed]`.
 - Prerequisite ordering: [PROJECT: cache generation, service startup, build,
   migration, fixture setup, or `None`]. A prerequisite that must run once per
-  session becomes the first row of every plan's validation matrix.
-- Invocation shape per target kind: [PROJECT: for example "a script target
-  uses `-s` and no frame cap; a scene target uses a numeric frame cap".]
-- Bounded-run rule: [PROJECT: timeout, frame cap, or noninteractive
-  termination contract, and the unit it counts. A frame cap counts frames, not
-  seconds.]
-- Verdict rule: [PROJECT: the verdict line every test prints, and what a run
-  that exits 0 without one means (it is a failure).]
-- Error-line rule: [PROJECT: the runtime error marker to grep for even when
-  the verdict says pass.]
+  session is described under "Session setup" and becomes the first row of
+  every plan's validation matrix.
+- Invocation shape per target kind and the bounded-run rule: see "Run caps".
 - Retry rule: performance and benchmark gates are `noisy-retry`: run once in
   isolation and retry once only when the output identifies environmental
   noise; record both outcomes. Assertion and correctness failures never retry
@@ -32,8 +27,107 @@ Run commands from `[PROJECT: repository root / named working directory]` using
   target at `HEAD` in a worktree or stash, not by recalling it. Keep the
   current list of known red targets here: [PROJECT: targets red at HEAD, with
   the date checked].
-- One at a time: [PROJECT: say whether targets share a log, cache, or port and
-  must therefore run sequentially.]
+- One at a time: see "Shared log paths".
+
+## Session setup
+
+[PROJECT: the step that must run once per session before the first validation
+run, with its exact command, or `None`. Example from a game project: run the
+class-cache prelude once per session before the first Godot target.]
+
+## Verdict line
+
+[PROJECT: the verdict line every test prints, and how a run can exit 0 without
+one in this toolchain. A run that exits 0 with no verdict is a failure.
+Example from a game project: every test prints a `PASS` or `FAIL` line. A
+runtime error inside `_ready()` itself means nothing ever calls `quit()`, and
+the frame cap exits 0.]
+
+## Error grep
+
+[PROJECT: the runtime error marker to grep for even when the verdict says
+pass, and whether the test harness enforces it. Example from a game project:
+grep for `SCRIPT ERROR`; where a test reports through `TestReport.finish()`,
+that check is automatic, and older tests need it by hand.]
+
+## Known messages
+
+- Messages that mean something specific in this toolchain: [PROJECT: one
+  bullet each, with what to do. Example from a game project:
+  `Could not find base class` means the class-name cache is stale; run the
+  session setup step and retry before reading anything else into it.
+  `Nonexistent function 'new' in base 'GDScript'` means a script up the
+  preload chain failed to parse, so the error is in a different file from the
+  one named.]
+- Messages that are expected in a headless or CI run: [PROJECT: one bullet
+  each. Example from a game project: `no local RenderingDevice` or
+  `GPU compute unavailable` is expected under `--headless`.]
+
+## Failure surfaces
+
+[PROJECT: the places a failure shows up here besides a failing test, which
+call for the `systematic-debugging` skill. Example from a game project: a
+scene errors, the native worker or GPU path misbehaves, or a sim capture shows
+a hitch.]
+
+## Run caps
+
+[PROJECT: the invocation form for each kind of target, and the frame or time
+cap with the unit it counts. A frame cap counts frames, not seconds. Example
+from a game project: `-s` for `extends SceneTree` scripts, with no frame cap;
+a rendered-frame cap for scenes. `--quit-after N` counts rendered frames, so a
+cap of 60 is about a second.]
+
+## Shared log paths
+
+[PROJECT: the log or output files that targets share, so those targets run one
+at a time, or `None`. Example from a game project: every run writes the same
+`user://logs/godot.log`.]
+
+## Build
+
+[PROJECT: the build command, every configuration it must build, and the
+restart a running process needs before tests see the new build, or `None`.
+Example from a game project: a scons rebuild of both configs, which must each
+exit 0, then a Godot restart before the running DLL reflects the change.
+Native code changes need this rebuild before validation means anything.]
+
+## Performance evidence
+
+[PROJECT: the authoritative measurement for production performance claims,
+and why headless benchmarks are only secondary diagnostics here. Example from
+a game project: for sim-speed claims, a perf recorder capture from a real
+windowed run.]
+
+## Linter scope
+
+[PROJECT: how the linter reports, and the command that gives the whole-file
+answer. Example from a game project: the PostToolUse hook reports only changed
+lines; a full `gdlint` on the file is the whole-file answer.] A green linter is
+never evidence that a contract is correct.
+
+## Invocation traps
+
+[PROJECT: the invocation mistakes a validator must not make, in one or two
+sentences. Example from a game project: "Runs use the real console binary
+after the cache prelude; script tests take the script flag without an
+early-exit flag; scene tests take a rendered-frame cap."]
+
+## Runtime writes and caches
+
+[PROJECT: the runtime cache and output writes the build or test tooling makes,
+which a validation run may make but must not commit, and any cache that must
+never be deleted, for example dependency caches, build artifacts, import or
+class caches, test logs, and app user data. Example from a game project: Godot
+writes its class cache, import files, logs, and user data.]
+
+## Environment limits
+
+[PROJECT: the environment limits that recur here, and the environment that
+exercises any GPU or display path, because a headless or CI run may only ever
+exercise a CPU fallback. Example from a game project: no Vulkan headless, and
+gdtoolkit may be missing. The GPU path runs only in a windowed run, because
+`--headless` has no rendering device.]
 
 ## Sandbox stance
 
@@ -66,13 +160,9 @@ Determinism, and When.
 ## Live application bridge
 
 [PROJECT: optional. Delete this section if the project has no MCP server that
-observes the running application. Otherwise name the server, its
-preconditions (what must be running, which plugin enabled), the tool names for
-run, stop, capture, log reading, and state inspection, and the traps: confirm
-the active session is this checkout before trusting it, never persist from a
-run, a backgrounded window returns a stale frame, load and parse errors live
-in a different log from runtime errors, and any bridge test runner whose
-discovery does not match this repository's tests.]
+observes the running application. Otherwise name the catalog rows that need
+the live app or a GPU and so cannot run headless. The server, its tools, and
+its traps are in `docs/agent_memory/live-app.md`.]
 
 ## Full-suite inventory
 

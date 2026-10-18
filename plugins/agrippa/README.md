@@ -50,6 +50,7 @@ The methodology has three layers, and the kit installs all of them.
 | `templates/planning/*.md` | `docs/planning/templates/*.md` |
 | `templates/PROJECT-CONTRACTS.md` | `docs/agent_memory/project-contracts.md` |
 | `templates/VALIDATION-COMMANDS.md` | `docs/agent_memory/validation-commands.md` |
+| `templates/LIVE-APP.md` | `docs/agent_memory/live-app.md`, only when the project has an MCP server that observes the running application |
 | `templates/agent-memory-CLAUDE.md` | `docs/agent_memory/CLAUDE.md` |
 | `templates/decisions-README.md` | `docs/decisions/README.md` |
 | `templates/plans-README.md` | `plans/README.md` |
@@ -86,11 +87,18 @@ different times:
 - Plain `[...]` inside `docs/planning/templates/` is filled **per plan** by the
   planner and stays in the installed templates.
 
-Two more install-time markers are removed during install. A line or comment
+The agents and skills contain no `[PROJECT: ...]` slot, and
+`dev/validate-kit.ps1` fails if one appears. They are project-neutral and
+read the project's facts from named sections of
+`docs/agent_memory/project-contracts.md`,
+`docs/agent_memory/validation-commands.md`, and, when the project has a
+live-app bridge, `docs/agent_memory/live-app.md`. So a project fact goes in
+one of those documents, never in an agent or skill.
+
+One more install-time marker is removed during install. A line or comment
 starting `Install note` is guidance for the installer; delete it once its
-file is filled. A block between `<!-- BEGIN optional live-app block -->` and
-`<!-- END optional live-app block -->` is either deleted whole or kept with its
-BEGIN and END lines and its `[PROJECT:` header removed.
+file is filled. The scan below also looks for `optional live-app block`, the
+marker an older kit used around agent sections; none may survive an upgrade.
 
 **Install-marker scan.** After install, a case-sensitive search for the
 regular expression `\[PROJECT:|Install note|optional live-app block` in every
@@ -115,8 +123,11 @@ workspace. The fixture's consumer census also expects line 1 of the installed
 - The `engineering:architecture` and `engineering:system-design` skills (the
   `engineering` plugin) write decision records. Without them, write the record
   by hand in the shape `docs/decisions/README.md` gives.
-- Named-agent `tools:` lines are complete allowlists. An agent that should use
-  an MCP server lists each tool by full name; MCP access is not implied.
+- The named agents have no `tools:` allowlist. Their `disallowedTools` lines
+  remove the editing tools, so a project's MCP tools reach them without being
+  listed. A live-app bridge's authoring tools reach them too, which is why
+  `docs/agent_memory/live-app.md` lists those tools and every agent is told
+  never to call them.
 
 ## Setup prompt: project with no planning methodology
 

@@ -63,17 +63,19 @@ acceptance record.
 Named agents live in `.claude/agents/`; only recurring read-only or
 command-runner roles are named.
 
-| File | Role | Tools | Default tier |
+| File | Role | Disallowed tools | Default tier |
 |---|---|---|---|
-| `repo-scout.md` | Consumer census and contract fact-pack for planning | Glob, Grep, Read, LSP | `sonnet` |
-| `plan-reviewer.md` | Independent read-only review of a stage or wave diff against contracts and acceptance | Glob, Grep, Read, Bash, LSP | `sonnet` (Opus for high-risk) |
-| `design-reviewer.md` | Read-only review of any non-trivial diff against the Engineering standards | Glob, Grep, Read, Bash, LSP | `sonnet` |
-| `validator.md` | Runs the validation matrix verbatim; owns no repo files | Bash, Read | `sonnet` (`haiku` per packet) |
+| `repo-scout.md` | Consumer census and contract fact-pack for planning | Write, Edit, NotebookEdit, Bash, PowerShell | `sonnet` |
+| `plan-reviewer.md` | Independent read-only review of a stage or wave diff against contracts and acceptance | Write, Edit, NotebookEdit | `sonnet` (Opus for high-risk) |
+| `design-reviewer.md` | Read-only review of any non-trivial diff against the Engineering standards | Write, Edit, NotebookEdit | `sonnet` |
+| `validator.md` | Runs the validation matrix verbatim; owns no repo files | Write, Edit, NotebookEdit | `sonnet` (`haiku` per packet) |
 
-A `tools:` line is a complete allowlist. MCP tools are not implied by it; an
-agent that should observe a running application through an MCP server lists
-each of that server's tools by full name. [PROJECT: name any MCP tools the
-agents above carry, or delete this sentence.]
+The agents have no `tools:` allowlist. Each one has every tool except those
+its `disallowedTools` line removes, so a project's MCP tools reach them
+without being listed. That includes a live-app bridge's authoring tools, so
+each agent is told never to call them, and `docs/agent_memory/live-app.md`
+lists which tools those are. No check can enforce that rule; reviewers watch
+for it.
 
 Their default tiers obey the table above: a consumer census and a full test
 suite are both long-context, large-output work, so neither `repo-scout` nor
