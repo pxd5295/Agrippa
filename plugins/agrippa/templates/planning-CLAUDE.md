@@ -1,15 +1,9 @@
-# docs/planning/ — routing guide & plan-workspace templates
+# docs/planning/
 
-`ROUTING.md` owns topology, tier selection, packets, waves, ownership, launch,
-and review; read it directly rather than a summary of it. `templates/` holds the
-blank `SPEC.md` / `PLAN.md` / `PACKETS.md` / `STATUS.md` / `EVIDENCE.md` that are
-**copied** into each new `plans/YYYY-MM-DD-<name>/`, never edited per-plan.
+The routing guide and the plan-workspace templates ship with the `agrippa`
+plugin's `plan` skill, not in this folder. Load `agrippa:plan` to read them,
+and never keep a local copy: the plugin's linter parses the plugin's
+templates, so a copy here drifts from the linter that checks plans.
 
-Two things are not stated in `ROUTING.md` itself:
-
-- **Editing a template changes all future plans**, not existing ones. Keep the
-  `A#`/`V#`/`C#` id conventions and the section shape
-  `tools/validate_plan_workspace.ps1` parses — templates are the contract that
-  linter checks against, and a template change must be mirrored there.
 - `MIGRATION.md`, when present, records how this repository adopted or
   upgraded the methodology. It is history; do not edit its decisions.

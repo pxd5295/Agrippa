@@ -14,10 +14,12 @@ plans/YYYY-MM-DD-short-change-name/
 ```
 
 `plans/handoff-YYYY-MM-DD-<slug>.md` files are short session handoffs written
-by the `/handoff` command; they link into workspaces and never replace them.
+by the `/agrippa:handoff` skill; they link into workspaces and never replace
+them.
 
-Use `docs/planning/templates/` for future workspaces only. Historical and
-active plan workspaces retain their original schema and provenance.
+New workspaces start from the templates in the `agrippa` plugin's `plan`
+skill. Historical and active plan workspaces retain their original schema and
+provenance.
 
 ## Artifact contract
 
@@ -56,11 +58,17 @@ arbitrary size limit.
 
 ## Workspace validation
 
-Before handoff, run:
+Before handoff, run this through the Bash tool, because the plugin puts
+`agrippa-lint` on the Bash tool's PATH only:
 
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File tools/validate_plan_workspace.ps1 -PlanPath plans/YYYY-MM-DD-name
+```bash
+agrippa-lint -PlanPath plans/YYYY-MM-DD-name
 ```
+
+Outside Claude Code, run `plugins/agrippa/scripts/validate_plan_workspace.ps1`
+from a checkout of Agrippa at this repository's pinned tag, with `-RepoRoot`
+set to this repository. Dated plans whose matrix names
+`tools/validate_plan_workspace.ps1` keep that row; they are records.
 
 The linter checks traceability, dispatch shape, routing, ownership, runnable
 command syntax, covering-test paths, and contract freshness. It checks shape,

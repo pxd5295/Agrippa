@@ -4,15 +4,16 @@
 
 ## Frozen contracts
 
-### C1: Planning trigger in root instructions
+### C1: Project contracts pointer in root instructions
 
 Contract source: `AGENTS.md:1` (read __TODAY__)
 
-- Exact contract: the root instructions name `Make a plan` as a planning
-  trigger.
+- Exact contract: the root instructions name
+  `docs/agent_memory/project-contracts.md` as the owner of the project
+  contracts.
 - Enumerated edit sites: none; this smoke test makes no edit.
 - Consumer census:
-  - `docs/agent-workflow.md:1`: `# Planning and implementation workflow`
+  - `AGENTS.md:1`: `# Agent Workflow`
 - Pre-authorized ownership expansion: None.
 - Covering tests: None.
 
@@ -22,8 +23,8 @@ Contract source: `AGENTS.md:1` (read __TODAY__)
 
 ```text
 Plan: __PLAN__
-Stage: M1 - Confirm the planning trigger
-Goal: confirm the root instructions name the planning trigger
+Stage: M1 - Confirm the project contracts pointer
+Goal: confirm the root instructions name the project contracts document
 Dependencies: None
 Owner / assigned tier: sonnet
 Design state: Frozen
@@ -45,10 +46,10 @@ Pre-authorized ownership expansion:
 - None
 
 Acceptance:
-- A1: The root AGENTS.md names the planning trigger phrase.
+- A1: The root AGENTS.md names the project contracts document.
 
 Validation:
-- V1: git grep -n "Make a plan" -- AGENTS.md; lint; sandboxed; deterministic
+- V1: git grep -n "project-contracts.md" -- AGENTS.md; lint; sandboxed; deterministic
 Covering tests: None
 Validation output: Bounded
 
@@ -59,7 +60,7 @@ Dirty/user-owned warnings:
 - None
 
 Stop/escalate when:
-- the trigger phrase is missing
+- the project contracts pointer is missing
 
 Return only: files changed; behavior implemented; validation results;
 unresolved dependencies/risks.
@@ -89,11 +90,11 @@ Pre-authorized ownership expansion:
 - None
 
 Acceptance:
-- A1: The root AGENTS.md names the planning trigger phrase.
+- A1: The root AGENTS.md names the project contracts document.
 - A2: The plan-workspace linter reports PASS for this workspace.
 
 Validation:
-- V2: powershell -NoProfile -ExecutionPolicy Bypass -File tools/validate_plan_workspace.ps1 -PlanPath __PLAN__; lint; sandboxed; deterministic
+- V2: agrippa-lint -PlanPath __PLAN__, through the Bash tool; lint; sandboxed; deterministic
 Validation output: Bounded
 
 Relevant references:

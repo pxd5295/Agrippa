@@ -17,10 +17,10 @@ differ:
   standards. The core rules say these are fixed before the change is reported
   done.
 - `plan-reviewer` and `/code-review` classify findings as `Blocking` or
-  `Optional`. `docs/planning/ROUTING.md` says the lead does not act on
-  `Optional` findings to close a review, and a finding that cannot be bound
-  to correctness, a contract ID, or an acceptance ID is `Optional` by
-  definition.
+  `Optional`. `ROUTING.md` in the `agrippa:plan` skill says the lead does
+  not act on `Optional` findings to close a review, and a finding that cannot
+  be bound to correctness, a contract ID, or an acceptance ID is `Optional`
+  by definition.
 - The user's own comments take precedence over every reviewer and over this
   skill. If you raised a concern and the user reaffirmed the request,
   proceed as asked and say that you are.
@@ -75,6 +75,6 @@ differ:
 ## What this skill does not do
 
 It does not decide whether a review is needed at all; the size floor and the
-review topology in the core rules and `docs/planning/ROUTING.md` do. It does not
-close a plan stage; that still requires every acceptance and validation ID
+review topology in the core rules and `ROUTING.md` in `agrippa:plan` do. It
+does not close a plan stage; that still requires every acceptance and validation ID
 through `verify-before-done`.

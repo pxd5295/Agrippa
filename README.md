@@ -34,11 +34,12 @@ copying `plugins/agrippa/` into it.
 
    It must print `PASS`. It checks file presence, required methodology
    clauses, leftover vocabulary from older toolchains, encoding, script
-   parsing, and an end-to-end smoke test against a simulated install. It checks
-   shape, never truth.
+   parsing, and an end-to-end smoke test against a simulated project that has
+   no copy of the linter. It checks shape, never truth.
 3. To check a repository that has the kit installed, add
    `-InstalledRepo <path>`. That repository's
-   `tools/validate_plan_workspace.ps1` must match the kit's linter.
+   `tools/validate_plan_workspace.ps1` must match
+   `plugins/agrippa/scripts/validate_plan_workspace.ps1`.
 4. Upgrade each installed repository with the upgrade prompt in
    `plugins/agrippa/README.md`.
 
@@ -46,7 +47,7 @@ copying `plugins/agrippa/` into it.
 
 | Repository | Path from here | State on 2026-10-18 |
 |---|---|---|
-| nuro-battler | `../evolution-game/nuro-battler` | Installed. Runs the kit linter unchanged, with its Godot rules in `tools/validate_plan_workspace.local.ps1`; `validate-kit.ps1 -InstalledRepo` passes. |
+| nuro-battler | `../evolution-game/nuro-battler` | Installed from the G3 kit, with its Godot rules in `tools/validate_plan_workspace.local.ps1`. Its copy of the linter predates `-RepoRoot`, so `validate-kit.ps1 -InstalledRepo` fails until Phase 8 of the plugin plan moves it to `agrippa-lint`. The plugin linter gives the same results on its plans. |
 
 ## License
 

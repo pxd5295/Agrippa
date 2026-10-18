@@ -1,25 +1,30 @@
 <#
 .SYNOPSIS
-Proves the installed plan-workspace linter accepts a valid workspace and
-rejects a broken one, then removes what it created.
+Proves the agrippa plugin's plan-workspace linter accepts a valid workspace in
+a project and rejects a broken one, then removes what it created.
 
 .DESCRIPTION
 Copies `smoke-workspace/` into `<RepoRoot>/plans/<today>-kit-smoke-test`
 (adding -2, -3, ... on a name collision), replaces the `__TODAY__` and
-`__PLAN__` tokens, and runs `<RepoRoot>/tools/validate_plan_workspace.ps1`
-against it. The run must PASS. It then marks stage M1 `Open` and deletes the
-M1 packet's `Return only` line, and the same linter must FAIL with both
-errors. The workspace is deleted afterwards either way; a `plans/` folder the
-script had to create is deleted too while it is still empty.
+`__PLAN__` tokens, and runs the plugin's
+`plugins/agrippa/scripts/validate_plan_workspace.ps1` from this Agrippa
+checkout against it. The run must PASS. It then marks stage M1 `Open` and
+deletes the M1 packet's `Return only` line, and the same linter must FAIL with
+both errors. The workspace is deleted afterwards either way; a `plans/` folder
+the script had to create is deleted too while it is still empty.
 
-It runs the shared linter with -SkipLocalChecks, because the generic fixture
-cannot satisfy a project's own invariants in
+The linter runs from the project root without -RepoRoot, the way the
+`agrippa-lint` wrapper runs it, so it finds the root through git. RepoRoot
+must therefore be the top-level folder of a git repository. The project needs
+no copy of the linter.
+
+It runs the linter with -SkipLocalChecks, because the generic fixture cannot
+satisfy a project's own invariants in
 `tools/validate_plan_workspace.local.ps1`; prove those by linting one real
 plan workspace instead.
 
-The fixture references only files the kit installs: `AGENTS.md`,
-`docs/agent-workflow.md` (its first line is the consumer-census snippet), and
-`tools/validate_plan_workspace.ps1`. If an adapted `docs/agent-workflow.md`
+The fixture references only the project's root `AGENTS.md`, whose first line
+is the consumer-census snippet `# Agent Workflow`. If an adapted `AGENTS.md`
 has a different first line, the pass run fails on check 25; fix the fixture's
 census snippet, not the linter.
 
@@ -35,11 +40,16 @@ param(
 $ErrorActionPreference = 'Stop'
 $root = (Resolve-Path -LiteralPath $RepoRoot).Path
 $fixture = Join-Path $PSScriptRoot 'smoke-workspace'
-$linter = Join-Path $root 'tools/validate_plan_workspace.ps1'
+# This script lives in dev/fixtures/ of the Agrippa repository.
+$linter = Join-Path $PSScriptRoot '../../plugins/agrippa/scripts/validate_plan_workspace.ps1'
 $failures = New-Object 'System.Collections.Generic.List[string]'
 
 if (-not (Test-Path -LiteralPath $linter -PathType Leaf)) {
-    Write-Output "FAIL: linter not installed at tools/validate_plan_workspace.ps1."
+    Write-Output "FAIL: the plugin linter is missing at $linter."
+    exit 1
+}
+if (-not (Test-Path -LiteralPath (Join-Path $root '.git'))) {
+    Write-Output "FAIL: $root is not the top-level folder of a git repository, so the linter cannot find it without -RepoRoot."
     exit 1
 }
 
@@ -65,7 +75,8 @@ function Invoke-Linter {
     # terminating error under 'Stop', and the linter reports through stderr.
     $ErrorActionPreference = 'Continue'
     # Run the linter under the same PowerShell that runs this script, so the
-    # test also works with pwsh on macOS and Linux.
+    # test also works with pwsh on macOS and Linux. The caller has set the
+    # location to the project root, and no -RepoRoot is passed.
     $shell = (Get-Process -Id $PID).Path
     $output = & $shell -NoProfile -ExecutionPolicy Bypass -File $linter -PlanPath $planRelative -SkipLocalChecks 2>&1 | ForEach-Object { [string]$_ }
     return [pscustomobject]@{

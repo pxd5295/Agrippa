@@ -1,8 +1,9 @@
 # Planning and implementation routing
 
-Read this guide when assigning or dispatching stages from a plan. Lifecycle,
-interview, risk, evidence, acceptance, and validation rules remain in
-`docs/agent-workflow.md`, which also defines the design states. Only `Frozen`
+Read this guide when assigning or dispatching stages from a plan. It is a
+reference file of the `agrippa:plan` skill. Lifecycle, interview, risk,
+evidence, acceptance, and validation rules remain in `agent-workflow.md`, the
+skill's other reference file, which also defines the design states. Only `Frozen`
 and `Bounded-choice` stages reach this table.
 
 When the table would assign Opus, first split the work into a planner-frozen
@@ -21,7 +22,7 @@ because Haiku is weakest with large files or output.
 | No long-context recall; mechanical `Frozen` change with line-anchored edit sites; bounded output and deterministic check | `haiku` | Exact transcription |
 | `Frozen` behavioral work in one ownership area; deterministic validation | `sonnet` | Standard behavioral transcription |
 | `Bounded-choice`, or bounded behavioral work needing local judgment | `sonnet` | Standard bounded implementation |
-| Native, persistence, security, concurrency, performance, or [PROJECT: shared-layout] risk with bounded ownership | `opus` | Risk-aware bounded work |
+| Native, persistence, security, concurrency, performance, shared-layout, or another "High-risk change classes" risk from `project-contracts.md`, with bounded ownership | `opus` | Risk-aware bounded work |
 | Difficult cross-area integration, or a failed bounded repair at a lower tier | `opus` (high effort) | Escalation ceiling |
 
 Tier inputs are: long-context need, files touched, ownership areas,
@@ -171,7 +172,7 @@ continue in the same turn.
 ## Launch
 
 Claude implements in the same session that planned, or in a later session named
-against the plan workspace. `docs/agent-workflow.md` owns the launch read order.
+against the plan workspace. `agent-workflow.md` owns the launch read order.
 
 `Implement plan` proceeds with the lead plus routed subagents by default. A
 plan-implementation request is an explicit user request to spawn the routed
@@ -182,9 +183,11 @@ per stage. A worktree that the plan requires cannot be skipped.
 ## Validator
 
 The `validator` agent receives an inline stage packet with `Owned files: None`.
-It may write runtime caches required by the project's build or test tooling
-([PROJECT: name them, for example class cache, import cache, logs]) but must
-not change the repository diff. Any produced diff is an integration error.
+It may write the runtime caches the project's build or test tooling requires,
+which "Runtime writes and caches" in `docs/agent_memory/validation-commands.md`
+lists, but must not change the repository diff. Any produced diff is an
+integration error. The workspace linter row, `agrippa-lint`, runs through the
+Bash tool, because the plugin's `bin/` folder is on the Bash tool's PATH only.
 
 ## Review topology
 

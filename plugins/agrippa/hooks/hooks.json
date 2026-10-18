@@ -1,5 +1,5 @@
 {
-  "description": "Adds the Agrippa core rules to every session at startup, resume, clear, and after compaction, and to every subagent.",
+  "description": "Adds the Agrippa core rules to every session at startup, resume, clear, and after compaction, and to every subagent. Logs subagent spawns to subagent-spawns.log only when the project sets AGRIPPA_SPAWN_LOG=1.",
   "hooks": {
     "SessionStart": [
       {
@@ -17,6 +17,28 @@
           {
             "type": "command",
             "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/scripts/inject_core_rules.ps1\" -HookEvent SubagentStart"
+          }
+        ]
+      },
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/scripts/log_subagent_spawns.ps1\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Agent|Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/scripts/log_subagent_spawns.ps1\"",
+            "timeout": 10
           }
         ]
       }

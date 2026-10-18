@@ -3,7 +3,14 @@
     Record every subagent spawn to a log file. Observational only.
 
 .DESCRIPTION
-    Runs as a Claude Code hook under two events and branches on
+    Runs as one of the agrippa plugin's hooks, wired in `hooks/hooks.json`.
+    It is opt-in: it does nothing unless the project sets
+    `AGRIPPA_SPAWN_LOG=1`, normally in the `env` block of its
+    `.claude/settings.json`. A plugin hook runs in every project that enables
+    the plugin, and a project that has not ignored the log file would
+    otherwise get an untracked file.
+
+    It runs under two events and branches on
     `hook_event_name`, so the log path, line format, and append logic have one
     owner instead of being copied into a second script:
 
@@ -36,8 +43,10 @@
     Never set it in the hook command itself.
 
 .OUTPUTS
-    Exit 0, always. The log is `subagent-spawns.log` at the repository root,
-    already covered by the `*.log` rule in `.gitignore`.
+    Exit 0, always. The log is `subagent-spawns.log` at the project root,
+    which Claude Code passes to hooks as `CLAUDE_PROJECT_DIR`; the payload's
+    `cwd` is the fallback. A project that opts in adds `subagent-spawns.log`
+    (or `*.log`) to its `.gitignore`.
 
 .NOTES
     Windows PowerShell 5.1 clean: no && / || chains, no ternary, no
@@ -50,16 +59,22 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$RepoRoot = Split-Path -Parent $PSScriptRoot
-$LogPath = Join-Path $RepoRoot 'subagent-spawns.log'
-
-# Reading the hook payload off stdin is shared with the other hook scripts.
-. (Join-Path $PSScriptRoot 'hook_payload.ps1')
+$LogPath = $null
 
 function Write-Note {
     param([string] $Text)
     if ($Explain) { Write-Host "[log_subagent_spawns] $Text" }
 }
+
+# The opt-in comes first, so a project that has not opted in pays only for
+# starting PowerShell.
+if ($env:AGRIPPA_SPAWN_LOG -ne '1') {
+    Write-Note 'AGRIPPA_SPAWN_LOG is not 1, so nothing is logged'
+    exit 0
+}
+
+# Reading the hook payload off stdin is shared with the other hook scripts.
+. (Join-Path $PSScriptRoot 'hook_payload.ps1')
 
 function Format-Value {
     param($Value, [string] $WhenMissing)
@@ -95,6 +110,16 @@ try {
         Write-Note 'no usable payload on stdin; this script runs as a hook'
         exit 0
     }
+
+    $projectRoot = $env:CLAUDE_PROJECT_DIR
+    if ([string]::IsNullOrWhiteSpace($projectRoot)) {
+        $projectRoot = [string] (Get-HookField $payload 'cwd')
+    }
+    if ([string]::IsNullOrWhiteSpace($projectRoot) -or -not (Test-Path -LiteralPath $projectRoot -PathType Container)) {
+        Write-Note 'no project folder in CLAUDE_PROJECT_DIR or the payload cwd'
+        exit 0
+    }
+    $LogPath = Join-Path $projectRoot 'subagent-spawns.log'
 
     $evt = Format-Value (Get-HookField $payload 'hook_event_name') 'unknown'
     $session = Format-Value (Get-HookField $payload 'session_id') '-'

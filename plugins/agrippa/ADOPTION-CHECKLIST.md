@@ -65,10 +65,13 @@ named as not done, with the reason.
       `docs/agent_memory/validation-commands.md` that they read names this
       repository's real owners, traps, and commands, or was deleted because
       it provably does not apply.
-- [ ] `/handoff` is installed and its transcript path rule fits this machine.
-- [ ] Optional hooks are installed and merged into existing settings, or
-      reported as declined. An edit-lint hook follows the rules in
-      `templates/hooks/README.md`.
+- [ ] The plugin's `/agrippa:handoff` skill is available, and its transcript
+      path rule fits this machine.
+- [ ] Optional hooks are switched on or installed and merged into existing
+      settings, or reported as declined. The plugin's spawn logger is on only
+      with `AGRIPPA_SPAWN_LOG=1` in `.claude/settings.json` and
+      `subagent-spawns.log` in `.gitignore`. An edit-lint hook follows the
+      rules in `templates/hooks/README.md`.
 
 ## Planning behavior
 
@@ -84,8 +87,10 @@ named as not done, with the reason.
 - [ ] Every stage is `Frozen` or `Bounded-choice`; `Open` cannot hand off.
 - [ ] `SPEC.md` records the design rationale and links a decision record for
       a shared-interface change.
-- [ ] Design-reference planning names this repository's style-token source
-      and in-app capture path, or says there is none.
+- [ ] For design-reference planning, the "Contract documents" table in
+      `project-contracts.md` names the style-token document and "UI capture"
+      in `validation-commands.md` names the in-app capture path, or each says
+      there is none.
 - [ ] New workspaces contain SPEC/PLAN/PACKETS/STATUS/EVIDENCE with `A#`/`V#`/
       `C#` traceability and verbatim packet acceptance text.
 
@@ -117,7 +122,7 @@ named as not done, with the reason.
 - [ ] Agrippa's `dev/validate-kit.ps1 -InstalledRepo <this repository>` prints
       PASS.
 - [ ] Agrippa's `dev/fixtures/run-smoke-test.ps1 -RepoRoot <this repository>`
-      prints PASS against the installed linter (valid fixture passes, broken
+      prints PASS with the plugin's linter (valid fixture passes, broken
       fixture fails with the expected errors).
 - [ ] The shared linter is unedited. This repository's command invariants and
       any narrower `$CommandPathExtensions` live in

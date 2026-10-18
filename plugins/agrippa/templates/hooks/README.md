@@ -3,61 +3,39 @@
 Hooks are optional. The methodology works without them, but two of them close
 gaps that instructions alone leave open: lint errors the agent never sees, and
 subagent spawns that silently inherit the lead's model instead of the routed
-tier. Install the scripts under `tools/` and wire them in the project's
-`.claude/settings.json`. Merge into an existing `hooks` object; never replace
-one.
+tier. The spawn logger ships in the agrippa plugin and only needs switching
+on. The edit-lint hook is the project's own: install its script under
+`tools/` and wire it in the project's `.claude/settings.json`. Merge into an
+existing `hooks` object; never replace one.
 
-## Subagent spawn log (portable, install as-is)
+## Subagent spawn log (in the plugin, opt-in)
 
-`log_subagent_spawns.ps1` and its helper `hook_payload.ps1` go in `tools/`.
-The logger runs on two events and appends one line per spawn to
-`subagent-spawns.log` at the repository root. Add `subagent-spawns.log` (or
-`*.log`) to `.gitignore`.
-
-It is observational. It writes nothing to stdout and always exits 0, so it
-never blocks, allows, or rewrites a spawn. The count it exists for is
-`agent=general-purpose model=NONE` on a `PreToolUse` row: that spawn named no
-tier, so it inherited the lead's model instead of the tier
-`docs/planning/ROUTING.md` routed. A `SubagentStart` row with no matching
-`PreToolUse` row is a spawn that bypassed the Agent tool, which is the normal
-shape for agents a dynamic workflow spawns.
+The plugin's `hooks/hooks.json` runs `scripts/log_subagent_spawns.ps1` on two
+events. It does nothing unless the project opts in, because a plugin hook
+runs in every project that enables the plugin. To opt in, add the variable to
+the `env` block of the project's `.claude/settings.json` and add
+`subagent-spawns.log` (or `*.log`) to `.gitignore`:
 
 ```json
 {
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Agent|Task",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/log_subagent_spawns.ps1",
-            "timeout": 10
-          }
-        ]
-      }
-    ],
-    "SubagentStart": [
-      {
-        "matcher": ".*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/log_subagent_spawns.ps1",
-            "timeout": 10
-          }
-        ]
-      }
-    ]
+  "env": {
+    "AGRIPPA_SPAWN_LOG": "1"
   }
 }
 ```
 
-On macOS or Linux without PowerShell, either install `pwsh` and replace
-`powershell -NoProfile -ExecutionPolicy Bypass -File` with `pwsh -NoProfile
--File`, or port the two scripts to the project's shell with the same rules:
-always exit 0, swallow every failure, retry the append briefly because several
-agents can start at once.
+The logger then appends one line per spawn to `subagent-spawns.log` at the
+project root. It is observational. It writes nothing to stdout and always
+exits 0, so it never blocks, allows, or rewrites a spawn. The count it exists
+for is `agent=general-purpose model=NONE` on a `PreToolUse` row: that spawn
+named no tier, so it inherited the lead's model instead of the tier
+`ROUTING.md` in the `agrippa:plan` skill routed. A `SubagentStart` row with
+no matching `PreToolUse` row is a spawn that bypassed the Agent tool, which is
+the normal shape for agents a dynamic workflow spawns.
+
+A project that still has its own copy of `tools/log_subagent_spawns.ps1`
+wired in `.claude/settings.json` removes that copy and its wiring when it
+opts in, or every spawn is logged twice.
 
 ## Edit-lint hook (pattern, write one per project)
 
@@ -119,7 +97,9 @@ these rules the hard way. Keep all of them in a port:
 Read-only git commands, the plan-workspace linter, and the project's exact test
 and build executables are the calls the methodology makes most often. Allowing
 them in `.claude/settings.json` removes most permission prompts during
-planning and validation without allowing anything destructive:
+planning and validation without allowing anything destructive. The linter runs
+as `agrippa-lint` through the Bash tool, because the plugin's `bin/` folder is
+on the Bash tool's PATH only:
 
 ```json
 {
@@ -131,7 +111,7 @@ planning and validation without allowing anything destructive:
       "Bash(git show:*)",
       "Bash(git ls-files:*)",
       "Bash(git rev-parse:*)",
-      "PowerShell(powershell -NoProfile -ExecutionPolicy Bypass -File tools/validate_plan_workspace.ps1:*)",
+      "Bash(agrippa-lint:*)",
       "[PROJECT: the exact test and build executables from validation-commands.md]"
     ]
   }

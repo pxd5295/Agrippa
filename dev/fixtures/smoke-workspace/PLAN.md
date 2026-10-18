@@ -15,8 +15,11 @@ Wave 2: [Integration]
 
 | Validation ID | Acceptance IDs | Exact command or check | Style | Sandbox | Determinism | When |
 |---|---|---|---|---|---|---|
-| V1 | A1 | `git grep -n "Make a plan" -- AGENTS.md` | lint | sandboxed | deterministic | M1 |
-| V2 | A1-A2 | `powershell -NoProfile -ExecutionPolicy Bypass -File tools/validate_plan_workspace.ps1 -PlanPath __PLAN__` | lint | sandboxed | deterministic | Integration |
+| V1 | A1 | `git grep -n "project-contracts.md" -- AGENTS.md` | lint | sandboxed | deterministic | M1 |
+| V2 | A1-A2 | `agrippa-lint -PlanPath __PLAN__` | lint | sandboxed | deterministic | Integration |
+
+V2 runs through the Bash tool, because the agrippa plugin puts `agrippa-lint`
+on the Bash tool's PATH only.
 
 ## Ownership matrix
 
@@ -26,7 +29,7 @@ Wave 2: [Integration]
 
 ## Milestones
 
-### M1: Confirm the planning trigger
+### M1: Confirm the project contracts pointer
 
 | Field | Record |
 |---|---|

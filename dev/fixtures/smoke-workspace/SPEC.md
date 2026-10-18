@@ -2,18 +2,18 @@
 
 > Kit smoke-test fixture. `run-smoke-test.ps1` copies this workspace into
 > `plans/`, replaces its date and path tokens, lints it, and deletes it. It
-> references only files the kit installs.
+> references only the root `AGENTS.md`, the one file every project keeps.
 
 ## Objective
 
-Prove that the installed planning methodology and its workspace linter work in
-this repository.
+Prove that the agrippa plugin's workspace linter works in this repository.
 
 ## Background
 
-The kit installs `AGENTS.md`, `docs/agent-workflow.md`, and
-`tools/validate_plan_workspace.ps1`. This single-stage workspace exercises
-every linter check against those files without changing any of them.
+The project keeps its own `AGENTS.md`. The agrippa plugin provides the plan
+templates and the linter, which runs as `agrippa-lint`. This single-stage
+workspace exercises every linter check against `AGENTS.md` without changing
+it.
 
 ## Planning interview decisions
 
@@ -25,7 +25,7 @@ every linter check against those files without changing any of them.
 
 **In scope**
 
-- Lint this workspace with the installed linter.
+- Lint this workspace with the plugin's linter.
 
 **Out of scope**
 
@@ -43,7 +43,7 @@ None: no design reference.
 
 **Chosen design**
 
-- The workspace uses the single-stage shape from `docs/agent-workflow.md`.
+- The workspace uses the single-stage shape from the `agrippa:plan` skill.
 
 **Generalization**
 
@@ -61,7 +61,7 @@ None: no design reference.
 
 ## Acceptance criteria
 
-- [ ] **A1:** The root AGENTS.md names the planning trigger phrase.
+- [ ] **A1:** The root AGENTS.md names the project contracts document.
 - [ ] **A2:** The plan-workspace linter reports PASS for this workspace.
 
 ## Handoff gate

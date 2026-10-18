@@ -3,7 +3,8 @@
     Shared helpers for reading a Claude Code hook payload from stdin.
 
 .DESCRIPTION
-    Dot-sourced by the repository's hook scripts; it is not run on its own:
+    Dot-sourced by the plugin's hook scripts, and by a project's own hook
+    scripts that keep a copy; it is not run on its own:
 
         . (Join-Path $PSScriptRoot 'hook_payload.ps1')
 

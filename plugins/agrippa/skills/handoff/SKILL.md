@@ -1,6 +1,8 @@
 ---
-description: Write a short handoff file so the next session can resume without reading this one
-argument-hint: [output path, default plans/handoff-YYYY-MM-DD-<slug>.md]
+name: handoff
+description: Write a short handoff file so the next session can resume without reading this one. Run it as /agrippa:handoff when a session ends mid-plan.
+argument-hint: "[output path, default plans/handoff-YYYY-MM-DD-<slug>.md]"
+disable-model-invocation: true
 ---
 
 Write a handoff file for the next session, from the conversation you already

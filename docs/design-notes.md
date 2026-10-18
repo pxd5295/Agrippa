@@ -26,10 +26,36 @@ they need it to recognize and search for an old install.
 
 ## The linter
 
-- The kit linter is the linter every installed repository runs. It is never
-  edited per project.
+- The kit linter is the linter every project runs. It is never edited per
+  project.
+- Since Phase 4 of `docs/plugin-conversion-plan.md` (2026-10-18), the linter
+  lives at `plugins/agrippa/scripts/validate_plan_workspace.ps1` and runs from
+  the plugin. A project no longer gets a copy at
+  `tools/validate_plan_workspace.ps1`. Inside Claude Code, the plugin's
+  `bin/agrippa-lint` wrapper runs it under `powershell` or `pwsh` and passes
+  every argument through. Outside Claude Code, for example in a terminal or
+  CI, you run it from a checkout of Agrippa at the project's pinned tag.
+- A plan's matrix row is `agrippa-lint -PlanPath plans/YYYY-MM-DD-name`. That
+  command names no version-specific path, so check 13 has nothing to fail on.
+  The plugin cache path changes with every version, and
+  `${CLAUDE_PLUGIN_ROOT}` is not set in shell commands, so a full path could
+  not work. Phase 0 showed that `bin/` is on the Bash tool's PATH only, so the
+  plan templates, the `plan` skill, the core rules, and the `validator` agent
+  all say this row runs through the Bash tool.
+- The repository root used to be the folder above the linter's own location.
+  It is now `-RepoRoot`, or else the git top-level folder of the current
+  directory. The default is resolved in the script body, because Windows
+  PowerShell 5.1 leaves `$PSScriptRoot` empty in parameter defaults. Outside a
+  git repository and without `-RepoRoot`, the linter fails with one `[Files]`
+  error rather than guess.
+- The wrapper converts the linter's path with `cygpath -w` when it exists,
+  because Windows PowerShell needs a Windows path and Git Bash passes POSIX
+  ones. Git records the wrapper as executable (`git add --chmod=+x`), and
+  `.gitattributes` keeps it LF, which its `#!/bin/sh` line needs.
+  `validate-kit.ps1` checks all three.
 - Project checks go in an optional `tools/validate_plan_workspace.local.ps1`,
-  which the linter dot-sources. It defines `Test-LocalValidationRow` (run once
+  which the linter now loads from `<RepoRoot>/tools/` rather than from its own
+  folder, and dot-sources. It defines `Test-LocalValidationRow` (run once
   per validation-matrix row) and `Test-LocalValidationMatrix` (run once per
   matrix). The template carries nuro-battler's Godot checks as the example.
 - `-SkipLocalChecks` exists for the smoke test, whose generic fixture cannot
@@ -46,12 +72,26 @@ they need it to recognize and search for an old install.
 - `validate-kit.ps1` compares an installed linter with the kit's after
   normalizing line endings, because git converts them on checkout. A
   byte-for-byte hash failed on CRLF versus LF on 2026-10-18.
+- Proof of the move, 2026-10-18. nuro-battler still had the G3 copy of the
+  linter. The plugin linter, run from this repository as
+  `powershell -NoProfile -ExecutionPolicy Bypass -File plugins/agrippa/scripts/validate_plan_workspace.ps1 -RepoRoot <nuro-battler> -PlanPath plans/<name>`,
+  reproduced nuro-battler's installed linter exactly on its two newest plans.
+  `2026-10-01-inspector-fidelity` gave 18 errors and 711 checks with both, and
+  `2026-10-01-inspector-redesign` gave 19 errors and 877 checks with both.
+  Every error message was identical. Without the local checks the first plan
+  had 647 checks, so the local file loaded from `<RepoRoot>/tools/`.
+  `agrippa-lint` run from nuro-battler's root with no `-RepoRoot` gave the
+  same 18 errors and 711 checks.
 
 ## Proof
 
 `fixtures/run-smoke-test.ps1` is the one end-to-end proof: the valid fixture
 must pass and a mutated copy must fail. `validate-kit.ps1` runs it against a
-simulated install in a temporary folder.
+simulated project: a temporary git repository that holds only the
+`AGENTS.md` template and has no `tools/` folder. So the smoke test proves the
+plugin's linter needs no copy in the project and finds the root through git.
+The fixture cites only `AGENTS.md`, because the guides it used to cite now
+ship in the plugin.
 
 ## Plugin feature checks (2026-10-18)
 
@@ -158,6 +198,27 @@ prints that file as `additionalContext`.
   marketplace. It listed all eight Engineering standards without reading any
   file. A `general-purpose` subagent it spawned quoted the rules and said they
   arrived as `SubagentStart` context.
+
+## Plugin skills and the spawn logger after Phase 4 (2026-10-18)
+
+- **The guides are `plan` skill reference files.** `agent-workflow.md` and
+  `ROUTING.md` change with the methodology, so they moved into
+  `skills/plan/reference/`, and the plan templates into
+  `skills/plan/templates/`. They had seven `[PROJECT: ...]` slots. Each became
+  a read of a project document: the style-token document in "Contract
+  documents" and the risk classes in `project-contracts.md`; "Invocation
+  traps", "Runtime writes and caches", and a new "UI capture" section in
+  `validation-commands.md`; and the "Gated subsystems" owner row.
+- **`handoff` is a skill.** It replaces `commands/handoff.md` and keeps
+  `$ARGUMENTS`. It has `disable-model-invocation: true`, because the command
+  only ever ran when the user typed it.
+- **The spawn logger is opt-in.** A plugin hook runs in every project that
+  enables the plugin. Without `AGRIPPA_SPAWN_LOG=1` the script exits before
+  reading its payload, so a project that has not opted in pays only for
+  starting PowerShell on each spawn. The log goes to `CLAUDE_PROJECT_DIR`,
+  with the payload's `cwd` as the fallback, because the script no longer sits
+  inside the project. Whether the `env` block reaches a plugin hook was not
+  tested in a live session; Phase 8 checks it with the spawn log.
 
 ## Linter rules that are easy to trip over
 

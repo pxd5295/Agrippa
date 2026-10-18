@@ -36,7 +36,8 @@
 ## Design reference
 
 [For a plan that starts from a mockup or design canvas, follow "Plans that
-start from a design reference" in `docs/agent-workflow.md`. Otherwise write
+start from a design reference" in the `agrippa:plan` skill's
+`agent-workflow.md`. Otherwise write
 "None: no design reference." and delete the two tables below.]
 
 - Source: [artboard URL and artboard name, read YYYY-MM-DD]

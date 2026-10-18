@@ -1,10 +1,11 @@
 # Planning and implementation workflow
 
-Load this guide only for plan creation or plan implementation. The Agrippa
-core rules own triggers and hard safety rules, and the root `AGENTS.md` owns
-the project contracts and project rules. This file owns planning, evidence,
-acceptance, and project contracts. `docs/planning/ROUTING.md` owns topology,
-tier selection, packets, waves, launch, and review.
+Load this guide only for plan creation or plan implementation. It is a
+reference file of the `agrippa:plan` skill. The Agrippa core rules own
+triggers and hard safety rules, and the root `AGENTS.md` owns the project
+contracts and project rules. This file owns planning, evidence, acceptance,
+and project contracts. `ROUTING.md`, the skill's other reference file, owns
+topology, tier selection, packets, waves, launch, and review.
 
 ## Planning lifecycle
 
@@ -78,8 +79,9 @@ correctly and still look different, so the plan carries the look itself.
    visible element of the artboard with concrete values from its source: the
    container or card for each region, all text including secondary notes and
    units, font family, size and weight, colors mapped to the project's style
-   tokens ([PROJECT: the style-token source file, or "no token file yet"]),
-   bar and row heights, spacing, legend style, and every state it draws (open,
+   tokens (the style-token document in the "Contract documents" table of
+   `docs/agent_memory/project-contracts.md`, or raw values when it lists
+   none), bar and row heights, spacing, legend style, and every state it draws (open,
    closed, hover, empty). Each row names the contract that builds it (`C#`) or
    a deviation (`D#`). A row with neither is `Open` design and does not hand
    off.
@@ -94,15 +96,14 @@ correctly and still look different, so the plan carries the look itself.
    row.
 4. **Accept and check fidelity.** `SPEC.md` carries one acceptance criterion
    that the built UI matches the frozen design except for the listed
-   deviations. Its validation row captures the rendered UI in-app ([PROJECT:
-   how: a live tool bridge, a browser pane, a simulator, or the app's own
-   render-to-image path]), compares it side by side with the frozen render at
-   the same width, and walks every inventory row. Run it after the first stage
-   that puts the UI on screen and again at Integration. The lead runs this
-   check itself. In-app capture is allowed; [PROJECT: say whether
-   operating-system screen capture is allowed on this project's machines, for
-   example "operating-system screen capture is not"]. If the capture path is
-   down, report the check as not done; a headless pass never replaces it.
+   deviations. Its validation row captures the rendered UI in-app, the way
+   "UI capture" in `docs/agent_memory/validation-commands.md` says, compares
+   it side by side with the frozen render at the same width, and walks every
+   inventory row. Run it after the first stage that puts the UI on screen and
+   again at Integration. The lead runs this check itself. In-app capture is
+   allowed; operating-system screen capture is allowed only when that section
+   says so. If the capture path is down, report the check as not done; a
+   headless pass never replaces it.
 
 ### 4. Classify planning risk
 
@@ -115,7 +116,8 @@ route more stages to Haiku or Sonnet. Uncertainty stays conservative.
 
 ### 5. Create a unique workspace
 
-Create `plans/YYYY-MM-DD-short-name/` from the templates. Never overwrite a
+Create `plans/YYYY-MM-DD-short-name/` from the `agrippa:plan` skill's
+templates. Never overwrite a
 workspace; append `-2`, `-3`, and so on. A workspace contains:
 
 - `SPEC.md`: requirements, interview decisions, design rationale,
@@ -152,10 +154,11 @@ consumers in more than one area.
 A single-stage plan still needs its `Integration` stage, ownership matrix, and
 validation matrix. Reducing scope never means dropping the acceptance trace.
 
-Run:
+Run the linter through the Bash tool, because the plugin's `bin/` folder is
+on the Bash tool's PATH only:
 
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File tools/validate_plan_workspace.ps1 -PlanPath plans/YYYY-MM-DD-name
+```bash
+agrippa-lint -PlanPath plans/YYYY-MM-DD-name
 ```
 
 The linter checks shape, never truth. A wrong constant in a frozen contract can
@@ -188,7 +191,7 @@ Recommended Execution records wave order, cheap-tier share, the expected cost
 multiplier for any wave with more than one writer, safety, launch, and one
 atomic allocation row per stage with assigned tier, actual tier, route,
 escalation trigger, and next stage. Objective routing and packet rules live only
-in `docs/planning/ROUTING.md`.
+in `ROUTING.md`.
 
 ## Planning on Claude Fable 5.1
 
@@ -235,7 +238,7 @@ Stage Model Allocation. Otherwise load `SPEC.md`, the assigned plan record,
 packet/contracts, hot status, and relevant architecture; read cold evidence
 only for a concrete decision or prior result.
 
-Follow `docs/planning/ROUTING.md` for dispatch, waves, validator, allocation
+Follow `ROUTING.md` for dispatch, waves, validator, allocation
 continuity, escalation, and review. Treat each allocation row as atomic.
 
 ## Validation and evidence
@@ -244,17 +247,16 @@ Run the smallest relevant checks during a milestone and the immediate
 shared-contract gate; run the complete applicable suite once after integration.
 Expand earlier only when evidence exposes unexpected coupling. The validation
 catalog owns exact syntax, prerequisites, inventory, determinism, and retry
-rules; [PROJECT: one sentence on the invocation rule that most often goes
-wrong, for example "Godot uses the real console binary with the class-cache
-prelude; SceneTree scripts use `-s` without `--quit-after` and scenes use a
-frame cap."]
+rules. Read its "Invocation traps" section before the first run, because it
+names the invocation rules that most often go wrong.
 
 Keep `STATUS.md` small: phase, planner, owner, assigned/actual tier, remaining
 work, blockers, next action, and gates. Append commands, outcomes, routing,
 retries, escalations, unrelated failures, and budget exceptions to `EVIDENCE.md`;
 distinguish environment limits from regressions. Performance records a
-baseline; [PROJECT: name the equivalence or compatibility gate a high-risk
-subsystem needs, or delete this clause].
+baseline, and a change to a subsystem in the "Gated subsystems" row of the
+Architecture owners table in `docs/agent_memory/project-contracts.md` passes
+the gate that row names.
 
 Completion requires every Acceptance ID and required Validation ID to pass, or
 an exact remaining gap to be reported. A green linter is never evidence that a

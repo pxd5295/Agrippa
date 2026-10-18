@@ -26,6 +26,10 @@ Copy runnable commands from `docs/agent_memory/validation-commands.md`. Each
 Delete V1 when the catalog names no prerequisite. Style and Sandbox values come
 from `docs/agent_memory/validation-commands.md`.
 
+The workspace linter row is `agrippa-lint -PlanPath plans/YYYY-MM-DD-name`
+(`lint`, `sandboxed`, `deterministic`). It runs through the Bash tool, because
+the agrippa plugin puts its `bin/` folder on the Bash tool's PATH only.
+
 With a design reference, add the fidelity row for the fidelity criterion: an
 in-app capture of the rendered UI, compared side by side with the frozen render
 at the same width, plus a walk of every visual inventory row; `manual`,
@@ -52,7 +56,7 @@ Paths are whole-file ownership in a shared checkout. Concurrent
 | Dependencies | [Wave 0 / None] |
 | Design state | Frozen |
 | Contract IDs | C1 |
-| Assigned tier | [tier from `docs/planning/ROUTING.md`: lead / haiku / sonnet / opus] |
+| Assigned tier | [tier from the `agrippa:plan` skill's `ROUTING.md`: lead / haiku / sonnet / opus] |
 | Routing inputs | [long-context; file count; ownership areas; shared interface; risk flags; determinism] |
 | Risk flags | [None / native / persistence / security / concurrency / perf / shared-layout] |
 | Owned files/modules | `path/to/file.ext` |

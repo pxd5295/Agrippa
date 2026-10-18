@@ -129,6 +129,15 @@ exercise a CPU fallback. Example from a game project: no Vulkan headless, and
 gdtoolkit may be missing. The GPU path runs only in a windowed run, because
 `--headless` has no rendering device.]
 
+## UI capture
+
+[PROJECT: how a design-fidelity check captures the rendered UI in-app (a live
+tool bridge, a browser pane, a simulator, or the app's own render-to-image
+path), and whether operating-system screen capture is allowed on this
+project's machines, or `None` when the project has no UI. Example from a game
+project: the live editor bridge's game screenshot; operating-system screen
+capture is not allowed.]
+
 ## Sandbox stance
 
 Every plan-matrix row records a Sandbox value:

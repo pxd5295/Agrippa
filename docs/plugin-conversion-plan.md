@@ -1,9 +1,10 @@
 # Plan: turn Agrippa into a Claude Code plugin marketplace
 
-Written 2026-10-18. Status: Phases 0, 1, 2, and 3 done on 2026-10-18. Phase 4
-has not started. Phase 1's second check, that `claude --plugin-dir
-plugins/agrippa` lists the agents and skills, waits until the templates move
-into `agents/` and `skills/` in a later phase.
+Written 2026-10-18. Status: Phases 0, 1, 2, 3, and 4 done on 2026-10-18.
+Phase 5 has not started. Phase 1's second check, that `claude --plugin-dir
+plugins/agrippa` lists the agents and skills, waits until the four agents and
+four kit skills move into `agents/` and `skills/` in a later phase. The `plan`
+and `handoff` skills are already in `skills/`.
 
 ## Goal
 
@@ -368,6 +369,40 @@ none remain.
 
 Done when the smoke test passes against a simulated project that has no
 `tools/validate_plan_workspace.ps1`.
+
+Result, 2026-10-18: done. `dev/validate-kit.ps1` builds the simulated project
+as a temporary git repository with only `AGENTS.md`, and the smoke test passes
+against it.
+
+- The linter moved to `scripts/validate_plan_workspace.ps1`, as the target
+  layout says. It takes `-RepoRoot`, defaults to the git top-level folder of
+  the current directory, and loads the local file from
+  `<RepoRoot>/tools/validate_plan_workspace.local.ps1`.
+- `bin/agrippa-lint` is committed as executable. Run by bare name from Git
+  Bash, it linted nuro-battler and a materialized smoke fixture.
+- On nuro-battler's two newest plans, the plugin linter with `-RepoRoot`
+  reproduced the installed linter's errors, check counts, and messages
+  exactly. `docs/design-notes.md` records the commands and counts under "The
+  linter".
+- The spawn logger and its payload helper moved to `scripts/` and are wired in
+  `hooks/hooks.json`. They do nothing unless `AGRIPPA_SPAWN_LOG=1`.
+  `validate-kit.ps1` runs the logger with and without the variable. A live
+  session with the plugin enabled was not used to test the `env` block;
+  Phase 8 checks that with nuro-battler's spawn log.
+- `skills/plan/` holds `SKILL.md`, `reference/agent-workflow.md`,
+  `reference/ROUTING.md`, and `templates/*.md`. The guides' seven
+  `[PROJECT: ...]` slots became reads of project documents, and the
+  `VALIDATION-COMMANDS.md` template gained a "UI capture" section for two of
+  them. `skills/handoff/SKILL.md` replaces `commands/handoff.md`.
+- The core rules now point to the `agrippa:plan` skill for the guides and to
+  `agrippa-lint` for the linter. They are 9,829 characters.
+- `validate-kit.ps1 -InstalledRepo ../evolution-game/nuro-battler` now fails,
+  as expected: nuro-battler's copy of the linter predates `-RepoRoot`. Phase 5
+  changes what `-InstalledRepo` checks, and Phase 8 removes the copy.
+- `UPGRADING.md` still maps old rules to `docs/agent-workflow.md`,
+  `docs/planning/ROUTING.md`, `.claude/commands/handoff.md`, and
+  `tools/validate_plan_workspace.ps1`, where G3 installed them. Phase 6
+  rewrites it.
 
 ### Phase 5: rewrite the self-check
 

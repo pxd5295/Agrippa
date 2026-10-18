@@ -28,14 +28,16 @@ The methodology has three layers, and the kit installs all of them.
   facts in a root `AGENTS.md` (project contracts and project rules) and a root
   `CLAUDE.md` that imports it and lists project skills. Per-directory
   `CLAUDE.md` files hold rules that matter only in one folder.
-- **On-demand guides.** `docs/agent-workflow.md` (lifecycle, interview, design
-  states, design-reference planning, risk, workspace shapes, evidence) and
-  `docs/planning/ROUTING.md` (tier table, fork or fresh, roster, packets,
-  ownership, waves, launch, validator, review). They load only for planning or
-  plan implementation.
-- **Tools the rules call.** Four named agents, four skills, the `/handoff`
-  command, the plan templates, the workspace linter, project-contract and
-  validation-catalog documents, decision records, and optional hooks.
+- **On-demand guides.** The plugin's `plan` skill holds `agent-workflow.md`
+  (lifecycle, interview, design states, design-reference planning, risk,
+  workspace shapes, evidence) and `ROUTING.md` (tier table, fork or fresh,
+  roster, packets, ownership, waves, launch, validator, review) as reference
+  files. They load only for planning or plan implementation.
+- **Tools the rules call.** Four named agents, four skills, the plugin's
+  `/agrippa:handoff` skill, the plan templates in the `plan` skill, the
+  workspace linter that runs from the plugin as `agrippa-lint`,
+  project-contract and validation-catalog documents, decision records, and
+  optional hooks.
 
 ## Kit layout
 
@@ -44,10 +46,7 @@ The methodology has three layers, and the kit installs all of them.
 | `templates/AGENTS.md` | `AGENTS.md`, adapted and merged |
 | `templates/CLAUDE.md` | `CLAUDE.md` (root), adapted and merged |
 | `templates/directory-CLAUDE.md` | `<ownership area>/CLAUDE.md`, one per area that has real rules |
-| `templates/agent-workflow.md` | `docs/agent-workflow.md` |
-| `templates/ROUTING.md` | `docs/planning/ROUTING.md` |
-| `templates/planning-CLAUDE.md` | `docs/planning/CLAUDE.md` |
-| `templates/planning/*.md` | `docs/planning/templates/*.md` |
+| `templates/planning-CLAUDE.md` | `docs/planning/CLAUDE.md`, which says the guides and templates are in the plugin |
 | `templates/PROJECT-CONTRACTS.md` | `docs/agent_memory/project-contracts.md` |
 | `templates/VALIDATION-COMMANDS.md` | `docs/agent_memory/validation-commands.md` |
 | `templates/LIVE-APP.md` | `docs/agent_memory/live-app.md`, only when the project has an MCP server that observes the running application |
@@ -56,9 +55,7 @@ The methodology has three layers, and the kit installs all of them.
 | `templates/plans-README.md` | `plans/README.md` |
 | `templates/agents/*.md` | `.claude/agents/*.md` (`repo-scout`, `plan-reviewer`, `design-reviewer`, `validator`) |
 | `templates/skills/*/SKILL.md` | `.claude/skills/*/SKILL.md` (`design-first`, `systematic-debugging`, `verify-before-done`, `receiving-review`) |
-| `templates/commands/handoff.md` | `.claude/commands/handoff.md` |
-| `templates/validate-plan-workspace.ps1` | `tools/validate_plan_workspace.ps1` |
-| `templates/hooks/*.ps1` | `tools/*.ps1`, optional; wiring in `templates/hooks/README.md` |
+| `templates/hooks/README.md` | Not installed; how to opt in to the plugin's spawn logger, the edit-lint hook a project writes for itself, and the permission allowlist |
 | `templates/validate-plan-workspace.local.ps1` | `tools/validate_plan_workspace.local.ps1`, only when the project has command invariants to enforce |
 | `templates/MIGRATION.md` | `docs/planning/MIGRATION.md`, upgrades only |
 | `UPGRADING.md` | Not installed; the generation markers and rule mapping for upgrades |
@@ -66,7 +63,16 @@ The methodology has three layers, and the kit installs all of them.
 | `.claude-plugin/plugin.json` | Not installed; the plugin manifest |
 | `scripts/core-rules.md` | Not installed; the core rules the plugin adds to every session, kept under 10,000 characters |
 | `scripts/inject_core_rules.ps1` | Not installed; prints `scripts/core-rules.md` as hook context |
-| `hooks/hooks.json` | Not installed; runs `scripts/inject_core_rules.ps1` on `SessionStart` and `SubagentStart` |
+| `scripts/validate_plan_workspace.ps1` | Not installed; the shared plan-workspace linter, run from the plugin |
+| `bin/agrippa-lint` | Not installed; the plugin puts it on the Bash tool's PATH, and it runs `scripts/validate_plan_workspace.ps1` under `powershell` or `pwsh` |
+| `scripts/log_subagent_spawns.ps1` | Not installed; the spawn logger, which does nothing unless the project sets `AGRIPPA_SPAWN_LOG=1` |
+| `scripts/hook_payload.ps1` | Not installed; reads a hook payload for the spawn logger |
+| `hooks/hooks.json` | Not installed; runs `scripts/inject_core_rules.ps1` on `SessionStart` and `SubagentStart`, and `scripts/log_subagent_spawns.ps1` on `PreToolUse` for the Agent tool and on `SubagentStart` |
+| `skills/plan/SKILL.md` | Not installed; the `/agrippa:plan` skill, the planning entry point |
+| `skills/plan/reference/agent-workflow.md` | Not installed; the lifecycle guide, a `plan` skill reference file |
+| `skills/plan/reference/ROUTING.md` | Not installed; the routing guide, a `plan` skill reference file |
+| `skills/plan/templates/*.md` | Not installed; the blank plan-workspace files, copied into each `plans/YYYY-MM-DD-<name>/` |
+| `skills/handoff/SKILL.md` | Not installed; the `/agrippa:handoff` skill, which writes a short session handoff |
 | `LICENSE`, `NOTICE` | Not installed as methodology files; they stay with the kit folder. The Apache-2.0 license and the attribution notice that redistributed copies must carry |
 
 Two development files live outside this folder, in the `dev/` folder of the
@@ -84,11 +90,13 @@ different times:
   the source repository. When the subject does not exist in the target (no
   native code, no live-app bridge), delete the placeholder together with the
   sentence, bullet, or marked optional block around it; never write "N/A".
-- Plain `[...]` inside `docs/planning/templates/` is filled **per plan** by the
-  planner and stays in the installed templates.
+- Plain `[...]` inside the `plan` skill's templates (`skills/plan/templates/`)
+  is filled **per plan** by the planner, in the workspace copy, and stays in
+  the templates.
 
-The agents and skills contain no `[PROJECT: ...]` slot, and
-`dev/validate-kit.ps1` fails if one appears. They are project-neutral and
+The agents and skills, including the `plan` skill's guides and templates,
+contain no `[PROJECT: ...]` slot, and `dev/validate-kit.ps1` fails if one
+appears. They are project-neutral and
 read the project's facts from named sections of
 `docs/agent_memory/project-contracts.md`,
 `docs/agent_memory/validation-commands.md`, and, when the project has a
@@ -104,15 +112,21 @@ marker an older kit used around agent sections; none may survive an upgrade.
 regular expression `\[PROJECT:|Install note|optional live-app block` in every
 file outside the kit folder must find nothing.
 
-The shared linter is never edited per project. A project's own command
-invariants (one required binary, an invocation shape per test kind, a
-prerequisite that must come first) go in `tools/validate_plan_workspace.local.ps1`
-from `templates/validate-plan-workspace.local.ps1`, which the linter loads when
-present. A later kit upgrade replaces the shared linter and keeps the local
-file. The smoke test runs with `-SkipLocalChecks`, because its generic fixture
-cannot satisfy project rules; prove local checks by linting one real plan
-workspace. The fixture's consumer census also expects line 1 of the installed
-`docs/agent-workflow.md` to read `# Planning and implementation workflow`.
+The shared linter, `scripts/validate_plan_workspace.ps1`, runs from the
+plugin and is never copied into or edited in a project. Inside Claude Code a
+plan runs it as `agrippa-lint -PlanPath plans/YYYY-MM-DD-name` through the
+Bash tool, because the plugin's `bin/` folder is on the Bash tool's PATH
+only. Without `-RepoRoot`, the linter uses the git top-level folder of the
+current directory. Outside Claude Code, run it from a checkout of Agrippa at
+the project's pinned tag with `-RepoRoot`. A project's own command invariants
+(one required binary, an invocation shape per test kind, a prerequisite that
+must come first) go in `tools/validate_plan_workspace.local.ps1` from
+`templates/validate-plan-workspace.local.ps1`, which the linter loads from the
+repository root when present. A plugin upgrade replaces the shared linter and
+keeps the local file. The smoke test runs with `-SkipLocalChecks`, because its
+generic fixture cannot satisfy project rules; prove local checks by linting
+one real plan workspace. The fixture's consumer census also expects line 1 of
+the project's `AGENTS.md` to read `# Agent Workflow`.
 
 ## Requirements and fallbacks
 
@@ -172,7 +186,8 @@ use.
    the shared linter; if this repository has command invariants worth
    enforcing in every plan, write tools/validate_plan_workspace.local.ps1 from
    its template, otherwise do not install it. If I chose the optional hooks:
-   install the spawn logger as-is; for the edit-lint hook, write the script
+   turn on the plugin's spawn logger with AGRIPPA_SPAWN_LOG=1 as
+   templates/hooks/README.md says; for the edit-lint hook, write the script
    following every rule in templates/hooks/README.md and prove it by making
    one deliberate lint error and reverting it, or leave it unwired and say
    so; merge hooks and the permission allowlist into .claude/settings.json
@@ -282,7 +297,7 @@ Small changes skip the workspace under the size gate in the core rules and are
 implemented directly after a design statement. A plan ends with the first
 allocation and an exact resume prompt. `Implement plan [path]` then runs the
 lead plus routed subagents; no opt-in phrase or per-spawn confirmation is
-needed. `/handoff` writes a short brief when a session ends mid-plan.
+needed. `/agrippa:handoff` writes a short brief when a session ends mid-plan.
 
 ## Keeping the kit current
 
@@ -294,11 +309,11 @@ reaches other repositories only after it is ported back to the kit.
 `dev/validate-kit.ps1` checks file
 presence, required methodology clauses, leftover vocabulary from older
 toolchains, encoding, script parsing, and an end-to-end smoke test against a
-simulated install.
+simulated project that has no copy of the linter.
 
-An installed repository's `tools/validate_plan_workspace.ps1` is an unchanged
-copy of `templates/validate-plan-workspace.ps1` (line endings may differ),
-with its own
-rules in `tools/validate_plan_workspace.local.ps1`. Change the kit copy and
-copy it over the installed one. `dev/validate-kit.ps1 -InstalledRepo <path>`
-fails while the two differ. Without `-InstalledRepo`, it checks only the kit.
+A project runs the linter from the plugin, with its own rules in
+`tools/validate_plan_workspace.local.ps1`. A repository installed from an
+older kit may still have a copy at `tools/validate_plan_workspace.ps1`.
+`dev/validate-kit.ps1 -InstalledRepo <path>` fails while that copy differs
+from `scripts/validate_plan_workspace.ps1` (line endings may differ). Without
+`-InstalledRepo`, it checks only the kit.

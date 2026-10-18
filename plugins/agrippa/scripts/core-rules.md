@@ -9,9 +9,10 @@ both plans and implements; per-stage tiers apply only to subagents the lead
 spawns.
 
 Two guides load on demand, only for plan creation or implementation, never
-both eagerly: `docs/agent-workflow.md` (lifecycle, artifacts, interview, risk,
-evidence, acceptance, validation) and `docs/planning/ROUTING.md` (topology,
-tiers, packets, waves, ownership, launch, review).
+both eagerly. They are reference files of the `agrippa:plan` skill, which also
+holds the plan templates: `agent-workflow.md` (lifecycle, artifacts,
+interview, risk, evidence, acceptance, validation) and `ROUTING.md`
+(topology, tiers, packets, waves, ownership, launch, review).
 
 ## Request boundaries and model freedom
 
@@ -117,8 +118,9 @@ workspace was skipped and why, and offer one.
 
 Create a workspace when the approach is uncertain, the change spans files or
 ownership areas, or the code is unfamiliar. Bounded one-writer work in one
-area uses the single-stage shape in `docs/agent-workflow.md`; parallel or
-cross-area work uses the full shape. Read `docs/agent-workflow.md`, inspect
+area uses the single-stage shape in `agent-workflow.md`; parallel or
+cross-area work uses the full shape. Load `agrippa:plan`, read
+`agent-workflow.md`, inspect
 only relevant code and contracts, interview with `AskUserQuestion` when
 choices are material, and record planning risk in `STATUS.md`.
 
@@ -133,8 +135,8 @@ options, one default, and the observation that changes it) ships.
 ## Implementation launch
 
 Use the plan the user names, or else only the plan established in the current
-task; never guess among historical plans. Then follow
-`docs/planning/ROUTING.md` for dispatch, tiers, waves, ownership, the
+task; never guess among historical plans. Then follow `ROUTING.md` in
+`agrippa:plan` for dispatch, tiers, waves, ownership, the
 validator, escalation, review, launch authorization, and read order.
 
 ## Roster and skills
@@ -162,7 +164,7 @@ you followed:
 Stop as soon as sourced frozen contracts can be written:
 
 1. These rules and `AGENTS.md`, then the lifecycle sections of
-   `docs/agent-workflow.md`.
+   `agent-workflow.md`.
 2. Dirty-worktree status, exact owned code, and applicable
    `docs/agent_memory/` contracts.
 3. Targeted `Glob`/`Grep`/`Read`, delegated to `repo-scout` when a census or
@@ -174,8 +176,10 @@ needed. The lead writes every workspace artifact itself.
 
 ## Validation reach
 
-`tools/validate_plan_workspace.ps1` checks a plan workspace's traceability,
+`agrippa-lint -PlanPath plans/<name>` checks a plan workspace's traceability,
 dispatch shape, ownership, and command syntax. It checks shape, never truth.
+It is on the Bash tool's PATH only, so run it, and any matrix row naming it,
+through the Bash tool.
 Every plan names its exact commands from `validation-commands.md`; one example
 command is never the full suite. Before implementing, run the matrix commands
 to confirm their targets exist, and record the dirty-worktree state.

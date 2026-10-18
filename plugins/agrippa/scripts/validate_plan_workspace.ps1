@@ -12,30 +12,73 @@ URI-style scheme prefix, and it encodes no project's toolchain. Do not edit
 this file per project. Project-specific command invariants (one required test
 binary, an invocation shape per test kind, a prelude that must come first, a
 narrower `$CommandPathExtensions` list) go in the optional
-`validate_plan_workspace.local.ps1` beside it, which this script dot-sources at
-the "Project-specific extension point". A kit upgrade replaces this file and
-never touches the local one.
+`tools/validate_plan_workspace.local.ps1` in the project, which this script
+dot-sources at the "Project-specific extension point". A plugin upgrade
+replaces this file and never touches the local one.
 
-Install at `tools/validate_plan_workspace.ps1`, one level below the repository
-root. It is coupled to `docs/planning/templates/`: a change to the template
-shape must be reflected here, and the reverse. Keep it Windows PowerShell
-5.1-clean and read-only.
+It ships in the agrippa plugin and runs from there, never from a copy in the
+project. Inside Claude Code, the plugin's `bin/agrippa-lint` wrapper runs it
+from the Bash tool. Elsewhere, run it from a checkout of Agrippa at the
+project's pinned tag and pass -RepoRoot. It is coupled to the plan templates
+in `skills/plan/templates/`: a change to the template shape must be reflected
+here, and the reverse. Keep it Windows PowerShell 5.1-clean and read-only.
+
+.PARAMETER PlanPath
+The plan workspace folder, absolute or relative to the repository root.
+
+.PARAMETER RepoRoot
+The root of the repository the plan belongs to. When omitted, it is the git
+top-level folder of the current directory.
+
+.PARAMETER SkipLocalChecks
+Skip `tools/validate_plan_workspace.local.ps1`. The kit smoke test uses this,
+because its generic fixture cannot satisfy a project's own invariants.
 #>
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
     [string]$PlanPath,
 
-    # Skip validate_plan_workspace.local.ps1. The kit smoke test uses this,
-    # because its generic fixture cannot satisfy a project's own invariants.
+    [string]$RepoRoot,
+
     [switch]$SkipLocalChecks
 )
 
 $ErrorActionPreference = 'Stop'
-$repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $errors = New-Object 'System.Collections.Generic.List[string]'
 $warnings = New-Object 'System.Collections.Generic.List[string]'
 $checks = 0
+
+# Resolve the default repository root here rather than in a parameter default,
+# as every kit script does, because Windows PowerShell 5.1 leaves $PSScriptRoot
+# empty in parameter defaults. A native command's stderr becomes a terminating
+# error under 'Stop' in 5.1, so git runs under 'Continue'.
+if (-not $RepoRoot) {
+    $gitTop = $null
+    $ErrorActionPreference = 'Continue'
+    try {
+        $gitTop = @(git rev-parse --show-toplevel 2>$null)
+        if ($LASTEXITCODE -ne 0) {
+            $gitTop = $null
+        }
+    } catch {
+        $gitTop = $null
+    }
+    $ErrorActionPreference = 'Stop'
+    if ($gitTop -and $gitTop.Count -gt 0) {
+        $RepoRoot = [string]$gitTop[0]
+    }
+}
+if (-not $RepoRoot -or -not (Test-Path -LiteralPath $RepoRoot -PathType Container)) {
+    $shownRoot = $RepoRoot
+    if (-not $shownRoot) {
+        $shownRoot = "the current directory ($((Get-Location).Path)) is not inside a git repository"
+    }
+    Write-Error "[Files] Could not find the repository root: $shownRoot. Run from inside the repository or pass -RepoRoot." -ErrorAction Continue
+    Write-Output 'FAIL: 1 shape error(s), 0 checks. Shape validation never proves contract truth.'
+    exit 1
+}
+$repoRoot = (Resolve-Path -LiteralPath $RepoRoot).Path
 
 # Extensions that count as repository source or test paths when they appear
 # inside a validation command (check 13). Other paths, such as an output file a
@@ -539,7 +582,9 @@ if ($integration.Count -eq 1) {
 # may define Test-LocalValidationRow (called once per matrix row) and
 # Test-LocalValidationMatrix (called once with every row), call Add-Check from
 # either, and reassign $CommandPathExtensions. A missing file changes nothing.
-$localChecks = Join-Path $PSScriptRoot 'validate_plan_workspace.local.ps1'
+# The file belongs to the project, so it is read from the repository root,
+# never from this script's folder.
+$localChecks = Join-Path $repoRoot 'tools/validate_plan_workspace.local.ps1'
 if (-not $SkipLocalChecks -and (Test-Path -LiteralPath $localChecks -PathType Leaf)) {
     . $localChecks
 }

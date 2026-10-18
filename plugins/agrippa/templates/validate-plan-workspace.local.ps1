@@ -1,13 +1,16 @@
 <#
 .SYNOPSIS
-Project-specific checks for tools/validate_plan_workspace.ps1. Optional.
+Project-specific checks for the agrippa plugin's plan-workspace linter.
+Optional.
 
 .DESCRIPTION
 Install as `tools/validate_plan_workspace.local.ps1` only when this repository
 has command invariants worth enforcing in every plan's validation matrix; with
-no such invariant, do not install it. The linter dot-sources this file, so
-Add-Check, $repoRoot, $planRoot, and $CommandPathExtensions are in scope. A
-kit upgrade replaces the linter and never this file.
+no such invariant, do not install it. The linter, which runs from the plugin
+as `agrippa-lint`, loads this file from `<repository root>/tools/` and
+dot-sources it, so Add-Check, $repoRoot, $planRoot, and
+$CommandPathExtensions are in scope. A plugin upgrade replaces the linter and
+never this file.
 
 Typical invariants: one required launcher or wrapper binary instead of a bare
 name on PATH, an invocation shape per test kind, a required working directory

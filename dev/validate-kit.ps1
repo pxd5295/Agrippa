@@ -4,19 +4,22 @@ Validates the agrippa plugin's own files and the development files that test it.
 
 .DESCRIPTION
 Checks that every kit file under plugins/agrippa/ and every development file
-under dev/ exists, that every template, script, and hook file is listed in the
-kit README layout table, that the core rules and templates still carry the
-methodology's required clauses, that the core rules stay under the
-10,000-character hook context cap and the injection hook prints them, that
-agent and skill frontmatter is well formed and cross-referenced, that the
-agents remove the editing tools with disallowedTools instead of listing an
-allowlist, that no agent or skill contains a [PROJECT: ...] slot, that no
-vocabulary from an older toolchain survives outside UPGRADING.md, that text
-files are clean UTF-8 without trailing whitespace, and that every PowerShell
-script parses. Given a repository that has installed the linter, it also
-checks that the installed copy is byte-identical to the kit's. It then
-simulates an install in a temporary folder and runs
-`dev/fixtures/run-smoke-test.ps1` against it, which proves the shipped linter
+under dev/ exists, that every template, script, hook, skill, and bin file is
+listed in the kit README layout table, that the core rules and templates
+still carry the methodology's required clauses, that the core rules stay
+under the 10,000-character hook context cap and the injection hook prints
+them, that the spawn logger is wired and does nothing without
+AGRIPPA_SPAWN_LOG=1, that the agrippa-lint wrapper is an executable LF shell
+script that runs the plugin's linter, that agent and skill frontmatter is well
+formed and cross-referenced, that the agents remove the editing tools with
+disallowedTools instead of listing an allowlist, that no agent or skill
+contains a [PROJECT: ...] slot, that no vocabulary from an older toolchain
+survives outside UPGRADING.md, that text files are clean UTF-8 without
+trailing whitespace, and that every PowerShell script parses. Given a
+repository that still has a copy of the linter, it also checks that the copy
+is identical to the plugin's. It then builds a simulated project in a
+temporary git repository with no copy of the linter and runs
+`dev/fixtures/run-smoke-test.ps1` against it, which proves the plugin's linter
 accepts the valid fixture and rejects the broken one.
 
 Like the workspace linter it ships, this checks shape and the presence of
@@ -24,8 +27,11 @@ documented contracts, never semantic truth. Windows PowerShell 5.1-clean.
 
 .PARAMETER InstalledRepo
 Root of a repository that has installed this kit. Its
-tools/validate_plan_workspace.ps1 must match the kit's linter exactly, apart
-from line endings. The check is skipped when this is omitted.
+tools/validate_plan_workspace.ps1 must match the plugin's
+scripts/validate_plan_workspace.ps1 exactly, apart from line endings. The
+check is skipped when this is omitted. Phase 5 of
+docs/plugin-conversion-plan.md replaces this check for repositories that use
+the plugin.
 #>
 [CmdletBinding()]
 param(
@@ -68,6 +74,9 @@ function Read-KitFile {
 
 $agentNames = @('repo-scout', 'plan-reviewer', 'design-reviewer', 'validator')
 $skillNames = @('design-first', 'systematic-debugging', 'verify-before-done', 'receiving-review')
+# Plugin skills load from skills/ at the plugin root and are never copied into
+# a project.
+$pluginSkillNames = @('plan', 'handoff')
 $planningNames = @('SPEC', 'PLAN', 'PACKETS', 'STATUS', 'EVIDENCE')
 
 $required = @(
@@ -75,14 +84,18 @@ $required = @(
     'README.md',
     'ADOPTION-CHECKLIST.md',
     'UPGRADING.md',
+    'bin/agrippa-lint',
     'scripts/core-rules.md',
     'scripts/inject_core_rules.ps1',
+    'scripts/validate_plan_workspace.ps1',
+    'scripts/log_subagent_spawns.ps1',
+    'scripts/hook_payload.ps1',
     'hooks/hooks.json',
+    'skills/plan/reference/agent-workflow.md',
+    'skills/plan/reference/ROUTING.md',
     'templates/AGENTS.md',
     'templates/CLAUDE.md',
     'templates/directory-CLAUDE.md',
-    'templates/agent-workflow.md',
-    'templates/ROUTING.md',
     'templates/planning-CLAUDE.md',
     'templates/PROJECT-CONTRACTS.md',
     'templates/VALIDATION-COMMANDS.md',
@@ -91,16 +104,13 @@ $required = @(
     'templates/decisions-README.md',
     'templates/plans-README.md',
     'templates/MIGRATION.md',
-    'templates/commands/handoff.md',
-    'templates/validate-plan-workspace.ps1',
     'templates/validate-plan-workspace.local.ps1',
-    'templates/hooks/README.md',
-    'templates/hooks/hook_payload.ps1',
-    'templates/hooks/log_subagent_spawns.ps1'
+    'templates/hooks/README.md'
 )
 $required += @($agentNames | ForEach-Object { "templates/agents/$_.md" })
 $required += @($skillNames | ForEach-Object { "templates/skills/$_/SKILL.md" })
-$required += @($planningNames | ForEach-Object { "templates/planning/$_.md" })
+$required += @($pluginSkillNames | ForEach-Object { "skills/$_/SKILL.md" })
+$required += @($planningNames | ForEach-Object { "skills/plan/templates/$_.md" })
 
 # Development files are not shipped with the plugin.
 $devRequired = @(
@@ -125,17 +135,17 @@ $coreRules = Read-KitFile 'scripts/core-rules.md'
 $hooksJson = Read-KitFile 'hooks/hooks.json'
 $agents = Read-KitFile 'templates/AGENTS.md'
 $claude = Read-KitFile 'templates/CLAUDE.md'
-$workflow = Read-KitFile 'templates/agent-workflow.md'
-$routing = Read-KitFile 'templates/ROUTING.md'
-$plan = Read-KitFile 'templates/planning/PLAN.md'
-$packets = Read-KitFile 'templates/planning/PACKETS.md'
-$spec = Read-KitFile 'templates/planning/SPEC.md'
+$workflow = Read-KitFile 'skills/plan/reference/agent-workflow.md'
+$routing = Read-KitFile 'skills/plan/reference/ROUTING.md'
+$plan = Read-KitFile 'skills/plan/templates/PLAN.md'
+$packets = Read-KitFile 'skills/plan/templates/PACKETS.md'
+$spec = Read-KitFile 'skills/plan/templates/SPEC.md'
 $plansReadme = Read-KitFile 'templates/plans-README.md'
-$workspaceLinter = Read-KitFile 'templates/validate-plan-workspace.ps1'
+$workspaceLinter = Read-KitFile 'scripts/validate_plan_workspace.ps1'
 
-# --- Every template, script, and hook file is listed in the README layout table
+# --- Every template, script, hook, skill, and bin file is listed in the README layout table
 
-$listedFiles = foreach ($folder in @('templates', 'scripts', 'hooks')) {
+$listedFiles = foreach ($folder in @('templates', 'scripts', 'hooks', 'skills', 'bin')) {
     Get-ChildItem -LiteralPath (Join-Path $kitRoot $folder) -Recurse -File
 }
 foreach ($file in $listedFiles) {
@@ -143,9 +153,7 @@ foreach ($file in $listedFiles) {
     $listedAs = $relative
     if ($relative -like 'templates/agents/*.md') { $listedAs = 'templates/agents/*.md' }
     elseif ($relative -like 'templates/skills/*/SKILL.md') { $listedAs = 'templates/skills/*/SKILL.md' }
-    elseif ($relative -like 'templates/planning/*.md') { $listedAs = 'templates/planning/*.md' }
-    elseif ($relative -like 'templates/hooks/*.ps1') { $listedAs = 'templates/hooks/*.ps1' }
-    elseif ($relative -eq 'templates/hooks/README.md') { $listedAs = 'templates/hooks/README.md' }
+    elseif ($relative -like 'skills/plan/templates/*.md') { $listedAs = 'skills/plan/templates/*.md' }
     Add-Check ($readme.Contains($listedAs)) "README layout table does not list $relative (expected '$listedAs')."
 }
 
@@ -189,7 +197,10 @@ Test-Clauses 'Core rules' $coreRules @(
     'No stage may hand off as `Open`',
     '## Implementation launch',
     'engineering:architecture',
-    'docs/planning/ROUTING\.md',
+    '`agrippa:plan`',
+    'ROUTING\.md',
+    'agrippa-lint -PlanPath',
+    'through the Bash tool',
     '## Roster and skills',
     '## Planner read ladder',
     '## Validation reach',
@@ -244,6 +255,65 @@ foreach ($hookEvent in @('SessionStart', 'SubagentStart')) {
         $printed = [string]$hookPayload.hookSpecificOutput.additionalContext
     }
     Add-Check ($hookExit -eq 0 -and $printed.Replace("`r`n", "`n") -ceq $coreRules.Replace("`r`n", "`n")) "inject_core_rules.ps1 -HookEvent $hookEvent did not print core-rules.md as $hookEvent additionalContext:`n$($hookOutput -join "`n")"
+}
+
+# The spawn logger runs on PreToolUse for the Agent tool and on every
+# SubagentStart, and stays silent unless the project sets AGRIPPA_SPAWN_LOG=1.
+foreach ($wiring in @(@('PreToolUse', 'Agent|Task'), @('SubagentStart', '.*'))) {
+    $hookEvent = $wiring[0]
+    $groups = @()
+    if ($null -ne $hookConfig -and $null -ne $hookConfig.hooks.$hookEvent) {
+        $groups = @($hookConfig.hooks.$hookEvent | Where-Object { $_.matcher -eq $wiring[1] })
+    }
+    $logCommands = @($groups | ForEach-Object { $_.hooks } | Where-Object { $_.command -match 'CLAUDE_PLUGIN_ROOT\}/scripts/log_subagent_spawns\.ps1' })
+    Add-Check ($logCommands.Count -eq 1) "hooks/hooks.json must run scripts/log_subagent_spawns.ps1 once on $hookEvent with matcher '$($wiring[1])'."
+}
+$logProject = Join-Path ([IO.Path]::GetTempPath()) ('kit-log-' + [guid]::NewGuid().ToString('N').Substring(0, 8))
+$savedOptIn = $env:AGRIPPA_SPAWN_LOG
+$savedProject = $env:CLAUDE_PROJECT_DIR
+try {
+    New-Item -ItemType Directory -Path $logProject | Out-Null
+    $logFile = Join-Path $logProject 'subagent-spawns.log'
+    $logPayload = '{"hook_event_name":"PreToolUse","session_id":"kitcheck","tool_input":{"subagent_type":"agrippa:validator","model":"sonnet"}}'
+    $env:CLAUDE_PROJECT_DIR = $logProject
+    $shell = (Get-Process -Id $PID).Path
+    $logScript = Join-Path $kitRoot 'scripts/log_subagent_spawns.ps1'
+    $ErrorActionPreference = 'Continue'
+    $env:AGRIPPA_SPAWN_LOG = $null
+    $offOutput = $logPayload | & $shell -NoProfile -ExecutionPolicy Bypass -File $logScript 2>&1 | ForEach-Object { [string]$_ }
+    $offExit = $LASTEXITCODE
+    $offWrote = Test-Path -LiteralPath $logFile
+    $env:AGRIPPA_SPAWN_LOG = '1'
+    $onOutput = $logPayload | & $shell -NoProfile -ExecutionPolicy Bypass -File $logScript 2>&1 | ForEach-Object { [string]$_ }
+    $onExit = $LASTEXITCODE
+    $ErrorActionPreference = 'Stop'
+    Add-Check ($offExit -eq 0 -and -not $offWrote -and -not $offOutput) "log_subagent_spawns.ps1 must exit 0 silently and write no log without AGRIPPA_SPAWN_LOG=1:`n$($offOutput -join "`n")"
+    $logged = ''
+    if (Test-Path -LiteralPath $logFile) {
+        $logged = [IO.File]::ReadAllText($logFile)
+    }
+    Add-Check ($onExit -eq 0 -and -not $onOutput -and $logged -match 'PreToolUse\s+agent=agrippa:validator model=sonnet') "log_subagent_spawns.ps1 with AGRIPPA_SPAWN_LOG=1 did not log the spawn to CLAUDE_PROJECT_DIR/subagent-spawns.log:`n$($onOutput -join "`n")$logged"
+} finally {
+    $ErrorActionPreference = 'Stop'
+    $env:AGRIPPA_SPAWN_LOG = $savedOptIn
+    $env:CLAUDE_PROJECT_DIR = $savedProject
+    if (Test-Path -LiteralPath $logProject) {
+        Remove-Item -LiteralPath $logProject -Recurse -Force
+    }
+}
+
+# The wrapper runs from the Bash tool's PATH, so git must record it as
+# executable and it must keep LF line endings for its shebang to work.
+$wrapperPath = Join-Path $kitRoot 'bin/agrippa-lint'
+if (Test-Path -LiteralPath $wrapperPath -PathType Leaf) {
+    $wrapper = [IO.File]::ReadAllText($wrapperPath, [Text.Encoding]::UTF8)
+    Add-Check ($wrapper.StartsWith("#!/bin/sh`n")) 'bin/agrippa-lint must start with #!/bin/sh and use LF line endings.'
+    Add-Check (-not $wrapper.Contains("`r")) 'bin/agrippa-lint must use LF line endings.'
+    Add-Check ($wrapper.Contains('/../scripts/validate_plan_workspace.ps1') -and $wrapper -match '"\$@"') 'bin/agrippa-lint must run ../scripts/validate_plan_workspace.ps1 and pass its arguments through.'
+    $ErrorActionPreference = 'Continue'
+    $wrapperIndex = @(git -C $repoRoot ls-files -s -- 'plugins/agrippa/bin/agrippa-lint' 2>$null)
+    $ErrorActionPreference = 'Stop'
+    Add-Check ($wrapperIndex.Count -eq 1 -and $wrapperIndex[0] -match '^100755 ') 'bin/agrippa-lint must be committed as executable (git add --chmod=+x).'
 }
 Test-Clauses 'Workflow template' $workflow @(
     'consumer census during\s+planning',
@@ -313,15 +383,15 @@ $localTemplate = Read-KitFile 'templates/validate-plan-workspace.local.ps1'
 Add-Check ($localTemplate -match 'function Test-LocalValidationRow' -and $workspaceLinter -match 'Test-LocalValidationRow') 'Local-check template and linter disagree on Test-LocalValidationRow.'
 Add-Check ($localTemplate -match 'function Test-LocalValidationMatrix' -and $workspaceLinter -match 'Test-LocalValidationMatrix') 'Local-check template and linter disagree on Test-LocalValidationMatrix.'
 
-# A repository that has installed the linter must keep it identical to the
-# kit's, apart from line endings, which git may convert on checkout; project
-# rules belong in the local extension file instead.
+# A repository that still has a copy of the linter must keep it identical to
+# the plugin's, apart from line endings, which git may convert on checkout;
+# project rules belong in the local extension file instead.
 if ($InstalledRepo) {
     $installedLinter = Join-Path $InstalledRepo 'tools/validate_plan_workspace.ps1'
     Add-Check (Test-Path -LiteralPath $installedLinter -PathType Leaf) "-InstalledRepo has no tools/validate_plan_workspace.ps1: $InstalledRepo"
     if (Test-Path -LiteralPath $installedLinter -PathType Leaf) {
         $installedText = [IO.File]::ReadAllText($installedLinter, [Text.Encoding]::UTF8).Replace("`r`n", "`n")
-        Add-Check ($installedText -ceq $workspaceLinter.Replace("`r`n", "`n")) 'Installed tools/validate_plan_workspace.ps1 differs from templates/validate-plan-workspace.ps1; copy the kit linter over it unchanged.'
+        Add-Check ($installedText -ceq $workspaceLinter.Replace("`r`n", "`n")) 'Installed tools/validate_plan_workspace.ps1 differs from the plugin''s scripts/validate_plan_workspace.ps1; copy the plugin linter over it unchanged, or remove the copy once the project uses agrippa-lint.'
     }
 }
 
@@ -373,20 +443,32 @@ foreach ($name in $agentNames) {
 
 # Agents and skills are project-neutral. A project fact belongs in a project
 # document they read, never in a [PROJECT: ...] slot of their own.
-foreach ($folder in @('templates/agents', 'templates/skills')) {
+foreach ($folder in @('templates/agents', 'templates/skills', 'skills')) {
     foreach ($file in (Get-ChildItem -LiteralPath (Join-Path $kitRoot $folder) -Recurse -File)) {
         $relative = $file.FullName.Substring($kitRoot.Length).TrimStart('\', '/').Replace('\', '/')
         $content = [IO.File]::ReadAllText($file.FullName, [Text.Encoding]::UTF8)
         Add-Check (-not $content.Contains('[PROJECT:')) "$relative must be project-neutral: it contains a [PROJECT: ...] slot."
     }
 }
-foreach ($name in $skillNames) {
-    $text = Read-KitFile "templates/skills/$name/SKILL.md"
+$skillFiles = @($skillNames | ForEach-Object { @($_, "templates/skills/$_/SKILL.md") })
+$skillFiles += @($pluginSkillNames | ForEach-Object { @($_, "skills/$_/SKILL.md") })
+for ($i = 0; $i -lt $skillFiles.Count; $i += 2) {
+    $name = $skillFiles[$i]
+    $text = Read-KitFile $skillFiles[$i + 1]
     Add-Check ($text -match "(?m)^name:\s*$([regex]::Escape($name))\s*$") "Skill $name frontmatter name does not match its folder."
     Add-Check ($text -match '(?m)^description:\s*\S') "Skill $name is missing a frontmatter description."
 }
-$handoff = Read-KitFile 'templates/commands/handoff.md'
-Add-Check ($handoff -match '(?m)^description:\s*\S') 'handoff command is missing a frontmatter description.'
+# The plan skill points to its reference files and templates through
+# ${CLAUDE_SKILL_DIR}, which Claude Code substitutes, so they resolve wherever
+# the plugin is installed.
+$planSkill = Read-KitFile 'skills/plan/SKILL.md'
+foreach ($reference in @('reference/agent-workflow.md', 'reference/ROUTING.md', 'templates/')) {
+    Add-Check ($planSkill.Contains('${CLAUDE_SKILL_DIR}/' + $reference)) "Skill plan does not point to `${CLAUDE_SKILL_DIR}/$reference."
+}
+Add-Check ($planSkill -match 'agrippa-lint -PlanPath' -and $planSkill -match 'Bash tool') 'Skill plan must lint with agrippa-lint through the Bash tool.'
+Add-Check ($plan -match 'agrippa-lint -PlanPath' -and $plan -match 'Bash tool') 'PLAN template must name the agrippa-lint row and say it runs through the Bash tool.'
+$validatorAgent = Read-KitFile 'templates/agents/validator.md'
+Add-Check ($validatorAgent -match 'agrippa-lint' -and $validatorAgent -match 'Bash\s+tool') 'validator agent must say the agrippa-lint row runs through the Bash tool.'
 
 # --- Older-toolchain vocabulary, encoding, and whitespace -----------------
 
@@ -442,20 +524,27 @@ foreach ($script in ($checkedFiles | Where-Object { $_.Extension -eq '.ps1' })) 
     Add-Check ($parseErrors.Count -eq 0) "$($script.Name) has PowerShell parse errors: $($parseErrors.Message -join '; ')"
 }
 
-# --- End-to-end: simulated install plus the smoke test ---------------------
+# --- End-to-end: simulated project plus the smoke test ---------------------
 
+# The simulated project is a git repository with only its own AGENTS.md. It
+# has no tools/ folder, so the smoke test proves the plugin's linter needs no
+# copy in the project and finds the repository root through git.
 $simRoot = Join-Path ([IO.Path]::GetTempPath()) ('kit-sim-' + [guid]::NewGuid().ToString('N').Substring(0, 8))
 try {
-    New-Item -ItemType Directory -Path (Join-Path $simRoot 'docs'), (Join-Path $simRoot 'tools') | Out-Null
+    New-Item -ItemType Directory -Path $simRoot | Out-Null
     Copy-Item -LiteralPath (Join-Path $kitRoot 'templates/AGENTS.md') -Destination (Join-Path $simRoot 'AGENTS.md')
-    Copy-Item -LiteralPath (Join-Path $kitRoot 'templates/agent-workflow.md') -Destination (Join-Path $simRoot 'docs/agent-workflow.md')
-    Copy-Item -LiteralPath (Join-Path $kitRoot 'templates/validate-plan-workspace.ps1') -Destination (Join-Path $simRoot 'tools/validate_plan_workspace.ps1')
+    $ErrorActionPreference = 'Continue'
+    $gitInit = git init -q $simRoot 2>&1 | ForEach-Object { [string]$_ }
+    $gitInitExit = $LASTEXITCODE
+    $ErrorActionPreference = 'Stop'
+    Add-Check ($gitInitExit -eq 0) "git init failed for the simulated project:`n$($gitInit -join "`n")"
+    Add-Check (-not (Test-Path -LiteralPath (Join-Path $simRoot 'tools'))) 'The simulated project must have no tools/ folder.'
     $shell = (Get-Process -Id $PID).Path
     $ErrorActionPreference = 'Continue'
     $smoke = & $shell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $devRoot 'fixtures/run-smoke-test.ps1') -RepoRoot $simRoot 2>&1 | ForEach-Object { [string]$_ }
     $smokeExit = $LASTEXITCODE
     $ErrorActionPreference = 'Stop'
-    Add-Check ($smokeExit -eq 0) "Smoke test against a simulated install failed:`n$($smoke -join "`n")"
+    Add-Check ($smokeExit -eq 0) "Smoke test against a simulated project failed:`n$($smoke -join "`n")"
 } finally {
     if (Test-Path -LiteralPath $simRoot) {
         Remove-Item -LiteralPath $simRoot -Recurse -Force

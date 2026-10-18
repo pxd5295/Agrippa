@@ -28,6 +28,11 @@ section before the first run.
 
 Headless is the default runtime and every matrix row is a headless command.
 
+Run the workspace linter row, `agrippa-lint -PlanPath ...`, through the Bash
+tool. The agrippa plugin puts `agrippa-lint` on the Bash tool's PATH only. A
+"not found" error means the row ran in the wrong shell; that is an invocation
+error, never a lint result.
+
 ## Live-app bridge
 
 If `docs/agent_memory/live-app.md` does not exist, the project has no live-app
