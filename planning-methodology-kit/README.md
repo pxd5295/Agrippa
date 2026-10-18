@@ -258,16 +258,20 @@ needed. `/handoff` writes a short brief when a session ends mid-plan.
 
 ## Keeping the kit current
 
-The kit is a copy, not a link. In the source repository, a change to
-`AGENTS.md`, the guides, the templates, the agents, the skills, or the linter
-does not reach the kit until someone ports it here. After porting, run
-`validate-kit.ps1`; it checks file presence, required methodology clauses,
-leftover vocabulary from older toolchains, encoding, script parsing, and an
-end-to-end smoke test against a simulated install.
+The kit is maintained in its own repository, Agrippa, and that copy is the
+source of truth. Change the methodology there first, run `validate-kit.ps1`,
+and then upgrade each installed repository with the upgrade prompt above. A
+rule first tried out in an installed repository reaches other repositories
+only after it is ported back to the kit. `validate-kit.ps1` checks file
+presence, required methodology clauses, leftover vocabulary from older
+toolchains, encoding, script parsing, and an end-to-end smoke test against a
+simulated install.
 
-The linter is the exception: the source repository's
-`tools/validate_plan_workspace.ps1` is a byte-identical copy of
-`templates/validate-plan-workspace.ps1`, with its own rules in
-`tools/validate_plan_workspace.local.ps1`. Change the kit copy and copy it
-over the installed one. When the kit sits at `docs/<kit>/` in a repository
-with the linter installed, `validate-kit.ps1` fails while the two differ.
+An installed repository's `tools/validate_plan_workspace.ps1` is an unchanged
+copy of `templates/validate-plan-workspace.ps1` (line endings may differ),
+with its own
+rules in `tools/validate_plan_workspace.local.ps1`. Change the kit copy and
+copy it over the installed one. `validate-kit.ps1 -InstalledRepo <path>`
+fails while the two differ. Without `-InstalledRepo`, it checks the
+repository two folders above the kit, which is the root when the kit was
+copied to `docs/<kit>/`.

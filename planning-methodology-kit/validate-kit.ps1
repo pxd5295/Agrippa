@@ -8,7 +8,7 @@ that the templates still carry the methodology's required clauses, that agent
 and skill frontmatter is well formed and cross-referenced, that no vocabulary
 from an older toolchain survives outside UPGRADING.md, that text files are
 clean UTF-8 without trailing whitespace, and that every PowerShell script
-parses. Inside a repository that has installed the linter, it also checks that
+parses. Given a repository that has installed the linter, it also checks that
 the installed copy is byte-identical to the kit's. It then simulates an
 install in a temporary folder and runs `fixtures/run-smoke-test.ps1` against
 it, which proves the shipped linter
@@ -16,12 +16,26 @@ accepts the valid fixture and rejects the broken one.
 
 Like the workspace linter it ships, this checks shape and the presence of
 documented contracts, never semantic truth. Windows PowerShell 5.1-clean.
+
+.PARAMETER InstalledRepo
+Root of a repository that has installed this kit. Its
+tools/validate_plan_workspace.ps1 must match the kit's linter exactly, apart
+from line endings.
+Defaults to the folder two levels above the kit, which is the repository root
+when the kit was copied to docs/<kit>/; the check is skipped when the default
+has no installed linter.
 #>
 [CmdletBinding()]
-param()
+param(
+    [string]$InstalledRepo
+)
 
 $ErrorActionPreference = 'Stop'
 $kitRoot = $PSScriptRoot
+# Windows PowerShell 5.1 leaves $PSScriptRoot empty in parameter defaults.
+if (-not $InstalledRepo) {
+    $InstalledRepo = Join-Path $kitRoot '../..'
+}
 $errors = New-Object 'System.Collections.Generic.List[string]'
 $warnings = New-Object 'System.Collections.Generic.List[string]'
 $checks = 0
@@ -220,13 +234,17 @@ $localTemplate = Read-KitFile 'templates/validate-plan-workspace.local.ps1'
 Add-Check ($localTemplate -match 'function Test-LocalValidationRow' -and $workspaceLinter -match 'Test-LocalValidationRow') 'Local-check template and linter disagree on Test-LocalValidationRow.'
 Add-Check ($localTemplate -match 'function Test-LocalValidationMatrix' -and $workspaceLinter -match 'Test-LocalValidationMatrix') 'Local-check template and linter disagree on Test-LocalValidationMatrix.'
 
-# When the kit lives at docs/<kit>/ in a repository that has installed the
-# linter, the installed copy must stay byte-identical to the kit's; project
-# rules belong in the local extension file instead. Elsewhere this is skipped.
-$installedLinter = Join-Path $kitRoot '../../tools/validate_plan_workspace.ps1'
+# A repository that has installed the linter must keep it identical to the
+# kit's, apart from line endings, which git may convert on checkout; project
+# rules belong in the local extension file instead. An explicit -InstalledRepo
+# must have the linter; the default may not.
+$installedLinter = Join-Path $InstalledRepo 'tools/validate_plan_workspace.ps1'
+if ($PSBoundParameters.ContainsKey('InstalledRepo')) {
+    Add-Check (Test-Path -LiteralPath $installedLinter -PathType Leaf) "-InstalledRepo has no tools/validate_plan_workspace.ps1: $InstalledRepo"
+}
 if (Test-Path -LiteralPath $installedLinter -PathType Leaf) {
-    $kitLinterHash = (Get-FileHash -LiteralPath (Join-Path $kitRoot 'templates/validate-plan-workspace.ps1')).Hash
-    Add-Check ((Get-FileHash -LiteralPath $installedLinter).Hash -eq $kitLinterHash) 'Installed tools/validate_plan_workspace.ps1 differs from templates/validate-plan-workspace.ps1; copy the kit linter over it unchanged.'
+    $installedText = [IO.File]::ReadAllText($installedLinter, [Text.Encoding]::UTF8).Replace("`r`n", "`n")
+    Add-Check ($installedText -ceq $workspaceLinter.Replace("`r`n", "`n")) 'Installed tools/validate_plan_workspace.ps1 differs from templates/validate-plan-workspace.ps1; copy the kit linter over it unchanged.'
 }
 
 # The linter owns the template vocabulary it parses. Read its required packet
