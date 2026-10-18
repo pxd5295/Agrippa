@@ -97,7 +97,7 @@ documents, and each step below names the section to read:
    existing test target, a new assertion in one, or a one-off probe. The
    check must fail before the fix and pass after it, and you must have run
    both.
-2. Place the fix with the rules in `.claude/skills/design-first/SKILL.md`.
+2. Place the fix with the rules in the `agrippa:design-first` skill.
    A bug found at a call site is usually owned by a base class, a hook, an
    engine, a funnel, or the configuration layer; the "Architecture owners"
    table in the project contracts names them. Fix the owner. Do not add a

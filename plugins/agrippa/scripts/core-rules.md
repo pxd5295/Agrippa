@@ -141,23 +141,26 @@ validator, escalation, review, launch authorization, and read order.
 
 ## Roster and skills
 
-Named agents: `repo-scout` (read-only census and contract facts for
-planning), `plan-reviewer` (read-only correctness and contract review of a
-stage or wave diff), `design-reviewer` (read-only review for duplication,
-special cases, placement, coupling, shared values, and file growth), and
-`validator` (runs the validation matrix verbatim). Workers are
-`general-purpose` spawns with a verbatim packet and a routed `model`; the lead
-implements small work directly.
+Named agents: `agrippa:repo-scout` (read-only census and contract facts for
+planning), `agrippa:plan-reviewer` (read-only correctness and contract review
+of a stage or wave diff), `agrippa:design-reviewer` (read-only review for
+duplication, special cases, placement, coupling, shared values, and file
+growth), and `agrippa:validator` (runs the validation matrix verbatim).
+Workers are `general-purpose` spawns with a verbatim packet and a routed
+`model`; the lead implements small work directly.
 
 Only `design-first` is required; use the others when they fit, and say which
 you followed:
 
-- `design-first`: design statement and placement before the first edit.
-- `systematic-debugging`: root cause before a fix, for a failing test, a
-  runtime error, or a hard-to-reproduce misbehavior.
-- `verify-before-done`: the evidence behind "passes", "fixed", or "done",
-  with the verdict line and error-line grep from `validation-commands.md`.
-- `receiving-review`: a per-finding disposition for any review or feedback.
+- `agrippa:design-first`: design statement and placement before the first
+  edit.
+- `agrippa:systematic-debugging`: root cause before a fix, for a failing test,
+  a runtime error, or a hard-to-reproduce misbehavior.
+- `agrippa:verify-before-done`: the evidence behind "passes", "fixed", or
+  "done", with the verdict line and error-line grep from
+  `validation-commands.md`.
+- `agrippa:receiving-review`: a per-finding disposition for any review or
+  feedback.
 
 ## Planner read ladder
 

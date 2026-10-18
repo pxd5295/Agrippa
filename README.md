@@ -32,14 +32,23 @@ copying `plugins/agrippa/` into it.
    powershell -NoProfile -ExecutionPolicy Bypass -File dev/validate-kit.ps1
    ```
 
-   It must print `PASS`. It checks file presence, required methodology
+   It must print `PASS`. It checks the plugin layout, that `plugin.json` and
+   `marketplace.json` carry the same version, agent and skill frontmatter and
+   their `agrippa:` names, that no `[PROJECT: ...]` slot appears outside the
+   project-side templates, the size of the core rules, required methodology
    clauses, leftover vocabulary from older toolchains, encoding, script
-   parsing, and an end-to-end smoke test against a simulated project that has
-   no copy of the linter. It checks shape, never truth.
-3. To check a repository that has the kit installed, add
-   `-InstalledRepo <path>`. That repository's
-   `tools/validate_plan_workspace.ps1` must match
-   `plugins/agrippa/scripts/validate_plan_workspace.ps1`.
+   parsing, that the two copies of `LICENSE` and of `NOTICE` are identical,
+   and an end-to-end smoke test against a simulated project that has no copy
+   of the linter. It checks shape, never truth.
+3. To check a project that uses the plugin, add `-InstalledRepo <path>`. The
+   project's committed `.claude/settings.json` must declare the `agrippa`
+   marketplace and enable `agrippa@agrippa`. It must have
+   `docs/agent_memory/project-contracts.md` and
+   `docs/agent_memory/validation-commands.md`. It must keep no local copy of
+   the plugin's agents, its skills, the shared linter
+   (`tools/validate_plan_workspace.ps1`), or the spawn-logger scripts. Each
+   failure is printed as an `INSTALLED REPO:` line that names the file or
+   setting and says what to do.
 4. Upgrade each installed repository with the upgrade prompt in
    `plugins/agrippa/README.md`.
 
@@ -47,7 +56,7 @@ copying `plugins/agrippa/` into it.
 
 | Repository | Path from here | State on 2026-10-18 |
 |---|---|---|
-| nuro-battler | `../evolution-game/nuro-battler` | Installed from the G3 kit, with its Godot rules in `tools/validate_plan_workspace.local.ps1`. Its copy of the linter predates `-RepoRoot`, so `validate-kit.ps1 -InstalledRepo` fails until Phase 8 of the plugin plan moves it to `agrippa-lint`. The plugin linter gives the same results on its plans. |
+| nuro-battler | `../evolution-game/nuro-battler` | Installed from the G3 kit, with its Godot rules in `tools/validate_plan_workspace.local.ps1`. It still has local copies of the agents, kit skills, `/handoff`, linter, and spawn logger, and does not yet enable the plugin, so `validate-kit.ps1 -InstalledRepo` fails with 17 migration items until Phase 8 of the plugin plan migrates it. The plugin linter gives the same results on its plans. |
 
 ## License
 

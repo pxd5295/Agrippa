@@ -54,13 +54,18 @@ named as not done, with the reason.
 
 ## Agents, skills, commands, hooks
 
-- [ ] Four agents are installed: `repo-scout`, `plan-reviewer`,
-      `design-reviewer`, `validator`, all on `sonnet` by default, unchanged
-      from the kit. If the project has an MCP server that observes the
-      running application, `docs/agent_memory/live-app.md` exists and lists
-      every one of its authoring tools; otherwise that file does not exist.
-- [ ] Four skills are installed (`design-first`, `systematic-debugging`,
-      `verify-before-done`, `receiving-review`), unchanged from the kit.
+- [ ] `.claude/settings.json` is committed, declares the `agrippa`
+      marketplace in `extraKnownMarketplaces`, and enables `agrippa@agrippa`
+      in `enabledPlugins`.
+- [ ] The four agents (`agrippa:repo-scout`, `agrippa:plan-reviewer`,
+      `agrippa:design-reviewer`, `agrippa:validator`) come from the plugin,
+      and `.claude/agents/` has no copy of them. If the project has an MCP
+      server that observes the running application,
+      `docs/agent_memory/live-app.md` exists and lists every one of its
+      authoring tools; otherwise that file does not exist.
+- [ ] The four skills (`agrippa:design-first`, `agrippa:systematic-debugging`,
+      `agrippa:verify-before-done`, `agrippa:receiving-review`) come from the
+      plugin, and `.claude/skills/` has no copy of them.
       Every section of `docs/agent_memory/project-contracts.md` and
       `docs/agent_memory/validation-commands.md` that they read names this
       repository's real owners, traps, and commands, or was deleted because
@@ -124,7 +129,9 @@ named as not done, with the reason.
 - [ ] Agrippa's `dev/fixtures/run-smoke-test.ps1 -RepoRoot <this repository>`
       prints PASS with the plugin's linter (valid fixture passes, broken
       fixture fails with the expected errors).
-- [ ] The shared linter is unedited. This repository's command invariants and
+- [ ] The shared linter runs from the plugin, and the repository has no copy
+      of it at `tools/validate_plan_workspace.ps1`, nor of the spawn logger's
+      scripts. This repository's command invariants and
       any narrower `$CommandPathExtensions` live in
       `tools/validate_plan_workspace.local.ps1`, proved by linting one real
       workspace, or the file is deliberately not installed.

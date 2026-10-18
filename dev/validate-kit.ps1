@@ -3,22 +3,26 @@
 Validates the agrippa plugin's own files and the development files that test it.
 
 .DESCRIPTION
-Checks that every kit file under plugins/agrippa/ and every development file
-under dev/ exists, that every template, script, hook, skill, and bin file is
-listed in the kit README layout table, that the core rules and templates
-still carry the methodology's required clauses, that the core rules stay
-under the 10,000-character hook context cap and the injection hook prints
-them, that the spawn logger is wired and does nothing without
-AGRIPPA_SPAWN_LOG=1, that the agrippa-lint wrapper is an executable LF shell
-script that runs the plugin's linter, that agent and skill frontmatter is well
-formed and cross-referenced, that the agents remove the editing tools with
-disallowedTools instead of listing an allowlist, that no agent or skill
-contains a [PROJECT: ...] slot, that no vocabulary from an older toolchain
-survives outside UPGRADING.md, that text files are clean UTF-8 without
-trailing whitespace, and that every PowerShell script parses. Given a
-repository that still has a copy of the linter, it also checks that the copy
-is identical to the plugin's. It then builds a simulated project in a
-temporary git repository with no copy of the linter and runs
+Checks the plugin layout: every kit file under plugins/agrippa/ and every
+development file under dev/ exists, the plugin root holds only the known
+folders and files, agents/ and skills/ hold exactly the plugin's agents and
+skills, and every template, script, hook, agent, skill, and bin file is listed
+in the kit README layout table. It checks that the marketplace lists the one
+plugin and that plugin.json and the marketplace entry carry the same version.
+It checks agent and skill frontmatter and namespacing: names match their
+files, carry no prefix of their own, are named with the agrippa: prefix in the
+core rules, and are never pointed to at a project copy path. The agents remove
+the editing tools with disallowedTools instead of listing an allowlist. No
+shipped file outside templates/ and the README contains a [PROJECT: ...] slot.
+The core rules and templates still carry the methodology's required clauses,
+the core rules stay under the 10,000-character hook context cap, and the
+injection hook prints them. The spawn logger is wired and does nothing
+without AGRIPPA_SPAWN_LOG=1, and the agrippa-lint wrapper is an executable LF
+shell script that runs the plugin's linter. No vocabulary from an older
+toolchain survives outside UPGRADING.md and this script, text files are clean
+UTF-8 without trailing whitespace, every PowerShell script parses, and the two
+copies of LICENSE and of NOTICE are identical. It then builds a simulated
+project in a temporary git repository with no copy of the linter and runs
 `dev/fixtures/run-smoke-test.ps1` against it, which proves the plugin's linter
 accepts the valid fixture and rejects the broken one.
 
@@ -26,12 +30,13 @@ Like the workspace linter it ships, this checks shape and the presence of
 documented contracts, never semantic truth. Windows PowerShell 5.1-clean.
 
 .PARAMETER InstalledRepo
-Root of a repository that has installed this kit. Its
-tools/validate_plan_workspace.ps1 must match the plugin's
-scripts/validate_plan_workspace.ps1 exactly, apart from line endings. The
-check is skipped when this is omitted. Phase 5 of
-docs/plugin-conversion-plan.md replaces this check for repositories that use
-the plugin.
+Root of a project that uses the plugin. Its committed .claude/settings.json
+must declare the agrippa marketplace and enable agrippa@agrippa, it must have
+docs/agent_memory/project-contracts.md and validation-commands.md, and it must
+keep no local copy of what the plugin provides: the agents, the plugin's
+skills, the shared linter, the spawn-logger scripts, or a settings.json hook
+or permission that runs them. Each failure names the file or setting and says
+what to do. The check is skipped when this is omitted.
 #>
 [CmdletBinding()]
 param(
@@ -72,11 +77,14 @@ function Read-KitFile {
     return Read-RepoFile $kitRoot $RelativePath
 }
 
+# Agents load from agents/ and skills from skills/ at the plugin root, under
+# the agrippa: prefix. A project never keeps a copy of them. The four kit
+# skills are the methodology's working skills; plan and handoff are entry
+# points.
 $agentNames = @('repo-scout', 'plan-reviewer', 'design-reviewer', 'validator')
 $skillNames = @('design-first', 'systematic-debugging', 'verify-before-done', 'receiving-review')
-# Plugin skills load from skills/ at the plugin root and are never copied into
-# a project.
 $pluginSkillNames = @('plan', 'handoff')
+$allSkillNames = $skillNames + $pluginSkillNames
 $planningNames = @('SPEC', 'PLAN', 'PACKETS', 'STATUS', 'EVIDENCE')
 
 $required = @(
@@ -84,6 +92,8 @@ $required = @(
     'README.md',
     'ADOPTION-CHECKLIST.md',
     'UPGRADING.md',
+    'LICENSE',
+    'NOTICE',
     'bin/agrippa-lint',
     'scripts/core-rules.md',
     'scripts/inject_core_rules.ps1',
@@ -107,9 +117,8 @@ $required = @(
     'templates/validate-plan-workspace.local.ps1',
     'templates/hooks/README.md'
 )
-$required += @($agentNames | ForEach-Object { "templates/agents/$_.md" })
-$required += @($skillNames | ForEach-Object { "templates/skills/$_/SKILL.md" })
-$required += @($pluginSkillNames | ForEach-Object { "skills/$_/SKILL.md" })
+$required += @($agentNames | ForEach-Object { "agents/$_.md" })
+$required += @($allSkillNames | ForEach-Object { "skills/$_/SKILL.md" })
 $required += @($planningNames | ForEach-Object { "skills/plan/templates/$_.md" })
 
 # Development files are not shipped with the plugin.
@@ -125,8 +134,71 @@ foreach ($path in $required) {
 foreach ($path in $devRequired) {
     [void](Read-RepoFile $devRoot $path)
 }
-[void](Read-RepoFile $repoRoot '.claude-plugin/marketplace.json')
-$requiredCount = $required.Count + $devRequired.Count + 1
+$rootRequired = @('.claude-plugin/marketplace.json', 'README.md', 'LICENSE', 'NOTICE')
+foreach ($path in $rootRequired) {
+    [void](Read-RepoFile $repoRoot $path)
+}
+$requiredCount = $required.Count + $devRequired.Count + $rootRequired.Count
+
+# --- Plugin layout ----------------------------------------------------------
+
+# The plugin root holds only these entries. A new top-level file or folder must
+# be added here and to the README layout table, so nothing ships unnoticed.
+$pluginEntries = @('.claude-plugin', 'agents', 'skills', 'hooks', 'bin', 'scripts', 'templates', 'README.md', 'ADOPTION-CHECKLIST.md', 'UPGRADING.md', 'LICENSE', 'NOTICE')
+foreach ($entry in (Get-ChildItem -LiteralPath $kitRoot -Force)) {
+    Add-Check ($pluginEntries -contains $entry.Name) "Unexpected entry at the plugin root: plugins/agrippa/$($entry.Name). Move it into a known folder, or add it to the plugin layout in dev/validate-kit.ps1 and the README layout table."
+}
+$agentFiles = @(Get-ChildItem -LiteralPath (Join-Path $kitRoot 'agents') -Force -ErrorAction SilentlyContinue | ForEach-Object { $_.Name })
+foreach ($file in $agentFiles) {
+    Add-Check ($agentNames -contains [IO.Path]::GetFileNameWithoutExtension($file) -and $file.EndsWith('.md')) "Unexpected file in plugins/agrippa/agents/: $file. Only the agents $($agentNames -join ', ') ship there."
+}
+$skillFolders = @(Get-ChildItem -LiteralPath (Join-Path $kitRoot 'skills') -Force -ErrorAction SilentlyContinue | ForEach-Object { $_.Name })
+foreach ($folder in $skillFolders) {
+    Add-Check ($allSkillNames -contains $folder) "Unexpected entry in plugins/agrippa/skills/: $folder. Only the skills $($allSkillNames -join ', ') ship there."
+}
+# The agents and kit skills used to be templates copied into each project.
+foreach ($oldFolder in @('templates/agents', 'templates/skills', 'commands')) {
+    Add-Check (-not (Test-Path -LiteralPath (Join-Path $kitRoot $oldFolder))) "plugins/agrippa/$oldFolder must not exist: agents ship in agents/ and skills in skills/."
+}
+
+# The marketplace lists the one plugin, and both manifests carry the same
+# version, so a release tag names exactly one plugin version.
+function Read-Json {
+    param([string]$Text, [string]$Label)
+    try {
+        return ConvertFrom-Json -InputObject $Text
+    } catch {
+        Add-Check $false "$Label is not valid JSON: $($_.Exception.Message)"
+        return $null
+    }
+}
+$pluginManifest = Read-Json (Read-KitFile '.claude-plugin/plugin.json') 'plugins/agrippa/.claude-plugin/plugin.json'
+$marketplace = Read-Json (Read-RepoFile $repoRoot '.claude-plugin/marketplace.json') '.claude-plugin/marketplace.json'
+if ($null -ne $pluginManifest -and $null -ne $marketplace) {
+    Add-Check ($pluginManifest.name -ceq 'agrippa') "plugin.json name must be 'agrippa', found '$($pluginManifest.name)'."
+    Add-Check ($marketplace.name -ceq 'agrippa') "marketplace.json name must be 'agrippa', found '$($marketplace.name)'."
+    $entries = @($marketplace.plugins)
+    Add-Check ($entries.Count -eq 1) "marketplace.json must list exactly one plugin, found $($entries.Count)."
+    $entry = $entries | Where-Object { $_.name -ceq 'agrippa' } | Select-Object -First 1
+    Add-Check ($null -ne $entry) "marketplace.json does not list the plugin 'agrippa'."
+    if ($null -ne $entry) {
+        Add-Check ($entry.source -ceq './plugins/agrippa') "marketplace.json entry 'agrippa' must have source './plugins/agrippa', found '$($entry.source)'."
+        Add-Check ([string]$pluginManifest.version -match '^\d+\.\d+\.\d+$') "plugin.json version must be a semantic version such as 1.0.0, found '$($pluginManifest.version)'."
+        Add-Check ([string]$entry.version -ceq [string]$pluginManifest.version) "marketplace.json entry 'agrippa' has version '$($entry.version)' but plugin.json has '$($pluginManifest.version)'. Set both to the release version."
+    }
+}
+
+# Each copy of the license and notice must match its root original, so the
+# plugin folder carries the same terms wherever it is installed.
+foreach ($name in @('LICENSE', 'NOTICE')) {
+    $rootCopy = Join-Path $repoRoot $name
+    $pluginCopy = Join-Path $kitRoot $name
+    if ((Test-Path -LiteralPath $rootCopy -PathType Leaf) -and (Test-Path -LiteralPath $pluginCopy -PathType Leaf)) {
+        $rootText = [IO.File]::ReadAllText($rootCopy, [Text.Encoding]::UTF8).Replace("`r`n", "`n")
+        $pluginText = [IO.File]::ReadAllText($pluginCopy, [Text.Encoding]::UTF8).Replace("`r`n", "`n")
+        Add-Check ($rootText -ceq $pluginText) "$name and plugins/agrippa/$name differ. Copy the root $name over the plugin's copy."
+    }
+}
 
 $readme = Read-KitFile 'README.md'
 $adoption = Read-KitFile 'ADOPTION-CHECKLIST.md'
@@ -143,17 +215,17 @@ $spec = Read-KitFile 'skills/plan/templates/SPEC.md'
 $plansReadme = Read-KitFile 'templates/plans-README.md'
 $workspaceLinter = Read-KitFile 'scripts/validate_plan_workspace.ps1'
 
-# --- Every template, script, hook, skill, and bin file is listed in the README layout table
+# --- Every template, script, hook, agent, skill, and bin file is listed in the README layout table
 
-$listedFiles = foreach ($folder in @('templates', 'scripts', 'hooks', 'skills', 'bin')) {
+$listedFiles = foreach ($folder in @('templates', 'scripts', 'hooks', 'agents', 'skills', 'bin')) {
     Get-ChildItem -LiteralPath (Join-Path $kitRoot $folder) -Recurse -File
 }
 foreach ($file in $listedFiles) {
     $relative = $file.FullName.Substring($kitRoot.Length).TrimStart('\', '/').Replace('\', '/')
     $listedAs = $relative
-    if ($relative -like 'templates/agents/*.md') { $listedAs = 'templates/agents/*.md' }
-    elseif ($relative -like 'templates/skills/*/SKILL.md') { $listedAs = 'templates/skills/*/SKILL.md' }
+    if ($relative -like 'agents/*.md') { $listedAs = 'agents/*.md' }
     elseif ($relative -like 'skills/plan/templates/*.md') { $listedAs = 'skills/plan/templates/*.md' }
+    elseif ($relative -match '^skills/[^/]+/SKILL\.md$' -and $skillNames -contains $relative.Split('/')[1]) { $listedAs = 'skills/*/SKILL.md' }
     Add-Check ($readme.Contains($listedAs)) "README layout table does not list $relative (expected '$listedAs')."
 }
 
@@ -206,10 +278,11 @@ Test-Clauses 'Core rules' $coreRules @(
     '## Validation reach',
     'checks shape,\s+never truth'
 )
+# The roster names each plugin agent and skill by its namespaced name, which is
+# the name a spawn or skill load must use.
 foreach ($name in ($agentNames + $skillNames)) {
-    Add-Check ($coreRules -match [regex]::Escape($name)) "Core rules do not list $name."
+    Add-Check ($coreRules.Contains("``agrippa:$name``")) "Core rules do not name ``agrippa:$name`` in the roster."
 }
-Add-Check ($coreRules -notmatch '\[PROJECT:') 'Core rules must be project-neutral: they contain a [PROJECT: ...] slot.'
 Add-Check ($coreRules.Length -lt 10000) "Core rules exceed the 10,000-character hook context cap: $($coreRules.Length)."
 Test-Clauses 'AGENTS template' $agents @(
     '## Project contracts',
@@ -383,18 +456,6 @@ $localTemplate = Read-KitFile 'templates/validate-plan-workspace.local.ps1'
 Add-Check ($localTemplate -match 'function Test-LocalValidationRow' -and $workspaceLinter -match 'Test-LocalValidationRow') 'Local-check template and linter disagree on Test-LocalValidationRow.'
 Add-Check ($localTemplate -match 'function Test-LocalValidationMatrix' -and $workspaceLinter -match 'Test-LocalValidationMatrix') 'Local-check template and linter disagree on Test-LocalValidationMatrix.'
 
-# A repository that still has a copy of the linter must keep it identical to
-# the plugin's, apart from line endings, which git may convert on checkout;
-# project rules belong in the local extension file instead.
-if ($InstalledRepo) {
-    $installedLinter = Join-Path $InstalledRepo 'tools/validate_plan_workspace.ps1'
-    Add-Check (Test-Path -LiteralPath $installedLinter -PathType Leaf) "-InstalledRepo has no tools/validate_plan_workspace.ps1: $InstalledRepo"
-    if (Test-Path -LiteralPath $installedLinter -PathType Leaf) {
-        $installedText = [IO.File]::ReadAllText($installedLinter, [Text.Encoding]::UTF8).Replace("`r`n", "`n")
-        Add-Check ($installedText -ceq $workspaceLinter.Replace("`r`n", "`n")) 'Installed tools/validate_plan_workspace.ps1 differs from the plugin''s scripts/validate_plan_workspace.ps1; copy the plugin linter over it unchanged, or remove the copy once the project uses agrippa-lint.'
-    }
-}
-
 # The linter owns the template vocabulary it parses. Read its required packet
 # labels and stage fields from its own source, so a linter change is checked
 # against the templates without a second hand-kept list here.
@@ -422,8 +483,10 @@ foreach ($field in $stageFields) {
 # to read live-app.md for the bridge tools it must never call.
 $editingTools = @('Write', 'Edit', 'NotebookEdit')
 foreach ($name in $agentNames) {
-    $text = Read-KitFile "templates/agents/$name.md"
-    Add-Check ($text -match "(?m)^name:\s*$([regex]::Escape($name))\s*$") "$name.md frontmatter name does not match its filename."
+    $text = Read-KitFile "agents/$name.md"
+    # Claude Code adds the agrippa: prefix itself, so the frontmatter name is
+    # the bare file name.
+    Add-Check ($text -match "(?m)^name:\s*$([regex]::Escape($name))\s*$") "agents/$name.md frontmatter name must be '$name', matching its filename with no prefix."
     Add-Check ($text -match '(?m)^description:\s*\S') "$name.md is missing a frontmatter description."
     Add-Check ($text -notmatch '(?m)^tools:') "$name.md must not have a frontmatter tools allowlist; use disallowedTools."
     $disallowedLine = [regex]::Match($text, '(?m)^disallowedTools:\s*(.+?)\s*$')
@@ -441,22 +504,35 @@ foreach ($name in $agentNames) {
     Add-Check ($routing -match "``$([regex]::Escape($name)).md``") "ROUTING roster table does not list $name.md."
 }
 
-# Agents and skills are project-neutral. A project fact belongs in a project
-# document they read, never in a [PROJECT: ...] slot of their own.
-foreach ($folder in @('templates/agents', 'templates/skills', 'skills')) {
-    foreach ($file in (Get-ChildItem -LiteralPath (Join-Path $kitRoot $folder) -Recurse -File)) {
-        $relative = $file.FullName.Substring($kitRoot.Length).TrimStart('\', '/').Replace('\', '/')
-        $content = [IO.File]::ReadAllText($file.FullName, [Text.Encoding]::UTF8)
-        Add-Check (-not $content.Contains('[PROJECT:')) "$relative must be project-neutral: it contains a [PROJECT: ...] slot."
+# The plugin is project-neutral. A project fact belongs in a project document
+# that an agent or skill reads, never in a [PROJECT: ...] slot. Only the
+# project-side templates, which an install fills in, and the README, which
+# explains the convention, may carry one.
+foreach ($file in (Get-ChildItem -LiteralPath $kitRoot -Recurse -File)) {
+    $relative = $file.FullName.Substring($kitRoot.Length).TrimStart('\', '/').Replace('\', '/')
+    if ($relative -like 'templates/*' -or $relative -eq 'README.md') {
+        continue
     }
+    $content = [IO.File]::ReadAllText($file.FullName, [Text.Encoding]::UTF8)
+    Add-Check (-not $content.Contains('[PROJECT:')) "plugins/agrippa/$relative must be project-neutral: it contains a [PROJECT: ...] slot. Move the fact into a project document and read it from there."
 }
-$skillFiles = @($skillNames | ForEach-Object { @($_, "templates/skills/$_/SKILL.md") })
-$skillFiles += @($pluginSkillNames | ForEach-Object { @($_, "skills/$_/SKILL.md") })
-for ($i = 0; $i -lt $skillFiles.Count; $i += 2) {
-    $name = $skillFiles[$i]
-    $text = Read-KitFile $skillFiles[$i + 1]
-    Add-Check ($text -match "(?m)^name:\s*$([regex]::Escape($name))\s*$") "Skill $name frontmatter name does not match its folder."
-    Add-Check ($text -match '(?m)^description:\s*\S') "Skill $name is missing a frontmatter description."
+foreach ($name in $allSkillNames) {
+    $text = Read-KitFile "skills/$name/SKILL.md"
+    Add-Check ($text -match "(?m)^name:\s*$([regex]::Escape($name))\s*$") "skills/$name/SKILL.md frontmatter name must be '$name', matching its folder with no prefix."
+    Add-Check ($text -match '(?m)^description:\s*\S') "skills/$name/SKILL.md is missing a frontmatter description."
+}
+# Plugin text points to its own agents and skills by their agrippa: names, never
+# at the project copy paths an older kit installed. UPGRADING.md and the
+# README's upgrade prompt name those paths so an upgrade can delete them.
+$copyPathPattern = '\.claude/(agents/(' + (($agentNames | ForEach-Object { [regex]::Escape($_) }) -join '|') + ')\.md|skills/(' + (($allSkillNames | ForEach-Object { [regex]::Escape($_) }) -join '|') + ')/|commands/(' + (($pluginSkillNames | ForEach-Object { [regex]::Escape($_) }) -join '|') + ')\.md)'
+foreach ($file in (Get-ChildItem -LiteralPath $kitRoot -Recurse -File)) {
+    $relative = $file.FullName.Substring($kitRoot.Length).TrimStart('\', '/').Replace('\', '/')
+    if ($relative -eq 'UPGRADING.md' -or $relative -eq 'README.md') {
+        continue
+    }
+    $content = [IO.File]::ReadAllText($file.FullName, [Text.Encoding]::UTF8)
+    $copyPath = [regex]::Match($content, $copyPathPattern)
+    Add-Check (-not $copyPath.Success) "plugins/agrippa/$relative points to the project copy path $($copyPath.Value); name the plugin agent or skill with its agrippa: prefix instead."
 }
 # The plan skill points to its reference files and templates through
 # ${CLAUDE_SKILL_DIR}, which Claude Code substitutes, so they resolve wherever
@@ -467,7 +543,7 @@ foreach ($reference in @('reference/agent-workflow.md', 'reference/ROUTING.md', 
 }
 Add-Check ($planSkill -match 'agrippa-lint -PlanPath' -and $planSkill -match 'Bash tool') 'Skill plan must lint with agrippa-lint through the Bash tool.'
 Add-Check ($plan -match 'agrippa-lint -PlanPath' -and $plan -match 'Bash tool') 'PLAN template must name the agrippa-lint row and say it runs through the Bash tool.'
-$validatorAgent = Read-KitFile 'templates/agents/validator.md'
+$validatorAgent = Read-KitFile 'agents/validator.md'
 Add-Check ($validatorAgent -match 'agrippa-lint' -and $validatorAgent -match 'Bash\s+tool') 'validator agent must say the agrippa-lint row runs through the Bash tool.'
 
 # --- Older-toolchain vocabulary, encoding, and whitespace -----------------
@@ -489,7 +565,13 @@ $substringTerms = @(
 # names them to search for them. Paths are relative to the repository root.
 $vocabularyExempt = @('plugins/agrippa/UPGRADING.md', 'dev/validate-kit.ps1')
 
+# The shipped plugin, the development files, and the repository's root files.
+# docs/ and history/ are records of why the kit changed, are not shipped, and
+# may describe the older toolchains.
 $checkedFiles = @(Get-ChildItem -LiteralPath $kitRoot -Recurse -File) + @(Get-ChildItem -LiteralPath $devRoot -Recurse -File)
+# A worktree's .git is a file that points to the main repository.
+$checkedFiles += @(Get-ChildItem -LiteralPath $repoRoot -File | Where-Object { $_.Name -ne '.git' })
+$checkedFiles += @(Get-ChildItem -LiteralPath (Join-Path $repoRoot '.claude-plugin') -File)
 foreach ($file in $checkedFiles) {
     $relative = $file.FullName.Substring($repoRoot.Length).TrimStart('\', '/').Replace('\', '/')
     $bytes = [IO.File]::ReadAllBytes($file.FullName)
@@ -554,15 +636,137 @@ try {
 if ($workflow.Length -gt 9000) { $warnings.Add("Workflow template exceeds the 9,000-character soft target: $($workflow.Length).") }
 if ($routing.Length -gt 9000) { $warnings.Add("ROUTING template exceeds the 9,000-character soft target: $($routing.Length).") }
 
+# --- A project that uses the plugin ----------------------------------------
+
+# A project declares the plugin in its committed settings, keeps its own facts
+# in the project documents, and keeps no copy of anything the plugin provides,
+# because a copy shadows the plugin's version or drifts from it. These errors
+# are listed apart from the kit's, as the project's remaining migration steps.
+$projectErrors = New-Object 'System.Collections.Generic.List[string]'
+$projectChecks = 0
+
+function Add-ProjectCheck {
+    param([bool]$Condition, [string]$Message)
+    $script:projectChecks++
+    if (-not $Condition) {
+        $script:projectErrors.Add($Message)
+    }
+}
+
+if ($InstalledRepo) {
+    if (-not (Test-Path -LiteralPath $InstalledRepo -PathType Container)) {
+        Add-ProjectCheck $false "-InstalledRepo is not a folder: $InstalledRepo"
+    } else {
+        $projectRoot = (Resolve-Path -LiteralPath $InstalledRepo).Path
+        $enableHelp = 'as the kit README section "Enabling the plugin in a project" shows'
+
+        $settingsPath = Join-Path $projectRoot '.claude/settings.json'
+        $settings = $null
+        if (-not (Test-Path -LiteralPath $settingsPath -PathType Leaf)) {
+            Add-ProjectCheck $false ".claude/settings.json is missing. Create it with the extraKnownMarketplaces and enabledPlugins entries $enableHelp, and commit it."
+        } else {
+            $ErrorActionPreference = 'Continue'
+            $tracked = @(git -C $projectRoot ls-files -- '.claude/settings.json' 2>$null)
+            $ErrorActionPreference = 'Stop'
+            Add-ProjectCheck ($tracked.Count -eq 1) '.claude/settings.json is not committed. Commit it so every collaborator gets the plugin; .claude/settings.local.json does not count.'
+            try {
+                $settings = ConvertFrom-Json -InputObject ([IO.File]::ReadAllText($settingsPath, [Text.Encoding]::UTF8))
+            } catch {
+                Add-ProjectCheck $false ".claude/settings.json is not valid JSON: $($_.Exception.Message)"
+            }
+        }
+        if ($null -ne $settings) {
+            $marketplaceEntry = $null
+            if ($null -ne $settings.extraKnownMarketplaces) {
+                $marketplaceEntry = $settings.extraKnownMarketplaces.agrippa
+            }
+            Add-ProjectCheck ($null -ne $marketplaceEntry -and $null -ne $marketplaceEntry.source) ".claude/settings.json does not declare the agrippa marketplace. Add extraKnownMarketplaces.agrippa with its source, pinned to a release tag with ref, $enableHelp."
+            $enabled = $null
+            if ($null -ne $settings.enabledPlugins) {
+                $enabled = $settings.enabledPlugins.'agrippa@agrippa'
+            }
+            Add-ProjectCheck ($enabled -is [bool] -and $enabled) '.claude/settings.json does not enable the plugin. Add "agrippa@agrippa": true under enabledPlugins.'
+
+            # The plugin's hooks.json runs the spawn logger, and the linter
+            # runs as agrippa-lint, so settings that run local copies are left
+            # over.
+            if ($null -ne $settings.hooks) {
+                foreach ($hookEvent in $settings.hooks.PSObject.Properties) {
+                    $commands = @(@($hookEvent.Value) | ForEach-Object { @($_.hooks) } | ForEach-Object { [string]$_.command })
+                    $loggerCommands = @($commands | Where-Object { $_ -match 'log_subagent_spawns\.ps1' })
+                    Add-ProjectCheck ($loggerCommands.Count -eq 0) ".claude/settings.json hooks.$($hookEvent.Name) runs a local spawn logger ($($loggerCommands -join '; ')). Remove that hook entry; the plugin runs the spawn logger when the env block sets AGRIPPA_SPAWN_LOG=1."
+                }
+            }
+            if ($null -ne $settings.permissions) {
+                foreach ($list in @('allow', 'ask', 'deny')) {
+                    foreach ($rule in @($settings.permissions.$list)) {
+                        if ($null -eq $rule) {
+                            continue
+                        }
+                        Add-ProjectCheck ([string]$rule -notmatch 'validate_plan_workspace\.ps1') ".claude/settings.json permissions.$list rule '$rule' runs the local copy of the linter. Replace it with Bash(agrippa-lint:*)."
+                    }
+                }
+            }
+        }
+
+        $projectDocuments = @(
+            @('docs/agent_memory/project-contracts.md', 'templates/PROJECT-CONTRACTS.md'),
+            @('docs/agent_memory/validation-commands.md', 'templates/VALIDATION-COMMANDS.md')
+        )
+        foreach ($document in $projectDocuments) {
+            Add-ProjectCheck (Test-Path -LiteralPath (Join-Path $projectRoot $document[0]) -PathType Leaf) "$($document[0]) is missing. Write it from plugins/agrippa/$($document[1]); the plugin's agents and skills read the project's facts from it."
+        }
+
+        $moveFacts = 'Move any project facts it holds into docs/agent_memory/project-contracts.md, validation-commands.md, or live-app.md, then delete it'
+        foreach ($name in $agentNames) {
+            $path = ".claude/agents/$name.md"
+            Add-ProjectCheck (-not (Test-Path -LiteralPath (Join-Path $projectRoot $path))) "$path is a local copy of the plugin agent agrippa:$name. $moveFacts."
+        }
+        foreach ($name in $allSkillNames) {
+            $path = ".claude/skills/$name"
+            Add-ProjectCheck (-not (Test-Path -LiteralPath (Join-Path $projectRoot $path))) "$path/ is a local copy of the plugin skill agrippa:$name. $moveFacts."
+        }
+        foreach ($name in $pluginSkillNames) {
+            $path = ".claude/commands/$name.md"
+            Add-ProjectCheck (-not (Test-Path -LiteralPath (Join-Path $projectRoot $path))) "$path is a local command that the plugin skill /agrippa:$name replaces. Delete it."
+        }
+        Add-ProjectCheck (-not (Test-Path -LiteralPath (Join-Path $projectRoot 'tools/validate_plan_workspace.ps1'))) 'tools/validate_plan_workspace.ps1 is a local copy of the shared linter. Delete it; plans run agrippa-lint from the plugin, and project rules stay in tools/validate_plan_workspace.local.ps1.'
+
+        # The spawn logger's payload helper may also serve the project's own
+        # edit-lint hook. It is left over only when nothing else uses it.
+        foreach ($folder in @('tools', '.claude/hooks')) {
+            $loggerPath = "$folder/log_subagent_spawns.ps1"
+            Add-ProjectCheck (-not (Test-Path -LiteralPath (Join-Path $projectRoot $loggerPath))) "$loggerPath is a local copy of the spawn logger. Delete it; the plugin runs its own when the env block of .claude/settings.json sets AGRIPPA_SPAWN_LOG=1."
+            $helperPath = "$folder/hook_payload.ps1"
+            if (Test-Path -LiteralPath (Join-Path $projectRoot $helperPath) -PathType Leaf) {
+                $helperUsers = @(Get-ChildItem -LiteralPath (Join-Path $projectRoot $folder) -Filter '*.ps1' -File |
+                    Where-Object { $_.Name -ne 'hook_payload.ps1' -and $_.Name -ne 'log_subagent_spawns.ps1' } |
+                    Where-Object { [IO.File]::ReadAllText($_.FullName, [Text.Encoding]::UTF8).Contains('hook_payload.ps1') })
+                Add-ProjectCheck ($helperUsers.Count -gt 0) "$helperPath is the spawn logger's payload helper and no other script in $folder/ uses it. Delete it."
+            }
+        }
+    }
+}
+
 foreach ($warning in $warnings) {
     Write-Warning $warning
 }
-if ($errors.Count -gt 0) {
-    foreach ($message in $errors) {
-        Write-Output "ERROR: $message"
-    }
-    Write-Output "FAIL: $($errors.Count) kit error(s), $($warnings.Count) warning(s), $checks checks."
+foreach ($message in $errors) {
+    Write-Output "ERROR: $message"
+}
+foreach ($message in $projectErrors) {
+    Write-Output "INSTALLED REPO: $message"
+}
+$projectSummary = ''
+if ($InstalledRepo) {
+    $projectSummary = ", $($projectErrors.Count) error(s) in $InstalledRepo from $projectChecks checks"
+}
+if ($errors.Count -gt 0 -or $projectErrors.Count -gt 0) {
+    Write-Output "FAIL: $($errors.Count) kit error(s) from $checks checks$projectSummary, $($warnings.Count) warning(s)."
     exit 1
 }
 
-Write-Output "PASS: $checks kit checks, $requiredCount required files, smoke test passed, $($warnings.Count) warning(s)."
+if ($InstalledRepo) {
+    $projectSummary = ", $InstalledRepo passed $projectChecks checks"
+}
+Write-Output "PASS: $checks kit checks, $requiredCount required files, smoke test passed$projectSummary, $($warnings.Count) warning(s)."

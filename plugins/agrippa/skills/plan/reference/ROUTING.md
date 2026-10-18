@@ -61,7 +61,8 @@ acceptance record.
 
 ## Roster
 
-Named agents live in `.claude/agents/`; only recurring read-only or
+Named agents ship in the plugin's `agents/` folder and are spawned with the
+`agrippa:` prefix, for example `agrippa:validator`; only recurring read-only or
 command-runner roles are named.
 
 | File | Role | Disallowed tools | Default tier |
@@ -203,7 +204,7 @@ standards in the core rules, which name the diffs that need it and the size floo
 that exempts small ones, plan or not. Its `Design` findings are fixed before
 the change is reported done.
 
-`.claude/agents/plan-reviewer.md` owns the review subject list. A finding that
+The `agrippa:plan-reviewer` agent owns the review subject list. A finding that
 cannot be bound to correctness, a contract ID, or an acceptance ID is optional,
 and the lead does not act on it to close a review. This applies to self-review
 findings too. The recommended `receiving-review` skill gives a per-finding

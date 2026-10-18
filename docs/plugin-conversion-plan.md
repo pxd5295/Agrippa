@@ -1,10 +1,10 @@
 # Plan: turn Agrippa into a Claude Code plugin marketplace
 
-Written 2026-10-18. Status: Phases 0, 1, 2, 3, and 4 done on 2026-10-18.
-Phase 5 has not started. Phase 1's second check, that `claude --plugin-dir
-plugins/agrippa` lists the agents and skills, waits until the four agents and
-four kit skills move into `agents/` and `skills/` in a later phase. The `plan`
-and `handoff` skills are already in `skills/`.
+Written 2026-10-18. Status: Phases 0, 1, 2, 3, 4, and 5 done on 2026-10-18.
+Phase 6 has not started. Phase 5 moved the four agents and four kit skills
+into `agents/` and `skills/`, so Phase 1's second check, that `claude
+--plugin-dir plugins/agrippa` lists the agents and skills, can now be run in
+an interactive session; it has not been run yet.
 
 ## Goal
 
@@ -425,6 +425,48 @@ agents, kit skills, the shared linter, or the spawn logger.
 
 Done when it prints `PASS` here and fails, with a clear message, against
 nuro-battler before migration.
+
+Result, 2026-10-18: done. `dev/validate-kit.ps1` prints `PASS` with 1,218
+checks, and `claude plugin validate --strict` passes on both the plugin and
+the marketplace.
+
+- "The plugin layout" was taken to mean the target layout above. So the four
+  agents moved from `templates/agents/` to `agents/`, and the four kit skills
+  from `templates/skills/` to `skills/`, with `git mv`. The self-check fails
+  on any other entry at the plugin root, in `agents/`, or in `skills/`, and
+  on the old `templates/agents/` and `templates/skills/` folders.
+- The core rules' roster now names the agents and skills `agrippa:<name>`,
+  the name a spawn or skill load must use. They are 9,899 characters. The
+  frontmatter names stay bare, because Claude Code adds the prefix. Plugin
+  text other than `UPGRADING.md` and the README's upgrade prompt may not point
+  at a project copy path such as `.claude/agents/validator.md`; `ROUTING.md`
+  and `systematic-debugging` were changed to the `agrippa:` names.
+- The marketplace entry now carries `"version": "0.1.0"`, and the self-check
+  fails when it differs from `plugin.json`.
+- The `[PROJECT:` check covers every shipped file except `templates/` and the
+  README. The vocabulary and encoding checks now also cover the repository's
+  root files and `marketplace.json`; `docs/` and `history/` are records and
+  stay out. The two copies of `LICENSE` and of `NOTICE` must match.
+- A scratch copy with a stray root file, a version mismatch, a changed
+  `NOTICE`, a `[PROJECT:` slot in an agent, a copy path in a skill, and an
+  unprefixed roster name failed with one message for each.
+- `-InstalledRepo` no longer compares a copied linter. It prints each problem
+  as an `INSTALLED REPO:` line that names the file or setting and what to do.
+  Against nuro-battler it fails with 17 items: no marketplace declaration, no
+  `enabledPlugins` entry, two hook entries and one permission that run local
+  copies, no `project-contracts.md`, four agents, four kit skills,
+  `.claude/commands/handoff.md`, `tools/validate_plan_workspace.ps1`, and
+  `tools/log_subagent_spawns.ps1`. nuro-battler's `git status` was clean
+  before and after.
+- `tools/hook_payload.ps1` is not flagged in nuro-battler, because its
+  edit-lint hook, `lint_gd_file.ps1`, dot-sources it. Phase 8 must keep that
+  file, although step 2 lists it among the spawn-logger scripts.
+- nuro-battler has no `docs/agent_memory/project-contracts.md`, so Phase 8
+  must write one from its filled agents and skills.
+- The kit README gained "Enabling the plugin in a project", which shows the
+  two `settings.json` entries `-InstalledRepo` requires. Both setup prompts
+  and the adoption checklist now enable the plugin and keep no local copies.
+  Phase 6 still replaces the prompts with the install and upgrade skills.
 
 ### Phase 6: the install and upgrade skills
 

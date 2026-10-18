@@ -69,9 +69,16 @@ they need it to recognize and search for an old install.
   `sensor`.
 - A fresh worktree checkout resets file modification times, so check 24
   (freshness) counts differ between a worktree and the main checkout.
-- `validate-kit.ps1` compares an installed linter with the kit's after
-  normalizing line endings, because git converts them on checkout. A
-  byte-for-byte hash failed on CRLF versus LF on 2026-10-18.
+- `validate-kit.ps1 -InstalledRepo` used to compare a project's copy of the
+  linter with the kit's. Since Phase 5 of the plugin plan it fails on any
+  copy instead, because the project runs `agrippa-lint` from the plugin and a
+  copy could only drift. It also fails on a copy of a plugin agent or skill,
+  which would sit beside the plugin's `agrippa:` version and drift from it. It
+  leaves `tools/hook_payload.ps1` alone while another script in the folder
+  uses it, because nuro-battler's edit-lint hook dot-sources that helper.
+  Comparisons that remain, such as the two copies of `LICENSE`, normalize
+  line endings, because git converts them on checkout. A byte-for-byte hash
+  failed on CRLF versus LF on 2026-10-18.
 - Proof of the move, 2026-10-18. nuro-battler still had the G3 copy of the
   linter. The plugin linter, run from this repository as
   `powershell -NoProfile -ExecutionPolicy Bypass -File plugins/agrippa/scripts/validate_plan_workspace.ps1 -RepoRoot <nuro-battler> -PlanPath plans/<name>`,

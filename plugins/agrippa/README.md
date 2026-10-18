@@ -53,8 +53,8 @@ The methodology has three layers, and the kit installs all of them.
 | `templates/agent-memory-CLAUDE.md` | `docs/agent_memory/CLAUDE.md` |
 | `templates/decisions-README.md` | `docs/decisions/README.md` |
 | `templates/plans-README.md` | `plans/README.md` |
-| `templates/agents/*.md` | `.claude/agents/*.md` (`repo-scout`, `plan-reviewer`, `design-reviewer`, `validator`) |
-| `templates/skills/*/SKILL.md` | `.claude/skills/*/SKILL.md` (`design-first`, `systematic-debugging`, `verify-before-done`, `receiving-review`) |
+| `agents/*.md` | Not installed; the plugin's agents `agrippa:repo-scout`, `agrippa:plan-reviewer`, `agrippa:design-reviewer`, and `agrippa:validator`. A project keeps no copy in `.claude/agents/` |
+| `skills/*/SKILL.md` | Not installed; the plugin's skills `agrippa:design-first`, `agrippa:systematic-debugging`, `agrippa:verify-before-done`, and `agrippa:receiving-review`, plus `plan` and `handoff` below. A project keeps no copy in `.claude/skills/` |
 | `templates/hooks/README.md` | Not installed; how to opt in to the plugin's spawn logger, the edit-lint hook a project writes for itself, and the permission allowlist |
 | `templates/validate-plan-workspace.local.ps1` | `tools/validate_plan_workspace.local.ps1`, only when the project has command invariants to enforce |
 | `templates/MIGRATION.md` | `docs/planning/MIGRATION.md`, upgrades only |
@@ -77,8 +77,28 @@ The methodology has three layers, and the kit installs all of them.
 
 Two development files live outside this folder, in the `dev/` folder of the
 Agrippa repository, and are never installed. `dev/fixtures/run-smoke-test.ps1`
-proves the installed linter, and `dev/validate-kit.ps1` checks that this kit
+proves the plugin's linter, and `dev/validate-kit.ps1` checks that this kit
 is intact and self-consistent.
+
+## Enabling the plugin in a project
+
+A project enables the plugin in its committed `.claude/settings.json`. The
+marketplace's `ref` pins the release the project gets; use a release tag once
+Agrippa publishes one.
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "agrippa": {
+      "source": { "source": "github", "repo": "pxd5295/Agrippa", "ref": "v1.0.0" }
+    }
+  },
+  "enabledPlugins": { "agrippa@agrippa": true }
+}
+```
+
+Merge these two keys into the existing file; never replace its other entries.
+The settings take effect once the user trusts the folder.
 
 ## Placeholder convention
 
@@ -191,8 +211,11 @@ use.
    following every rule in templates/hooks/README.md and prove it by making
    one deliberate lint error and reverting it, or leave it unwired and say
    so; merge hooks and the permission allowlist into .claude/settings.json
-   without replacing existing entries. Do not change application code.
-   Preserve every unrelated user change.
+   without replacing existing entries. Enable the plugin in
+   .claude/settings.json as the README section "Enabling the plugin in a
+   project" shows. Never copy the plugin's agents, skills, linter, or spawn
+   logger into this repository. Do not change application code. Preserve
+   every unrelated user change.
 
 5. Validate, and paste the exact command and result for each:
    - `dev/fixtures/run-smoke-test.ps1 -RepoRoot <this repository>` from the
@@ -255,7 +278,12 @@ to use.
    (ownership areas, shared interfaces, commands, known traps) rather than
    rediscovering them. Project-specific checks that an old linter enforced
    move to tools/validate_plan_workspace.local.ps1; the shared linter is
-   replaced, never hand-merged. Install hooks as in the new-project prompt.
+   replaced, never hand-merged. Install hooks and enable the plugin as in the
+   new-project prompt. Delete this repository's copies of what the plugin
+   now provides (agents in .claude/agents, the kit skills in .claude/skills,
+   .claude/commands/handoff.md, tools/validate_plan_workspace.ps1, the
+   spawn-logger scripts, and the settings.json hook entries and permissions
+   that run them) only after I confirmed each deletion in step 3.
    Remove project-wide model or reasoning-effort pins and old toolchain
    configuration only after I confirmed it in step 3; otherwise list it under
    "Deprecated, awaiting confirmation". Never edit, move, rename, or convert a
@@ -306,14 +334,23 @@ source of truth. Change the methodology there first, run
 `dev/validate-kit.ps1`, and then upgrade each installed repository with the
 upgrade prompt above. A rule first tried out in an installed repository
 reaches other repositories only after it is ported back to the kit.
-`dev/validate-kit.ps1` checks file
-presence, required methodology clauses, leftover vocabulary from older
-toolchains, encoding, script parsing, and an end-to-end smoke test against a
-simulated project that has no copy of the linter.
 
-A project runs the linter from the plugin, with its own rules in
-`tools/validate_plan_workspace.local.ps1`. A repository installed from an
-older kit may still have a copy at `tools/validate_plan_workspace.ps1`.
-`dev/validate-kit.ps1 -InstalledRepo <path>` fails while that copy differs
-from `scripts/validate_plan_workspace.ps1` (line endings may differ). Without
-`-InstalledRepo`, it checks only the kit.
+`dev/validate-kit.ps1` checks the plugin layout, that `plugin.json` and the
+marketplace entry carry the same version, agent and skill frontmatter and
+their `agrippa:` names, that no `[PROJECT: ...]` slot appears outside
+`templates/`, that the core rules stay under 10,000 characters and the hooks
+print them, required methodology clauses, leftover vocabulary from older
+toolchains, encoding, script parsing, that the two copies of `LICENSE` and of
+`NOTICE` are identical, and an end-to-end smoke test against a simulated
+project that has no copy of the linter.
+
+`dev/validate-kit.ps1 -InstalledRepo <path>` also checks a project that uses
+the plugin. Its committed `.claude/settings.json` must declare the `agrippa`
+marketplace and enable `agrippa@agrippa`.
+`docs/agent_memory/project-contracts.md` and
+`docs/agent_memory/validation-commands.md` must exist. It must keep no copy of
+what the plugin provides: the agents in `.claude/agents/`, the plugin's skills
+in `.claude/skills/`, `.claude/commands/handoff.md`,
+`tools/validate_plan_workspace.ps1`, the spawn-logger scripts, or a
+`settings.json` hook or permission that runs them. Each failure names the file
+or setting and what to do. Without `-InstalledRepo`, it checks only the kit.
