@@ -8,8 +8,10 @@ that the templates still carry the methodology's required clauses, that agent
 and skill frontmatter is well formed and cross-referenced, that no vocabulary
 from an older toolchain survives outside UPGRADING.md, that text files are
 clean UTF-8 without trailing whitespace, and that every PowerShell script
-parses. It then simulates an install in a temporary folder and runs
-`fixtures/run-smoke-test.ps1` against it, which proves the shipped linter
+parses. Inside a repository that has installed the linter, it also checks that
+the installed copy is byte-identical to the kit's. It then simulates an
+install in a temporary folder and runs `fixtures/run-smoke-test.ps1` against
+it, which proves the shipped linter
 accepts the valid fixture and rejects the broken one.
 
 Like the workspace linter it ships, this checks shape and the presence of
@@ -217,6 +219,15 @@ Add-Check ($workspaceLinter -match 'validate_plan_workspace\.local\.ps1') 'Works
 $localTemplate = Read-KitFile 'templates/validate-plan-workspace.local.ps1'
 Add-Check ($localTemplate -match 'function Test-LocalValidationRow' -and $workspaceLinter -match 'Test-LocalValidationRow') 'Local-check template and linter disagree on Test-LocalValidationRow.'
 Add-Check ($localTemplate -match 'function Test-LocalValidationMatrix' -and $workspaceLinter -match 'Test-LocalValidationMatrix') 'Local-check template and linter disagree on Test-LocalValidationMatrix.'
+
+# When the kit lives at docs/<kit>/ in a repository that has installed the
+# linter, the installed copy must stay byte-identical to the kit's; project
+# rules belong in the local extension file instead. Elsewhere this is skipped.
+$installedLinter = Join-Path $kitRoot '../../tools/validate_plan_workspace.ps1'
+if (Test-Path -LiteralPath $installedLinter -PathType Leaf) {
+    $kitLinterHash = (Get-FileHash -LiteralPath (Join-Path $kitRoot 'templates/validate-plan-workspace.ps1')).Hash
+    Add-Check ((Get-FileHash -LiteralPath $installedLinter).Hash -eq $kitLinterHash) 'Installed tools/validate_plan_workspace.ps1 differs from templates/validate-plan-workspace.ps1; copy the kit linter over it unchanged.'
+}
 
 # The linter owns the template vocabulary it parses. Read its required packet
 # labels and stage fields from its own source, so a linter change is checked

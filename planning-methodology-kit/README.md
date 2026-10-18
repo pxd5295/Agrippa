@@ -264,3 +264,10 @@ does not reach the kit until someone ports it here. After porting, run
 `validate-kit.ps1`; it checks file presence, required methodology clauses,
 leftover vocabulary from older toolchains, encoding, script parsing, and an
 end-to-end smoke test against a simulated install.
+
+The linter is the exception: the source repository's
+`tools/validate_plan_workspace.ps1` is a byte-identical copy of
+`templates/validate-plan-workspace.ps1`, with its own rules in
+`tools/validate_plan_workspace.local.ps1`. Change the kit copy and copy it
+over the installed one. When the kit sits at `docs/<kit>/` in a repository
+with the linter installed, `validate-kit.ps1` fails while the two differ.
