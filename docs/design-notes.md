@@ -53,6 +53,53 @@ they need it to recognize and search for an old install.
 must pass and a mutated copy must fail. `validate-kit.ps1` runs it against a
 simulated install in a temporary folder.
 
+## Plugin feature checks (2026-10-18)
+
+Phase 0 of `docs/plugin-conversion-plan.md` tested the Claude Code features the
+plugin conversion depends on. The tests used a throwaway plugin loaded from a
+local directory marketplace, in a desktop-app session on Claude Code 2.1.299
+on Windows 11.
+
+- **SessionStart context.** A plugin `SessionStart` hook's `additionalContext`
+  reached the session at startup. The hook ran again after `/compact`, with
+  `source` set to `compact`, and its new text was in the compacted session.
+  A second, fresh session gave the same result.
+  The startup text survived only as a mention in the compaction summary, so
+  the injected rules depend on the hook running again after compaction, and
+  it does. A resumed session was not tested.
+- **Path substitution.** `${CLAUDE_PLUGIN_ROOT}` and `${CLAUDE_SKILL_DIR}` were
+  substituted in skill text, with forward slashes. Hook scripts also receive
+  `CLAUDE_PLUGIN_ROOT` as an environment variable. A plugin from a local
+  directory marketplace loads in place rather than from a cache copy.
+- **`bin/` on PATH.** A file in the plugin's `bin/` folder ran by bare name
+  from the Bash tool. It did not run from the PowerShell tool, whether named
+  with no extension, `.ps1`, or `.cmd`. So a matrix row that calls a `bin/`
+  command must run through the Bash tool.
+- **Plugin agents.** An agent spawned as `agprobe:echo-agent` with a `model`
+  override ran on that model. The `PreToolUse` hook received
+  `subagent_type: agprobe:echo-agent` and `model: sonnet`. The
+  `SubagentStart` hook received `agent_type: agprobe:echo-agent`.
+- **`disallowedTools`.** A plugin agent with no `tools:` line and
+  `disallowedTools: Write, Edit, NotebookEdit` had none of those three tools.
+  It kept every other tool, including the user's MCP tools. That is how a
+  shared agent can stay read-only and still use a project's live-app bridge.
+- **Skill `allowed-tools`.** A skill's `allowed-tools` line did not
+  pre-approve its command. In a fresh session in Ask permissions mode, a
+  skill's PowerShell command still asked for permission, even though it
+  matched the skill's `PowerShell(...)` rule exactly. Bash could not be tested
+  this way, because this environment ran every Bash command without a prompt,
+  with or without a skill. The first run's "no prompt" results came from that
+  automatic Bash approval and from the session being in auto mode. The plan
+  does not depend on `allowed-tools`, because a project can allow
+  `Bash(agrippa-lint:*)` in its settings.
+- **Hook changes need a new session.** A hook matcher changed while a session
+  was running did not take effect in that session.
+- **Skills after compaction.** A skill invoked again after compaction was not
+  delivered again. Claude Code pointed to the copy of the skill kept in the
+  compacted context.
+- **GitHub access.** `pxd5295/Agrippa` is public, so installing and updating
+  the plugin needs no GitHub credentials.
+
 ## Linter rules that are easy to trip over
 
 These cost three lint rounds (62 errors down to 0) on one nuro-battler plan.
