@@ -1,11 +1,11 @@
 ---
 name: design-first
-description: "Design a code change in this repo before editing it. Use before the first edit of any change, fix, or feature request that touches more than one function, adds a class, conditional, constant, or config key, or touches [PROJECT: the shared base classes, performance-owned subsystems, and configuration layer that need design care. Example from a Godot repo: WorldBase, AnimalBase, the native worker, the cfg layer], or a docs/agent_memory contract. Produces the design statement and placement decision required by the Engineering standards in AGENTS.md."
+description: "Design a code change in this repo before editing it. Use before the first edit of any change, fix, or feature request that touches more than one function, adds a class, conditional, constant, or config key, or touches [PROJECT: the shared base classes, performance-owned subsystems, and configuration layer that need design care. Example from a Godot repo: WorldBase, AnimalBase, the native worker, the cfg layer], or a docs/agent_memory contract. Produces the design statement and placement decision required by the Engineering standards in the Agrippa core rules."
 ---
 
 # Design first
 
-The Engineering standards in `AGENTS.md` require a design statement before the
+The Engineering standards in the core rules require a design statement before the
 first edit and a definition-of-done report at the end. This skill is the
 procedure for producing both in this codebase. It applies whether or not the
 change goes through a plan workspace.
@@ -137,14 +137,14 @@ memory.
 
 While reading the edit site, look for duplicated logic, a mode branch in a
 base class, a copied constant, or a call-site special case an owner should
-hold. Apply the refactor-or-file rule from `AGENTS.md`: fix it in this change
+hold. Apply the refactor-or-file rule from the core rules: fix it in this change
 if it stays in one ownership area and under roughly 50 lines; otherwise flag
 it as a separate task in the reply. Never extend the problem silently.
 
 ## 5. Report against the definition of done
 
 At the end of the change, list the six items from the definition of done in
-`AGENTS.md` and state which you verified, with the exact validation command
+the core rules and state which you verified, with the exact validation command
 and outcome. Exact commands and run limits are in
 `docs/agent_memory/validation-commands.md`. [PROJECT: any once-per-session
 setup step before the first validation run. Example from a Godot repo: run

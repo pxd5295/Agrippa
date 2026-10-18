@@ -1,6 +1,6 @@
 ---
 name: receiving-review
-description: Act on review findings from the design-reviewer or plan-reviewer agents, /code-review, or the user without either arguing them away or applying them blindly. Use when a review comes back on a diff you own, before editing anything in response. Produces a per-finding disposition that matches the Blocking/Optional and Design rules in AGENTS.md and ROUTING.md.
+description: Act on review findings from the design-reviewer or plan-reviewer agents, /code-review, or the user without either arguing them away or applying them blindly. Use when a review comes back on a diff you own, before editing anything in response. Produces a per-finding disposition that matches the Blocking/Optional and Design rules in the Agrippa core rules and ROUTING.md.
 ---
 
 # Receiving review
@@ -14,7 +14,7 @@ Reviews here come from four places, and the rules for what must be fixed
 differ:
 
 - `design-reviewer` reports `Design` findings against the Engineering
-  standards. `AGENTS.md` says these are fixed before the change is reported
+  standards. The core rules say these are fixed before the change is reported
   done.
 - `plan-reviewer` and `/code-review` classify findings as `Blocking` or
   `Optional`. `docs/planning/ROUTING.md` says the lead does not act on
@@ -53,7 +53,7 @@ differ:
      pushback without a citation is a guess.
    - **File** when the finding is real but lies outside the diff or the
      ownership area, or would exceed the roughly-50-line refactor-or-file
-     rule in `AGENTS.md`. Name it as a separate task in the reply.
+     rule in the core rules. Name it as a separate task in the reply.
    - **Decline without action** for `Optional` findings you are not taking.
      Say so in one line each; do not silently drop them and do not pad the
      diff with them.
@@ -75,6 +75,6 @@ differ:
 ## What this skill does not do
 
 It does not decide whether a review is needed at all; the size floor and the
-review topology in `AGENTS.md` and `docs/planning/ROUTING.md` do. It does not
+review topology in the core rules and `docs/planning/ROUTING.md` do. It does not
 close a plan stage; that still requires every acceptance and validation ID
 through `verify-before-done`.

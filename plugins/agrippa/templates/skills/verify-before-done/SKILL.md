@@ -1,12 +1,12 @@
 ---
 name: verify-before-done
-description: Produce the evidence behind any claim that work is done, a test passes, a build succeeds, a bug is fixed, or performance held. Use before reporting a change as done, before a commit, before closing a plan stage, and whenever a subagent or validator reports success. Turns the definition of done in AGENTS.md into a concrete gate with the repo's own commands and known false-positive traps.
+description: Produce the evidence behind any claim that work is done, a test passes, a build succeeds, a bug is fixed, or performance held. Use before reporting a change as done, before a commit, before closing a plan stage, and whenever a subagent or validator reports success. Turns the definition of done in the Agrippa core rules into a concrete gate with the repo's own commands and known false-positive traps.
 ---
 
 # Verify before done
 
 No claim of success without a command run in this session whose output you
-have read. The definition of done in `AGENTS.md` lists six items; this skill
+have read. The definition of done in the core rules lists six items; this skill
 is the procedure for item one, the named validation, and for saying honestly
 which of the other five you verified. Adapted from the
 `verification-before-completion` skill in obra/superpowers, trimmed to this

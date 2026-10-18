@@ -1,0 +1,25 @@
+{
+  "description": "Adds the Agrippa core rules to every session at startup, resume, clear, and after compaction, and to every subagent.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/scripts/inject_core_rules.ps1\" -HookEvent SessionStart"
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/scripts/inject_core_rules.ps1\" -HookEvent SubagentStart"
+          }
+        ]
+      }
+    ]
+  }
+}

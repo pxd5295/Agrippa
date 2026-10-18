@@ -25,15 +25,17 @@ named as not done, with the reason.
 
 ## Always-loaded rules
 
-- [ ] Root `AGENTS.md` keeps its role (triggers, safety, Engineering
-      standards, definition of done, planning size gate, launch, project
-      contracts) and routes lifecycle and routing detail to the two guides.
-- [ ] Questions about possible features are answer-and-offer, never edits.
-- [ ] Engineering standards name this repository's real base classes,
-      funnels, and contract owners; the design-reviewer size floor names the
-      subsystems that always get the pass.
-- [ ] Root `CLAUDE.md` imports `AGENTS.md` (`@AGENTS.md`) and lists the
-      roster, skills, planner read ladder, and validation reach.
+- [ ] The `agrippa` plugin is enabled, and a new session shows its core rules
+      (request boundaries, Engineering standards, definition of done,
+      planning size gate, launch, roster, skills, planner read ladder, and
+      validation reach) without reading any file.
+- [ ] Root `AGENTS.md` holds only the project contracts and project rules.
+- [ ] The "Architecture owners" table in `project-contracts.md` names this
+      repository's real base classes, funnels, configuration layer, and
+      performance-owned subsystem, which the Engineering standards and the
+      design-reviewer size floor refer to.
+- [ ] Root `CLAUDE.md` imports `AGENTS.md` (`@AGENTS.md`) and lists any
+      project skills.
 - [ ] Each ownership area with real rules has a per-directory `CLAUDE.md`;
       `docs/agent_memory/CLAUDE.md` and `docs/planning/CLAUDE.md` exist.
 - [ ] No project-wide pin of the lead's model or reasoning effort exists.

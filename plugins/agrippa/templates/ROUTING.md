@@ -194,7 +194,7 @@ Escalate the reviewer to Opus when the diff carries native, persistence, or
 security risk.
 
 The `design-reviewer` pass is separate and is owned by the Engineering
-standards in `AGENTS.md`, which name the diffs that need it and the size floor
+standards in the core rules, which name the diffs that need it and the size floor
 that exempts small ones, plan or not. Its `Design` findings are fixed before
 the change is reported done.
 

@@ -90,9 +90,9 @@ these rules the hard way. Keep all of them in a port:
   hook command itself.
 - **Keep rule configuration in the linter's own config file** with the reason
   for each tuned rule. Disable a rule that cannot be satisfied by a scoped
-  change, and a rule that would become a second owner for a value `AGENTS.md`
-  already owns (for example a maximum file length).
-- Style and syntax only. The structural rules in `AGENTS.md` (duplication,
+  change, and a rule that would become a second owner for a value the Agrippa core
+  rules already own (for example a maximum file length).
+- Style and syntax only. The structural rules in the core rules (duplication,
   file growth, contract drift) are diff-level and belong to `design-reviewer`.
 
 ```json

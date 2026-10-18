@@ -100,6 +100,37 @@ on Windows 11.
 - **GitHub access.** `pxd5295/Agrippa` is public, so installing and updating
   the plugin needs no GitHub credentials.
 
+## Core rules injection (2026-10-18)
+
+Phase 2 of `docs/plugin-conversion-plan.md` moved the generic always-loaded
+rules out of the `AGENTS.md` and `CLAUDE.md` templates into
+`plugins/agrippa/scripts/core-rules.md`. `scripts/inject_core_rules.ps1`
+prints that file as `additionalContext`.
+
+- **Two hooks, one script.** The plan named only a `SessionStart` hook. A
+  subagent does not receive `SessionStart` context; it starts with its own
+  prompt, the task, and the `CLAUDE.md` files. Before the split, subagents saw
+  the rules because the root `CLAUDE.md` imports `AGENTS.md`. Without a second
+  hook, `design-reviewer` and implementation workers would lose the
+  Engineering standards they are told to apply. A `SubagentStart` hook adds
+  the same text to every subagent before its first prompt.
+- **The 10,000-character cap.** Claude Code caps each context string at
+  10,000 characters and shows only a preview above that. The cap applies to
+  the `additionalContext` string, not to the JSON around it, so
+  `validate-kit.ps1` fails when `core-rules.md` reaches 10,000 characters. The
+  first version is 9,645 characters, so new rules need an equal cut or the
+  overflow skill the plan's risks section describes.
+- **Project names became table references.** The Engineering standards used
+  to name project classes inline. They now point to the "Architecture owners"
+  table in `docs/agent_memory/project-contracts.md`, so the same text works in
+  every project.
+- **The decision-record rule moved too.** "A shared-interface change starts
+  with a decision record" is methodology, so it is in the core rules. The
+  project's `AGENTS.md` names which interfaces are shared.
+- **UTF-8 output.** Windows PowerShell 5.1 encodes piped stdout in the console
+  code page, so the script writes UTF-8 bytes to the standard output stream
+  directly.
+
 ## Linter rules that are easy to trip over
 
 These cost three lint rounds (62 errors down to 0) on one nuro-battler plan.

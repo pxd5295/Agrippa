@@ -4,8 +4,10 @@ Validates the agrippa plugin's own files and the development files that test it.
 
 .DESCRIPTION
 Checks that every kit file under plugins/agrippa/ and every development file
-under dev/ exists, that every template is listed in the kit README layout
-table, that the templates still carry the methodology's required clauses, that
+under dev/ exists, that every template, script, and hook file is listed in the
+kit README layout table, that the core rules and templates still carry the
+methodology's required clauses, that the core rules stay under the
+10,000-character hook context cap and the injection hook prints them, that
 agent and skill frontmatter is well formed and cross-referenced, that no
 vocabulary from an older toolchain survives outside UPGRADING.md, that text
 files are clean UTF-8 without trailing whitespace, and that every PowerShell
@@ -71,6 +73,9 @@ $required = @(
     'README.md',
     'ADOPTION-CHECKLIST.md',
     'UPGRADING.md',
+    'scripts/core-rules.md',
+    'scripts/inject_core_rules.ps1',
+    'hooks/hooks.json',
     'templates/AGENTS.md',
     'templates/CLAUDE.md',
     'templates/directory-CLAUDE.md',
@@ -113,6 +118,8 @@ $requiredCount = $required.Count + $devRequired.Count + 1
 $readme = Read-KitFile 'README.md'
 $adoption = Read-KitFile 'ADOPTION-CHECKLIST.md'
 $upgrading = Read-KitFile 'UPGRADING.md'
+$coreRules = Read-KitFile 'scripts/core-rules.md'
+$hooksJson = Read-KitFile 'hooks/hooks.json'
 $agents = Read-KitFile 'templates/AGENTS.md'
 $claude = Read-KitFile 'templates/CLAUDE.md'
 $workflow = Read-KitFile 'templates/agent-workflow.md'
@@ -123,10 +130,13 @@ $spec = Read-KitFile 'templates/planning/SPEC.md'
 $plansReadme = Read-KitFile 'templates/plans-README.md'
 $workspaceLinter = Read-KitFile 'templates/validate-plan-workspace.ps1'
 
-# --- Every template is listed in the README layout table ------------------
+# --- Every template, script, and hook file is listed in the README layout table
 
-foreach ($file in Get-ChildItem -LiteralPath (Join-Path $kitRoot 'templates') -Recurse -File) {
-    $relative = 'templates/' + $file.FullName.Substring((Join-Path $kitRoot 'templates').Length).TrimStart('\', '/').Replace('\', '/')
+$listedFiles = foreach ($folder in @('templates', 'scripts', 'hooks')) {
+    Get-ChildItem -LiteralPath (Join-Path $kitRoot $folder) -Recurse -File
+}
+foreach ($file in $listedFiles) {
+    $relative = $file.FullName.Substring($kitRoot.Length).TrimStart('\', '/').Replace('\', '/')
     $listedAs = $relative
     if ($relative -like 'templates/agents/*.md') { $listedAs = 'templates/agents/*.md' }
     elseif ($relative -like 'templates/skills/*/SKILL.md') { $listedAs = 'templates/skills/*/SKILL.md' }
@@ -156,29 +166,81 @@ Test-Clauses 'README' $readme @(
     'UPGRADING\.md',
     'AskUserQuestion'
 )
-Test-Clauses 'AGENTS template' $agents @(
+# The methodology's always-loaded rules live in the core rules the plugin
+# injects. The AGENTS and CLAUDE templates hold project content only, so they
+# must not carry a second copy of a core section.
+Test-Clauses 'Core rules' $coreRules @(
+    '## Request boundaries',
     '## Engineering standards',
     '### Definition of done',
     'Size floor',
     'State the design before the first edit',
     'One owner per shared value',
     'Refactor or file it',
+    'Architecture owners',
     'is an answer\s+request',
     "Non-planning requests preserve the user's active model and reasoning effort",
+    '## Planning trigger',
     'Skip the workspace\s+entirely',
     'single-stage\s+shape',
     'No stage may hand off as `Open`',
+    '## Implementation launch',
     'engineering:architecture',
-    'docs/planning/ROUTING\.md'
-)
-Test-Clauses 'CLAUDE template' $claude @(
-    '@AGENTS\.md',
+    'docs/planning/ROUTING\.md',
+    '## Roster and skills',
     '## Planner read ladder',
     '## Validation reach',
     'checks shape,\s+never truth'
 )
 foreach ($name in ($agentNames + $skillNames)) {
-    Add-Check ($claude -match [regex]::Escape($name)) "CLAUDE template does not list $name."
+    Add-Check ($coreRules -match [regex]::Escape($name)) "Core rules do not list $name."
+}
+Add-Check ($coreRules -notmatch '\[PROJECT:') 'Core rules must be project-neutral: they contain a [PROJECT: ...] slot.'
+Add-Check ($coreRules.Length -lt 10000) "Core rules exceed the 10,000-character hook context cap: $($coreRules.Length)."
+Test-Clauses 'AGENTS template' $agents @(
+    '## Project contracts',
+    'docs/agent_memory/project-contracts\.md',
+    'docs/agent_memory/validation-commands\.md'
+)
+Test-Clauses 'CLAUDE template' $claude @(
+    '@AGENTS\.md'
+)
+foreach ($section in @('## Engineering standards', '### Definition of done', '## Planning trigger', '## Planner read ladder', '## Validation reach')) {
+    Add-Check (-not $agents.Contains($section)) "AGENTS template repeats the core rules section '$section'."
+    Add-Check (-not $claude.Contains($section)) "CLAUDE template repeats the core rules section '$section'."
+}
+
+# The hook must run the injection script on session and subagent start, and
+# the script must print the core rules unchanged as hook context.
+try {
+    $hookConfig = ConvertFrom-Json -InputObject $hooksJson
+} catch {
+    $hookConfig = $null
+}
+Add-Check ($null -ne $hookConfig) 'hooks/hooks.json is not valid JSON.'
+foreach ($hookEvent in @('SessionStart', 'SubagentStart')) {
+    $commands = @()
+    if ($null -ne $hookConfig -and $null -ne $hookConfig.hooks.$hookEvent) {
+        $commands = @($hookConfig.hooks.$hookEvent | ForEach-Object { $_.hooks } | ForEach-Object { $_.command })
+    }
+    $wired = @($commands | Where-Object { $_ -match 'CLAUDE_PLUGIN_ROOT\}/scripts/inject_core_rules\.ps1' -and $_ -match "-HookEvent $hookEvent\b" })
+    Add-Check ($wired.Count -eq 1) "hooks/hooks.json must run scripts/inject_core_rules.ps1 -HookEvent $hookEvent once on $hookEvent."
+    $shell = (Get-Process -Id $PID).Path
+    $ErrorActionPreference = 'Continue'
+    $hookOutput = & $shell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $kitRoot 'scripts/inject_core_rules.ps1') -HookEvent $hookEvent 2>&1 | ForEach-Object { [string]$_ }
+    $hookExit = $LASTEXITCODE
+    $ErrorActionPreference = 'Stop'
+    $hookPayload = $null
+    try {
+        $hookPayload = ConvertFrom-Json -InputObject ($hookOutput -join "`n")
+    } catch {
+        $hookPayload = $null
+    }
+    $printed = ''
+    if ($null -ne $hookPayload -and $hookPayload.hookSpecificOutput.hookEventName -eq $hookEvent) {
+        $printed = [string]$hookPayload.hookSpecificOutput.additionalContext
+    }
+    Add-Check ($hookExit -eq 0 -and $printed.Replace("`r`n", "`n") -ceq $coreRules.Replace("`r`n", "`n")) "inject_core_rules.ps1 -HookEvent $hookEvent did not print core-rules.md as $hookEvent additionalContext:`n$($hookOutput -join "`n")"
 }
 Test-Clauses 'Workflow template' $workflow @(
     'consumer census during\s+planning',
@@ -372,7 +434,6 @@ try {
     }
 }
 
-if ($agents.Length -gt 10000) { $warnings.Add("AGENTS template exceeds the 10,000-character soft target: $($agents.Length).") }
 if ($workflow.Length -gt 9000) { $warnings.Add("Workflow template exceeds the 9,000-character soft target: $($workflow.Length).") }
 if ($routing.Length -gt 9000) { $warnings.Add("ROUTING template exceeds the 9,000-character soft target: $($routing.Length).") }
 

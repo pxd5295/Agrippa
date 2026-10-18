@@ -7,7 +7,7 @@ description: "Find the root cause of a bug, failing test, crash, or performance 
 
 Find the cause before changing code. A fix applied to a symptom is not done,
 and in this codebase it usually lands as a call-site special case that the
-Engineering standards in `AGENTS.md` forbid. Follow the four phases in order.
+Engineering standards in the Agrippa core rules forbid. Follow the four phases in order.
 Each phase ends with something written in the reply so the user can see the
 chain of evidence.
 
@@ -125,7 +125,7 @@ tooling.
    funnel, the cfg layer.] Fix the owner. Do not add a conditional at the
    call site to route around it.
 3. One fix per change. No incidental improvements, and no bundled refactor
-   beyond the refactor-or-file rule in `AGENTS.md`.
+   beyond the refactor-or-file rule in the core rules.
 4. Verify with `verify-before-done` before reporting. A fix touching a gated
    subsystem is not done until its gate has run on a fresh build. [PROJECT:
    the gated subsystems and their gates. Example from a Godot repo: a fix

@@ -20,10 +20,13 @@ reasoning effort as the finer lever) apply only to subagents the lead spawns.
 
 The methodology has three layers, and the kit installs all of them.
 
-- **Always-loaded rules.** Root `AGENTS.md` (request boundaries, Engineering
-  standards, definition of done, planning trigger and size gate, launch, and
-  project contracts) and a root `CLAUDE.md` that imports it and adds the
-  roster, skills, planner read ladder, and validation reach. Per-directory
+- **Always-loaded rules.** The plugin's core rules (`scripts/core-rules.md`:
+  request boundaries, Engineering standards, definition of done, planning
+  trigger and size gate, launch, roster, skills, planner read ladder, and
+  validation reach), which a `SessionStart` hook adds to every session and a
+  `SubagentStart` hook adds to every subagent. The project keeps only its own
+  facts in a root `AGENTS.md` (project contracts and project rules) and a root
+  `CLAUDE.md` that imports it and lists project skills. Per-directory
   `CLAUDE.md` files hold rules that matter only in one folder.
 - **On-demand guides.** `docs/agent-workflow.md` (lifecycle, interview, design
   states, design-reference planning, risk, workspace shapes, evidence) and
@@ -60,6 +63,9 @@ The methodology has three layers, and the kit installs all of them.
 | `UPGRADING.md` | Not installed; the generation markers and rule mapping for upgrades |
 | `ADOPTION-CHECKLIST.md` | Not installed; every item is completed or reported |
 | `.claude-plugin/plugin.json` | Not installed; the plugin manifest |
+| `scripts/core-rules.md` | Not installed; the core rules the plugin adds to every session, kept under 10,000 characters |
+| `scripts/inject_core_rules.ps1` | Not installed; prints `scripts/core-rules.md` as hook context |
+| `hooks/hooks.json` | Not installed; runs `scripts/inject_core_rules.ps1` on `SessionStart` and `SubagentStart` |
 | `LICENSE`, `NOTICE` | Not installed as methodology files; they stay with the kit folder. The Apache-2.0 license and the attribution notice that redistributed copies must carry |
 
 Two development files live outside this folder, in the `dev/` folder of the
@@ -261,7 +267,7 @@ to use.
 Make a plan for [change]
 ```
 
-Small changes skip the workspace under the size gate in `AGENTS.md` and are
+Small changes skip the workspace under the size gate in the core rules and are
 implemented directly after a design statement. A plan ends with the first
 allocation and an exact resume prompt. `Implement plan [path]` then runs the
 lead plus routed subagents; no opt-in phrase or per-spawn confirmation is

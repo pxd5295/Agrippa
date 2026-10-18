@@ -22,9 +22,10 @@ own carries a `CLAUDE.md` at its root stating them.
 
 ## Architecture owners
 
-The Engineering standards in `AGENTS.md` and the `design-first` skill place
-every change at an existing owner. List the owners here so placement is a
-lookup, not a search.
+The Engineering standards in the Agrippa core rules and the `design-first`
+skill place every change at an existing owner, and they name the owners only
+by the row kinds below. List the owners here so placement is a lookup, not a
+search.
 
 | Owner kind | Where it lives | What it owns |
 |---|---|---|

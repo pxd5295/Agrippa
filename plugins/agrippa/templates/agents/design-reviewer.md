@@ -50,7 +50,8 @@ the review from the diff and say the visual check did not run.
 
 Work from the inline packet the lead supplies: the diff or file range under
 review, the design statement the lead gave before editing, and any plan path.
-Review the diff against the Engineering standards in `AGENTS.md` and the
+Review the diff against the Engineering standards in the Agrippa core rules,
+which the plugin adds to your context, and the
 placement rules in
 [PROJECT: path to the placement-rules procedure, e.g. .claude/skills/design-first/SKILL.md].
 You are looking for maintainability and architecture problems, not contract

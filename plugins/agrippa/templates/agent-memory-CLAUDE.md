@@ -33,8 +33,8 @@ cite them; they must stay accurate.
 - Keep `validation-commands.md` in sync with the test tree — a target must be
   registered there for a plan to cite it.
 - A new hook, base-class API, funnel, or shared interface gets a paragraph in
-  the relevant contract in the same change that adds it (`AGENTS.md`,
-  Engineering standards).
+  the relevant contract in the same change that adds it (the Engineering
+  standards in the Agrippa core rules).
 
 ## Note on Claude's separate memory
 

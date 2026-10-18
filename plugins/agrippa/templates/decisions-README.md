@@ -6,8 +6,8 @@ the record itself.
 
 ## When a record is required
 
-`AGENTS.md` requires one before the first edit of any shared interface listed
-in `docs/agent_memory/project-contracts.md`. Write it with the
+The Agrippa core rules require one before the first edit of any shared
+interface listed in `docs/agent_memory/project-contracts.md`. Write it with the
 `engineering:architecture` skill when that skill is installed, or by hand in
 the shape below. A new subsystem (a new base class or class family, native or
 extension module, editor panel, service, or ownership area) also runs

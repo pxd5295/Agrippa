@@ -1,14 +1,15 @@
 # Planning and implementation workflow
 
-Load this guide only for plan creation or plan implementation. Root `AGENTS.md`
-owns triggers and hard safety rules. This file owns planning, evidence,
+Load this guide only for plan creation or plan implementation. The Agrippa
+core rules own triggers and hard safety rules, and the root `AGENTS.md` owns
+the project contracts and project rules. This file owns planning, evidence,
 acceptance, and project contracts. `docs/planning/ROUTING.md` owns topology,
 tier selection, packets, waves, launch, and review.
 
 ## Planning lifecycle
 
-`AGENTS.md` owns the trigger and the gate that decides whether a workspace is
-warranted at all. This lifecycle starts once it is.
+The core rules own the trigger and the gate that decides whether a workspace
+is warranted at all. This lifecycle starts once it is.
 
 ### 1. Inspect narrowly
 
@@ -133,7 +134,7 @@ acceptance text matches `SPEC.md` after whitespace normalization.
 
 ### Workspace shape
 
-Two shapes are allowed; the trigger gate in `AGENTS.md` chooses between them,
+Two shapes are allowed; the trigger gate in the core rules chooses between them,
 and the linter applies unchanged to both.
 
 The **single-stage shape** is the default for bounded work in one ownership area
