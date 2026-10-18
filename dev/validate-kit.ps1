@@ -1,17 +1,18 @@
 <#
 .SYNOPSIS
-Validates the portable planning methodology kit's own files.
+Validates the agrippa plugin's own files and the development files that test it.
 
 .DESCRIPTION
-Checks that every kit file exists and is listed in the README layout table,
-that the templates still carry the methodology's required clauses, that agent
-and skill frontmatter is well formed and cross-referenced, that no vocabulary
-from an older toolchain survives outside UPGRADING.md, that text files are
-clean UTF-8 without trailing whitespace, and that every PowerShell script
-parses. Given a repository that has installed the linter, it also checks that
-the installed copy is byte-identical to the kit's. It then simulates an
-install in a temporary folder and runs `fixtures/run-smoke-test.ps1` against
-it, which proves the shipped linter
+Checks that every kit file under plugins/agrippa/ and every development file
+under dev/ exists, that every template is listed in the kit README layout
+table, that the templates still carry the methodology's required clauses, that
+agent and skill frontmatter is well formed and cross-referenced, that no
+vocabulary from an older toolchain survives outside UPGRADING.md, that text
+files are clean UTF-8 without trailing whitespace, and that every PowerShell
+script parses. Given a repository that has installed the linter, it also
+checks that the installed copy is byte-identical to the kit's. It then
+simulates an install in a temporary folder and runs
+`dev/fixtures/run-smoke-test.ps1` against it, which proves the shipped linter
 accepts the valid fixture and rejects the broken one.
 
 Like the workspace linter it ships, this checks shape and the presence of
@@ -20,10 +21,7 @@ documented contracts, never semantic truth. Windows PowerShell 5.1-clean.
 .PARAMETER InstalledRepo
 Root of a repository that has installed this kit. Its
 tools/validate_plan_workspace.ps1 must match the kit's linter exactly, apart
-from line endings.
-Defaults to the folder two levels above the kit, which is the repository root
-when the kit was copied to docs/<kit>/; the check is skipped when the default
-has no installed linter.
+from line endings. The check is skipped when this is omitted.
 #>
 [CmdletBinding()]
 param(
@@ -31,11 +29,11 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$kitRoot = $PSScriptRoot
-# Windows PowerShell 5.1 leaves $PSScriptRoot empty in parameter defaults.
-if (-not $InstalledRepo) {
-    $InstalledRepo = Join-Path $kitRoot '../..'
-}
+# This script lives in dev/ at the Agrippa repository root. Windows PowerShell
+# 5.1 leaves $PSScriptRoot empty in parameter defaults, so resolve it here.
+$devRoot = $PSScriptRoot
+$repoRoot = (Resolve-Path -LiteralPath (Join-Path $devRoot '..')).Path
+$kitRoot = (Resolve-Path -LiteralPath (Join-Path $repoRoot 'plugins/agrippa')).Path
 $errors = New-Object 'System.Collections.Generic.List[string]'
 $warnings = New-Object 'System.Collections.Generic.List[string]'
 $checks = 0
@@ -48,14 +46,20 @@ function Add-Check {
     }
 }
 
-function Read-KitFile {
-    param([string]$RelativePath)
-    $path = Join-Path $kitRoot $RelativePath
-    Add-Check (Test-Path -LiteralPath $path -PathType Leaf) "Missing kit file: $RelativePath"
+function Read-RepoFile {
+    param([string]$Root, [string]$RelativePath)
+    $path = Join-Path $Root $RelativePath
+    $shown = $path.Substring($repoRoot.Length).TrimStart('\', '/').Replace('\', '/')
+    Add-Check (Test-Path -LiteralPath $path -PathType Leaf) "Missing file: $shown"
     if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
         return ''
     }
     return [IO.File]::ReadAllText($path, [Text.Encoding]::UTF8)
+}
+
+function Read-KitFile {
+    param([string]$RelativePath)
+    return Read-RepoFile $kitRoot $RelativePath
 }
 
 $agentNames = @('repo-scout', 'plan-reviewer', 'design-reviewer', 'validator')
@@ -63,10 +67,10 @@ $skillNames = @('design-first', 'systematic-debugging', 'verify-before-done', 'r
 $planningNames = @('SPEC', 'PLAN', 'PACKETS', 'STATUS', 'EVIDENCE')
 
 $required = @(
+    '.claude-plugin/plugin.json',
     'README.md',
     'ADOPTION-CHECKLIST.md',
     'UPGRADING.md',
-    'validate-kit.ps1',
     'templates/AGENTS.md',
     'templates/CLAUDE.md',
     'templates/directory-CLAUDE.md',
@@ -84,17 +88,27 @@ $required = @(
     'templates/validate-plan-workspace.local.ps1',
     'templates/hooks/README.md',
     'templates/hooks/hook_payload.ps1',
-    'templates/hooks/log_subagent_spawns.ps1',
-    'fixtures/run-smoke-test.ps1'
+    'templates/hooks/log_subagent_spawns.ps1'
 )
 $required += @($agentNames | ForEach-Object { "templates/agents/$_.md" })
 $required += @($skillNames | ForEach-Object { "templates/skills/$_/SKILL.md" })
 $required += @($planningNames | ForEach-Object { "templates/planning/$_.md" })
-$required += @($planningNames | ForEach-Object { "fixtures/smoke-workspace/$_.md" })
+
+# Development files are not shipped with the plugin.
+$devRequired = @(
+    'validate-kit.ps1',
+    'fixtures/run-smoke-test.ps1'
+)
+$devRequired += @($planningNames | ForEach-Object { "fixtures/smoke-workspace/$_.md" })
 
 foreach ($path in $required) {
     [void](Read-KitFile $path)
 }
+foreach ($path in $devRequired) {
+    [void](Read-RepoFile $devRoot $path)
+}
+[void](Read-RepoFile $repoRoot '.claude-plugin/marketplace.json')
+$requiredCount = $required.Count + $devRequired.Count + 1
 
 $readme = Read-KitFile 'README.md'
 $adoption = Read-KitFile 'ADOPTION-CHECKLIST.md'
@@ -236,15 +250,14 @@ Add-Check ($localTemplate -match 'function Test-LocalValidationMatrix' -and $wor
 
 # A repository that has installed the linter must keep it identical to the
 # kit's, apart from line endings, which git may convert on checkout; project
-# rules belong in the local extension file instead. An explicit -InstalledRepo
-# must have the linter; the default may not.
-$installedLinter = Join-Path $InstalledRepo 'tools/validate_plan_workspace.ps1'
-if ($PSBoundParameters.ContainsKey('InstalledRepo')) {
+# rules belong in the local extension file instead.
+if ($InstalledRepo) {
+    $installedLinter = Join-Path $InstalledRepo 'tools/validate_plan_workspace.ps1'
     Add-Check (Test-Path -LiteralPath $installedLinter -PathType Leaf) "-InstalledRepo has no tools/validate_plan_workspace.ps1: $InstalledRepo"
-}
-if (Test-Path -LiteralPath $installedLinter -PathType Leaf) {
-    $installedText = [IO.File]::ReadAllText($installedLinter, [Text.Encoding]::UTF8).Replace("`r`n", "`n")
-    Add-Check ($installedText -ceq $workspaceLinter.Replace("`r`n", "`n")) 'Installed tools/validate_plan_workspace.ps1 differs from templates/validate-plan-workspace.ps1; copy the kit linter over it unchanged.'
+    if (Test-Path -LiteralPath $installedLinter -PathType Leaf) {
+        $installedText = [IO.File]::ReadAllText($installedLinter, [Text.Encoding]::UTF8).Replace("`r`n", "`n")
+        Add-Check ($installedText -ceq $workspaceLinter.Replace("`r`n", "`n")) 'Installed tools/validate_plan_workspace.ps1 differs from templates/validate-plan-workspace.ps1; copy the kit linter over it unchanged.'
+    }
 }
 
 # The linter owns the template vocabulary it parses. Read its required packet
@@ -301,11 +314,12 @@ $substringTerms = @(
     'workspace-write'
 )
 # UPGRADING.md must name the old markers to recognize them, and this script
-# names them to search for them.
-$vocabularyExempt = @('UPGRADING.md', 'validate-kit.ps1')
+# names them to search for them. Paths are relative to the repository root.
+$vocabularyExempt = @('plugins/agrippa/UPGRADING.md', 'dev/validate-kit.ps1')
 
-foreach ($file in Get-ChildItem -LiteralPath $kitRoot -Recurse -File) {
-    $relative = $file.FullName.Substring($kitRoot.Length).TrimStart('\', '/').Replace('\', '/')
+$checkedFiles = @(Get-ChildItem -LiteralPath $kitRoot -Recurse -File) + @(Get-ChildItem -LiteralPath $devRoot -Recurse -File)
+foreach ($file in $checkedFiles) {
+    $relative = $file.FullName.Substring($repoRoot.Length).TrimStart('\', '/').Replace('\', '/')
     $bytes = [IO.File]::ReadAllBytes($file.FullName)
     Add-Check (-not ($bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF)) "UTF-8 byte-order mark: $relative"
     $text = [IO.File]::ReadAllText($file.FullName, [Text.Encoding]::UTF8)
@@ -331,7 +345,7 @@ Add-Check (-not (Test-Path -LiteralPath (Join-Path $kitRoot 'templates/config.to
 
 # --- PowerShell scripts must parse -----------------------------------------
 
-foreach ($script in Get-ChildItem -LiteralPath $kitRoot -Recurse -Filter '*.ps1' -File) {
+foreach ($script in ($checkedFiles | Where-Object { $_.Extension -eq '.ps1' })) {
     $tokens = $null
     $parseErrors = $null
     [void][System.Management.Automation.Language.Parser]::ParseFile($script.FullName, [ref]$tokens, [ref]$parseErrors)
@@ -348,7 +362,7 @@ try {
     Copy-Item -LiteralPath (Join-Path $kitRoot 'templates/validate-plan-workspace.ps1') -Destination (Join-Path $simRoot 'tools/validate_plan_workspace.ps1')
     $shell = (Get-Process -Id $PID).Path
     $ErrorActionPreference = 'Continue'
-    $smoke = & $shell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $kitRoot 'fixtures/run-smoke-test.ps1') -RepoRoot $simRoot 2>&1 | ForEach-Object { [string]$_ }
+    $smoke = & $shell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $devRoot 'fixtures/run-smoke-test.ps1') -RepoRoot $simRoot 2>&1 | ForEach-Object { [string]$_ }
     $smokeExit = $LASTEXITCODE
     $ErrorActionPreference = 'Stop'
     Add-Check ($smokeExit -eq 0) "Smoke test against a simulated install failed:`n$($smoke -join "`n")"
@@ -373,4 +387,4 @@ if ($errors.Count -gt 0) {
     exit 1
 }
 
-Write-Output "PASS: $checks kit checks, $($required.Count) required files, smoke test passed, $($warnings.Count) warning(s)."
+Write-Output "PASS: $checks kit checks, $requiredCount required files, smoke test passed, $($warnings.Count) warning(s)."

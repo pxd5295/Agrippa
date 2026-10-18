@@ -59,8 +59,12 @@ The methodology has three layers, and the kit installs all of them.
 | `templates/MIGRATION.md` | `docs/planning/MIGRATION.md`, upgrades only |
 | `UPGRADING.md` | Not installed; the generation markers and rule mapping for upgrades |
 | `ADOPTION-CHECKLIST.md` | Not installed; every item is completed or reported |
-| `fixtures/` | Not installed; `run-smoke-test.ps1` proves the installed linter |
-| `validate-kit.ps1` | Not installed; checks that this kit is intact and self-consistent |
+| `.claude-plugin/plugin.json` | Not installed; the plugin manifest |
+
+Two development files live outside this folder, in the `dev/` folder of the
+Agrippa repository, and are never installed. `dev/fixtures/run-smoke-test.ps1`
+proves the installed linter, and `dev/validate-kit.ps1` checks that this kit
+is intact and self-consistent.
 
 ## Placeholder convention
 
@@ -109,13 +113,15 @@ workspace. The fixture's consumer census also expects line 1 of the installed
 
 ## Setup prompt: project with no planning methodology
 
-Copy the kit folder into the target repository, start Claude Code at the
-repository root on a strong model at high effort, and paste:
+Copy the kit folder, `plugins/agrippa/` in Agrippa, into the target
+repository. Keep an Agrippa checkout next to the target repository for the
+smoke test and the self-check. Start Claude Code at the target repository's
+root on a strong model at high effort, and paste:
 
 ```text
-Install the planning methodology from the kit folder named
-`planning-methodology-kit` in this repository. If more than one folder has that
-name, stop and ask which one to use.
+Install the planning methodology from the kit folder named `agrippa` in this
+repository. If more than one folder has that name, stop and ask which one to
+use.
 
 1. Read the kit completely before changing anything: README.md,
    ADOPTION-CHECKLIST.md, and every file under templates/. The installed
@@ -156,13 +162,15 @@ name, stop and ask which one to use.
    Preserve every unrelated user change.
 
 5. Validate, and paste the exact command and result for each:
-   - `fixtures/run-smoke-test.ps1 -RepoRoot .` from the kit must print PASS;
+   - `dev/fixtures/run-smoke-test.ps1 -RepoRoot <this repository>` from the
+     Agrippa checkout must print PASS;
    - the README's install-marker scan must find nothing;
    - each command in docs/agent_memory/validation-commands.md must have been
      run once and its result recorded;
    - if a local linter file was installed, write one small real plan
      workspace for a trivial change, lint it, and delete it;
-   - the kit's `validate-kit.ps1` must print PASS.
+   - `dev/validate-kit.ps1 -InstalledRepo <this repository>` from the Agrippa
+     checkout must print PASS.
 
 6. Report: the files installed, each project-specific adaptation and the
    evidence behind it, every ADOPTION-CHECKLIST item as done or not done with
@@ -180,8 +188,8 @@ that has drifted, or a different planning process. Paste:
 
 ```text
 Upgrade this repository's planning methodology to the one in the kit folder
-named `planning-methodology-kit`. If more than one folder has that name, stop
-and ask which one to use.
+named `agrippa`. If more than one folder has that name, stop and ask which one
+to use.
 
 1. Read the kit completely before changing anything: README.md, UPGRADING.md,
    ADOPTION-CHECKLIST.md, and every file under templates/. The result must
@@ -222,7 +230,8 @@ and ask which one to use.
    unrelated user change.
 
 5. Validate, and paste the exact command and result for each:
-   - `fixtures/run-smoke-test.ps1 -RepoRoot .` from the kit must print PASS;
+   - `dev/fixtures/run-smoke-test.ps1 -RepoRoot <this repository>` from the
+     Agrippa checkout must print PASS;
    - the README's install-marker scan must find nothing;
    - a search of AGENTS.md, CLAUDE.md, docs/, and .claude/ for the old
      toolchain's markers from UPGRADING.md must find nothing outside
@@ -234,7 +243,8 @@ and ask which one to use.
      plans are expected);
    - each command in docs/agent_memory/validation-commands.md must have been
      run once and its result recorded;
-   - the kit's `validate-kit.ps1` must print PASS.
+   - `dev/validate-kit.ps1 -InstalledRepo <this repository>` from the Agrippa
+     checkout must print PASS.
    Record all of it in docs/planning/MIGRATION.md.
 
 6. Report: the generation found, the mapping, the files changed, each
@@ -259,10 +269,11 @@ needed. `/handoff` writes a short brief when a session ends mid-plan.
 ## Keeping the kit current
 
 The kit is maintained in its own repository, Agrippa, and that copy is the
-source of truth. Change the methodology there first, run `validate-kit.ps1`,
-and then upgrade each installed repository with the upgrade prompt above. A
-rule first tried out in an installed repository reaches other repositories
-only after it is ported back to the kit. `validate-kit.ps1` checks file
+source of truth. Change the methodology there first, run
+`dev/validate-kit.ps1`, and then upgrade each installed repository with the
+upgrade prompt above. A rule first tried out in an installed repository
+reaches other repositories only after it is ported back to the kit.
+`dev/validate-kit.ps1` checks file
 presence, required methodology clauses, leftover vocabulary from older
 toolchains, encoding, script parsing, and an end-to-end smoke test against a
 simulated install.
@@ -271,7 +282,5 @@ An installed repository's `tools/validate_plan_workspace.ps1` is an unchanged
 copy of `templates/validate-plan-workspace.ps1` (line endings may differ),
 with its own
 rules in `tools/validate_plan_workspace.local.ps1`. Change the kit copy and
-copy it over the installed one. `validate-kit.ps1 -InstalledRepo <path>`
-fails while the two differ. Without `-InstalledRepo`, it checks the
-repository two folders above the kit, which is the root when the kit was
-copied to `docs/<kit>/`.
+copy it over the installed one. `dev/validate-kit.ps1 -InstalledRepo <path>`
+fails while the two differ. Without `-InstalledRepo`, it checks only the kit.

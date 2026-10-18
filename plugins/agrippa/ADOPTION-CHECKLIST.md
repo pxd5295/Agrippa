@@ -108,10 +108,11 @@ named as not done, with the reason.
 
 ## Offline validation
 
-- [ ] The kit's `validate-kit.ps1` prints PASS.
-- [ ] `fixtures/run-smoke-test.ps1 -RepoRoot .` prints PASS against the
-      installed linter (valid fixture passes, broken fixture fails with the
-      expected errors).
+- [ ] Agrippa's `dev/validate-kit.ps1 -InstalledRepo <this repository>` prints
+      PASS.
+- [ ] Agrippa's `dev/fixtures/run-smoke-test.ps1 -RepoRoot <this repository>`
+      prints PASS against the installed linter (valid fixture passes, broken
+      fixture fails with the expected errors).
 - [ ] The shared linter is unedited. This repository's command invariants and
       any narrower `$CommandPathExtensions` live in
       `tools/validate_plan_workspace.local.ps1`, proved by linting one real

@@ -1,7 +1,9 @@
 # Plan: turn Agrippa into a Claude Code plugin marketplace
 
-Written 2026-10-18. Status: Phase 0 done on 2026-10-18. Phase 1 has not
-started.
+Written 2026-10-18. Status: Phase 0 and Phase 1 done on 2026-10-18. Phase 2
+has not started. Phase 1's second check, that `claude --plugin-dir
+plugins/agrippa` lists the agents and skills, waits until the templates move
+into `agents/` and `skills/` in a later phase.
 
 ## Goal
 
