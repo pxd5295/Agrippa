@@ -21,6 +21,7 @@ copying `plugins/agrippa/` into it.
 | `docs/research-2026-08.md` | The external research behind several rules, with sources. | No |
 | `docs/plugin-conversion-plan.md` | The plan to turn Agrippa into a plugin marketplace. | No |
 | `history/plans/` | Two plan workspaces from nuro-battler that built earlier versions of the methodology. They are read-only history. | No |
+| `LICENSE`, `NOTICE` | The Apache-2.0 license and the attribution notice. Copies of both are inside `plugins/agrippa/`, so they travel with the plugin. | Yes, the copies in the plugin folder |
 
 ## Working on the kit
 
@@ -46,3 +47,17 @@ copying `plugins/agrippa/` into it.
 | Repository | Path from here | State on 2026-10-18 |
 |---|---|---|
 | nuro-battler | `../evolution-game/nuro-battler` | Installed. Runs the kit linter unchanged, with its Godot rules in `tools/validate_plan_workspace.local.ps1`; `validate-kit.ps1 -InstalledRepo` passes. |
+
+## License
+
+Agrippa is licensed under the Apache License, Version 2.0. See `LICENSE`.
+
+Anyone may use, modify, and redistribute it, including commercially. A
+redistributed copy must include the license and the attribution in `NOTICE`.
+Any file someone modifies must say that it was changed. Section 6 of the
+license gives no permission to use the name Agrippa, except to describe
+where the work came from. So a modified version may say that it is based on
+Agrippa, but the license does not let it call itself Agrippa.
+
+The two copies of `LICENSE` and of `NOTICE`, at the repository root and in
+`plugins/agrippa/`, must stay identical.

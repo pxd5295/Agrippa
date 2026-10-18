@@ -60,6 +60,7 @@ The methodology has three layers, and the kit installs all of them.
 | `UPGRADING.md` | Not installed; the generation markers and rule mapping for upgrades |
 | `ADOPTION-CHECKLIST.md` | Not installed; every item is completed or reported |
 | `.claude-plugin/plugin.json` | Not installed; the plugin manifest |
+| `LICENSE`, `NOTICE` | Not installed as methodology files; they stay with the kit folder. The Apache-2.0 license and the attribution notice that redistributed copies must carry |
 
 Two development files live outside this folder, in the `dev/` folder of the
 Agrippa repository, and are never installed. `dev/fixtures/run-smoke-test.ps1`
