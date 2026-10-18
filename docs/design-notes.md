@@ -130,6 +130,11 @@ prints that file as `additionalContext`.
 - **UTF-8 output.** Windows PowerShell 5.1 encodes piped stdout in the console
   code page, so the script writes UTF-8 bytes to the standard output stream
   directly.
+- **Proof.** On 2026-10-18 a fresh desktop session (Claude Code 2.1.299,
+  Windows 11) enabled the plugin from this repository as a local directory
+  marketplace. It listed all eight Engineering standards without reading any
+  file. A `general-purpose` subagent it spawned quoted the rules and said they
+  arrived as `SubagentStart` context.
 
 ## Linter rules that are easy to trip over
 

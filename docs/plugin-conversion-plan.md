@@ -1,6 +1,6 @@
 # Plan: turn Agrippa into a Claude Code plugin marketplace
 
-Written 2026-10-18. Status: Phase 0 and Phase 1 done on 2026-10-18. Phase 2
+Written 2026-10-18. Status: Phases 0, 1, and 2 done on 2026-10-18. Phase 3
 has not started. Phase 1's second check, that `claude --plugin-dir
 plugins/agrippa` lists the agents and skills, waits until the templates move
 into `agents/` and `skills/` in a later phase.
@@ -120,8 +120,10 @@ The generic parts of the `AGENTS.md` and `CLAUDE.md` templates become
 standards, the definition of done, the planning trigger and size gate,
 implementation launch, the roster, the skills list, the planner read ladder,
 and validation reach. A `SessionStart` hook prints that file as
-`additionalContext`. The project's own `AGENTS.md` keeps only the project
-contracts section and any project rules.
+`additionalContext`. A `SubagentStart` hook prints it for every subagent,
+which does not receive `SessionStart` context (added in Phase 2). The
+project's own `AGENTS.md` keeps only the project contracts section and any
+project rules.
 
 The reason is that these rules change with the methodology, so they must
 update with the plugin. The alternative, keeping them in each project's
@@ -298,6 +300,25 @@ Done when `claude plugin validate plugins/agrippa --strict` passes and
 
 Done when a fresh session in a test folder with the plugin enabled can state
 the Engineering standards without reading any file.
+
+Result, 2026-10-18: done. `core-rules.md` is 9,645 characters.
+
+- The hook runs on `SubagentStart` as well as `SessionStart`, because
+  subagents do not receive `SessionStart` context. `docs/design-notes.md`
+  records why, under "Core rules injection".
+- A fresh desktop session in a scratch folder enabled the plugin from this
+  repository as a local directory marketplace. Without reading any file, it
+  listed all eight Engineering standards and the size floor.
+- A `general-purpose` subagent spawned from that session quoted the first
+  standard and the size floor. It said the rules arrived as `SubagentStart`
+  context.
+- The session's transcript shows no file read. Its only tool call was the
+  subagent spawn.
+- The smoke fixture's acceptance text still says the root `AGENTS.md` names
+  the planning trigger. The linter checks shape only, so it still passes.
+  Phase 4 rewrites the fixture.
+- `UPGRADING.md` still maps old rules to sections of `AGENTS.md`. Phase 6
+  rewrites it for G4.
 
 ### Phase 3: make the skills and agents project-neutral
 
