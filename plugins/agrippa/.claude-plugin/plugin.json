@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Planning and implementation methodology: plan workspaces, routed subagents, review skills, and the plan-workspace linter.",
   "author": {
-    "name": "Patrick"
+    "name": "Patrick Dalesio"
   },
   "repository": "https://github.com/pxd5295/Agrippa",
   "license": "Apache-2.0"
