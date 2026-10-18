@@ -7,15 +7,17 @@ into other repositories.
 
 Agrippa is being turned into a Claude Code plugin marketplace with one plugin,
 `agrippa`. `docs/plugin-conversion-plan.md` describes the phases and their
-status. Until that work is finished, a project still installs the kit by
-copying `plugins/agrippa/` into it.
+status. A project enables the plugin and runs `/agrippa:install`, or
+`/agrippa:upgrade` when it already has planning rules. Until a release tag is
+published, enable the plugin from a local checkout of this repository as a
+directory marketplace.
 
 ## Layout
 
 | Path | What it is | Shipped to other repositories? |
 |---|---|---|
 | `.claude-plugin/marketplace.json` | The marketplace manifest. It lists the one plugin, `agrippa`. | Yes, as the marketplace a project adds. |
-| `plugins/agrippa/` | The plugin and installable kit: templates, linter, install and upgrade prompts. Start with its `README.md`. | Yes, this folder is copied into a target repository. |
+| `plugins/agrippa/` | The plugin: core rules, agents, skills (including `install` and `upgrade`), project-side templates, and the linter. Start with its `README.md`. | Yes, as the plugin a project enables. |
 | `dev/` | The kit's self-check, `validate-kit.ps1`, and the smoke-test fixture in `fixtures/`. | No |
 | `docs/design-notes.md` | Why the kit is shaped the way it is, and the linter rules that are easy to trip over. | No |
 | `docs/research-2026-08.md` | The external research behind several rules, with sources. | No |
@@ -46,11 +48,13 @@ copying `plugins/agrippa/` into it.
    `docs/agent_memory/project-contracts.md` and
    `docs/agent_memory/validation-commands.md`. It must keep no local copy of
    the plugin's agents, its skills, the shared linter
-   (`tools/validate_plan_workspace.ps1`), or the spawn-logger scripts. Each
+   (`tools/validate_plan_workspace.ps1`), the spawn logger, or its
+   `hook_payload.ps1` helper unless a project script still uses it. Each
    failure is printed as an `INSTALLED REPO:` line that names the file or
    setting and says what to do.
-4. Upgrade each installed repository with the upgrade prompt in
-   `plugins/agrippa/README.md`.
+4. Upgrade each installed repository by moving its marketplace `ref` to the
+   new tag, or with `/agrippa:upgrade` when its project documents must change
+   too.
 
 ## Installed repositories
 

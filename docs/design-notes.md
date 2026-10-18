@@ -146,6 +146,17 @@ on Windows 11.
   compacted context.
 - **GitHub access.** `pxd5295/Agrippa` is public, so installing and updating
   the plugin needs no GitHub credentials.
+- **`disable-model-invocation` hides a plugin skill.** Found on 2026-10-18
+  during the Phase 6 install proof, in a desktop-app session on Claude Code
+  2.1.299 on Windows 11, with the plugin loaded from a local directory
+  marketplace. The three plugin skills with `disable-model-invocation: true`
+  (`install`, `upgrade`, and `handoff`) were missing from that session, while
+  the other five skills and the four agents loaded. `Skill("agrippa:install")`
+  returned "Unknown skill", and when the user typed `/agrippa:install` the app
+  said no command by that name exists. So in this app the flag removes the
+  skill entirely, not only its model invocation. These skills have no flag.
+  Each description says instead that it runs only when the user explicitly
+  asks, and `dev/validate-kit.ps1` fails on the flag in any plugin skill.
 
 ## Agent tools after Phase 3 (2026-10-18)
 
@@ -217,8 +228,11 @@ prints that file as `additionalContext`.
   traps", "Runtime writes and caches", and a new "UI capture" section in
   `validation-commands.md`; and the "Gated subsystems" owner row.
 - **`handoff` is a skill.** It replaces `commands/handoff.md` and keeps
-  `$ARGUMENTS`. It has `disable-model-invocation: true`, because the command
-  only ever ran when the user typed it.
+  `$ARGUMENTS`. Phase 4 gave it `disable-model-invocation: true`, because the
+  command only ever ran when the user typed it. Phase 6 removed the flag,
+  because the desktop app then hides the skill entirely (see "Plugin feature
+  checks"). Its description now says it runs only when the user explicitly
+  asks.
 - **The spawn logger is opt-in.** A plugin hook runs in every project that
   enables the plugin. Without `AGRIPPA_SPAWN_LOG=1` the script exits before
   reading its payload, so a project that has not opted in pays only for

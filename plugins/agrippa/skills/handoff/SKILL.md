@@ -1,8 +1,7 @@
 ---
 name: handoff
-description: Write a short handoff file so the next session can resume without reading this one. Run it as /agrippa:handoff when a session ends mid-plan.
+description: Write a short handoff file so the next session can resume without reading this one, when a session ends mid-plan. Run it only when the user explicitly asks, by typing /agrippa:handoff or by asking for a handoff; never load it on your own initiative.
 argument-hint: "[output path, default plans/handoff-YYYY-MM-DD-<slug>.md]"
-disable-model-invocation: true
 ---
 
 Write a handoff file for the next session, from the conversation you already
@@ -55,9 +54,11 @@ think the state is and what you plan to do. Then: <next action>.
 
 Resolve this session's transcript path as
 `~/.claude/projects/<project-dir-slug>/<session-id>.jsonl`. The
-`<project-dir-slug>` is the repo's absolute path with every path separator
-and the drive colon replaced by `-`; for example `C:\Users\me\src\app`
-becomes `C--Users-me-src-app`, and `/home/me/src/app` becomes
+`<project-dir-slug>` is the repo's absolute path with every character that is
+not a letter or a digit replaced by `-`, including path separators, the drive
+colon, dots, and underscores. For example `C:\Users\me\src\app` becomes
+`C--Users-me-src-app`, `C:\src\app\.claude\worktrees\x` becomes
+`C--src-app--claude-worktrees-x`, and `/home/me/src/app` becomes
 `-home-me-src-app`. Take `<session-id>` from the scratchpad directory name in
 your environment if one is available. If not, use the most recently modified
 `.jsonl` in that directory. Report its size, so the next session can see the

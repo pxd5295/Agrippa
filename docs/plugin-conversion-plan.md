@@ -1,10 +1,10 @@
 # Plan: turn Agrippa into a Claude Code plugin marketplace
 
-Written 2026-10-18. Status: Phases 0, 1, 2, 3, 4, and 5 done on 2026-10-18.
-Phase 6 has not started. Phase 5 moved the four agents and four kit skills
-into `agents/` and `skills/`, so Phase 1's second check, that `claude
---plugin-dir plugins/agrippa` lists the agents and skills, can now be run in
-an interactive session; it has not been run yet.
+Written 2026-10-18. Status: Phases 0, 1, 2, 3, 4, 5, and 6 done on
+2026-10-18. Phase 7 has not started. Phase 1's second check, that the plugin's
+agents and skills are listed, was met by the Phase 6 install proof: a fresh
+desktop session with the plugin enabled listed all four agents and all eight
+skills.
 
 ## Goal
 
@@ -475,6 +475,56 @@ the marketplace.
 
 Done when `/agrippa:install` run in a scratch repository produces a project
 that passes `validate-kit.ps1 -InstalledRepo`.
+
+Result, 2026-10-18: done. `dev/validate-kit.ps1` prints `PASS` with 1,330
+checks, and `claude plugin validate plugins/agrippa --strict` passes.
+
+- `skills/install/SKILL.md` and `skills/upgrade/SKILL.md` replace the two
+  setup prompts, and the kit README now names `/agrippa:install` and
+  `/agrippa:upgrade` in short sections. Both skills keep the prompts'
+  safeguards, and the self-check requires their key clauses. Each shows the
+  current and complete proposed `.claude/settings.json` and writes nothing
+  until the user says yes, and asks before adding any permission rule.
+- The project-side templates stay in `templates/` at the plugin root, and the
+  skills read them through `${CLAUDE_PLUGIN_ROOT}`. The target layout put them
+  in the `install` skill folder. Moving them would have changed every path in
+  the README, the checklist, and the self-check for no gain in behavior.
+- `UPGRADING.md` gains G4 (the plugin) and a "From G3" table. The table maps
+  each copied-in G3 file to deletion or to a move of its facts into a named
+  section of `project-contracts.md`, `validation-commands.md`, or
+  `live-app.md`. The G1 and G2 tables now point to the core rules and the
+  plugin's agents and skills.
+- `tools/hook_payload.ps1` is a "From G3" deletion beside the spawn logger,
+  unless a project script still uses it. `-InstalledRepo` already flagged an
+  unused copy in the same folder. It now counts a use from either hook folder
+  or from a `settings.json` hook command, so nuro-battler's copy, which
+  `lint_gd_file.ps1` dot-sources, is still not flagged.
+- The first proof session could not see `install`, `upgrade`, or `handoff`.
+  The desktop app hides a plugin skill with `disable-model-invocation: true`
+  entirely, as `docs/design-notes.md` records under "Plugin feature checks".
+  The flag is gone from all three. Their descriptions say they run only when
+  the user explicitly asks, and the self-check fails on the flag.
+- A fresh desktop session in a scratch git repository (a small Python package)
+  ran `/agrippa:install` from the user's typed command. It wrote eight project
+  documents and kept the local directory marketplace entry at the user's
+  choice, so `settings.json` did not change. `validate-kit.ps1 -InstalledRepo`
+  on that repository printed `PASS` with 20 project checks, and the smoke test
+  passed.
+- That run's feedback changed the kit. The install skill now asks about an
+  existing marketplace entry before choosing a ref. It accepts an unpinned
+  local directory entry and reports it as unpinned. It no longer treats an
+  existing plugin entry as a reason to upgrade instead.
+- The templates also changed after that run. Examples outside a slot moved
+  into `Install note` comments. Plain `[...]` install-time blanks in
+  `PROJECT-CONTRACTS.md`, `VALIDATION-COMMANDS.md`, and `MIGRATION.md` became
+  `[PROJECT: ...]` slots, so the install-marker scan finds leftovers, and the
+  self-check fails on a new one. The README states one rule for a subject that
+  does not apply.
+- The `handoff` skill's project-folder slug rule now replaces every character
+  that is not a letter or digit, as Claude Code does.
+- `-InstalledRepo` does not flag G3 copies of `docs/agent-workflow.md`,
+  `docs/planning/ROUTING.md`, or `docs/planning/templates/`. "From G3" lists
+  them as deletions, and Phase 8 removes nuro-battler's.
 
 ### Phase 7: publish
 

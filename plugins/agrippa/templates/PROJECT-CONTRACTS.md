@@ -21,16 +21,19 @@ Treat these as separate writer boundaries unless a plan explicitly combines
 them after freezing the shared contract. An area whose code has rules of its
 own carries a `CLAUDE.md` at its root stating them.
 
-- `[PROJECT: path or module]`: [responsibility, authoritative interface,
-  primary tests].
-- `[PROJECT: path or module]`: [responsibility, authoritative interface,
-  primary tests].
+- `[PROJECT: path or module]`: [PROJECT: responsibility, authoritative
+  interface, primary tests].
+- `[PROJECT: path or module]`: [PROJECT: responsibility, authoritative
+  interface, primary tests].
 - `docs/agent_memory/`: stable contracts. A change here that alters a frozen
   interface is a change to the interface itself.
 
-Example from a game project: `scripts/` (simulation and editor code),
+<!-- Install note: an example from a game project, for shape only. Delete
+this comment once the section is filled.
+`scripts/` (simulation and editor code),
 `native/` (the native runtime), `tests/` (tests and benchmarks), and
 `docs/agent_memory/` (stable contracts).
+-->
 
 ## Architecture owners
 
@@ -41,21 +44,21 @@ search. Delete a row that provably does not apply.
 
 | Owner kind | Where it lives | What it owns |
 |---|---|---|
-| Shared base classes | `[PROJECT: file:symbol]` | [behavior shared by every variant] |
-| Hooks per base class | `[PROJECT: the contract doc that lists them]` | [the virtual hooks each base class exposes; adding one is a shared-interface change] |
-| Variant subclasses | `[PROJECT: file pattern]` | [behavior that exists in one variant only; name the variant axis] |
-| Configuration layer | `[PROJECT: default config file and loader]` | [value-only differences; name any gitignored override layer that shadows defaults, and a value-only variant that shows how thin one should be] |
-| Engines, services, and funnels | `[PROJECT: file:symbol]` | [registration, serialization, and what depends on each funnel] |
-| Derived-value engines | `[PROJECT: file:symbol]` | [the public API for derived values and modifiers, and the fields that are never written directly] |
-| Schema-driven lists | `[PROJECT: file:symbol of the list and its version constant]` | [the list every consumer iterates, and when the version is bumped] |
-| Performance-owned subsystem | `[PROJECT: path, or None]` | [hot-path work other code configures but never reimplements; name the layer that is tempted to reimplement it] |
-| Hot path | `[PROJECT: the loop or entry point]` | [what multiplies per-iteration cost, and the time budget bulk work must be sliced under] |
-| Gated subsystems | `[PROJECT: path or class]` | [the state, geometry, or dispatch changes that must pass a gate, and the gate targets from the validation catalog] |
-| New subsystem kinds | [PROJECT: kinds, or None] | [additions that count as a new subsystem besides a new base class, class family, or ownership area] |
-| Language servers | `[PROJECT: languages and folders, or None]` | [which languages have a language server for the `LSP` tool, and the doc that owns when to prefer it over grep and where it does not apply] |
+| Shared base classes | `[PROJECT: file:symbol]` | [PROJECT: behavior shared by every variant] |
+| Hooks per base class | `[PROJECT: the contract doc that lists them]` | [PROJECT: the virtual hooks each base class exposes; adding one is a shared-interface change] |
+| Variant subclasses | `[PROJECT: file pattern]` | [PROJECT: behavior that exists in one variant only; name the variant axis] |
+| Configuration layer | `[PROJECT: default config file and loader]` | [PROJECT: value-only differences; name any gitignored override layer that shadows defaults, and a value-only variant that shows how thin one should be] |
+| Engines, services, and funnels | `[PROJECT: file:symbol]` | [PROJECT: registration, serialization, and what depends on each funnel] |
+| Derived-value engines | `[PROJECT: file:symbol]` | [PROJECT: the public API for derived values and modifiers, and the fields that are never written directly] |
+| Schema-driven lists | `[PROJECT: file:symbol of the list and its version constant]` | [PROJECT: the list every consumer iterates, and when the version is bumped] |
+| Performance-owned subsystem | `[PROJECT: path, or None]` | [PROJECT: hot-path work other code configures but never reimplements; name the layer that is tempted to reimplement it] |
+| Hot path | `[PROJECT: the loop or entry point]` | [PROJECT: what multiplies per-iteration cost, and the time budget bulk work must be sliced under] |
+| Gated subsystems | `[PROJECT: path or class]` | [PROJECT: the state, geometry, or dispatch changes that must pass a gate, and the gate targets from the validation catalog] |
+| New subsystem kinds | [PROJECT: kinds, or None] | [PROJECT: additions that count as a new subsystem besides a new base class, class family, or ownership area] |
+| Language servers | `[PROJECT: languages and folders, or None]` | [PROJECT: which languages have a language server for the `LSP` tool, and the doc that owns when to prefer it over grep and where it does not apply] |
 
-Example from a game project:
-
+<!-- Install note: an example from a game project, for shape only. Delete
+this comment once the section is filled.
 - Shared base classes: `WorldBase` (`scripts/world/world_base.gd`) and
   `AnimalBase` (`scripts/animal/animal_base.gd`) hold behavior shared by
   training and evolution.
@@ -96,6 +99,7 @@ Example from a game project:
 - New subsystem kinds: a native worker or extension class, or an editor panel.
 - Language servers: C++ under `native/src/`; `native/src/CLAUDE.md` owns when
   to prefer `LSP` over grep.
+-->
 
 ## Contract documents
 
@@ -104,13 +108,16 @@ The contract documents in `docs/agent_memory/` besides this file and
 
 | Document | What it owns |
 |---|---|
-| `[PROJECT: docs/agent_memory/<name>.md, for example class architecture, a sensor or wire-format contract, data-model notes, or performance notes]` | [the interface or architecture facts it owns] |
+| `[PROJECT: docs/agent_memory/<name>.md, for example class architecture, a sensor or wire-format contract, data-model notes, or performance notes]` | [PROJECT: the interface or architecture facts it owns] |
 
-Example from a game project: class architecture and hooks
+<!-- Install note: an example from a game project, for shape only. Delete
+this comment once the section is filled.
+Class architecture and hooks
 (`class-architecture.md`), the sensor and brain contract
 (`sensor-contract.md`), the stat system (`animal-stat-system.md`), UI style
 tokens (`ui-style-tokens.md`), and generation performance notes
 (`perf-generation.md`).
+-->
 
 ## Shared and public interfaces
 
@@ -123,28 +130,35 @@ interfaces comes only from its contract source.
 
 | Interface | Contract source | Owners/consumers | Compatibility gate |
 |---|---|---|---|
-| `[PROJECT: API, schema, protocol, ABI, file format, persisted record, saved configuration, layout]` | `[path:line]` | `[modules]` | `[Validation catalog purpose]` |
+| `[PROJECT: API, schema, protocol, ABI, file format, persisted record, saved configuration, layout]` | `[PROJECT: path:line]` | `[PROJECT: modules]` | `[PROJECT: Validation catalog purpose]` |
 
-Example from a game project: sensor order, network shape, GPU weight layout,
+<!-- Install note: an example from a game project, for shape only. Delete
+this comment once the section is filled.
+Sensor order, network shape, GPU weight layout,
 the persisted archive format, scene/node contracts, and saved configuration.
 The V10 sensor and brain constants come only from
 `docs/agent_memory/sensor-contract.md`.
+-->
 
 ## High-risk change classes
 
 | Risk class | Trigger | Required contract/review/gate |
 |---|---|---|
-| Native/ABI | [PROJECT: trigger, naming the highest-risk dispatch layer] | [compatibility/equivalence gate, rebuild step, and reviewer] |
-| Persistence/migration | [PROJECT: trigger] | [forward/backward compatibility, schema version, rollback] |
-| Security/trust boundary | [PROJECT: trigger] | [threat/permission check and reviewer] |
-| Concurrency/performance | [PROJECT: trigger] | [deterministic equivalence or baseline/target] |
-| Deployment/external system | [PROJECT: trigger] | [approval, credential, or environment boundary] |
+| Native/ABI | [PROJECT: trigger, naming the highest-risk dispatch layer] | [PROJECT: compatibility/equivalence gate, rebuild step, and reviewer] |
+| Persistence/migration | [PROJECT: trigger] | [PROJECT: forward/backward compatibility, schema version, rollback] |
+| Security/trust boundary | [PROJECT: trigger] | [PROJECT: threat/permission check and reviewer] |
+| Concurrency/performance | [PROJECT: trigger] | [PROJECT: deterministic equivalence or baseline/target] |
+| Deployment/external system | [PROJECT: trigger] | [PROJECT: approval, credential, or environment boundary] |
 
 Delete rows that provably do not apply; add project-specific risks discovered
 from code and architecture references. These rows feed the `Risk flags` field
-of every plan stage, and a risk flag keeps a stage off Haiku. Example from a
-game project: the Native/ABI trigger is any change to native dispatch, which
+of every plan stage, and a risk flag keeps a stage off Haiku.
+
+<!-- Install note: an example from a game project, for shape only. Delete
+this comment once the section is filled.
+The Native/ABI trigger is any change to native dispatch, which
 needs the equivalence gate after a rebuild of both build configs.
+-->
 
 ## Debugging map
 
@@ -156,7 +170,9 @@ needs the equivalence gate after a rebuild of both build configs.
 - Kinds of difference that have mattered before: [PROJECT: for example
   ordering or lifecycle state].
 
-Example from a game project: the tick path is GDScript world and animal code,
+<!-- Install note: an example from a game project, for shape only. Delete
+this comment once the section is filled.
+The tick path is GDScript world and animal code,
 then `NuroMovementWorker` in `native/`, then the GPU brain and vision shaders;
 the serial-versus-pool equivalence gate (`tests/test_native_smoke.gd`,
 `tests/test_threaded_tick_equivalence.tscn`) tells you whether the native
@@ -164,6 +180,7 @@ worker agrees with itself; probes are `tests/_probe_*.gd`. Working
 counterparts are the other mode's subclass and the other entity type through
 the same funnel. Spawn order, and whether the object was in the tree when a
 setter ran, have both mattered.
+-->
 
 ## Worktree and integration contracts
 

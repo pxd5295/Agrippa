@@ -34,8 +34,9 @@ Root of a project that uses the plugin. Its committed .claude/settings.json
 must declare the agrippa marketplace and enable agrippa@agrippa, it must have
 docs/agent_memory/project-contracts.md and validation-commands.md, and it must
 keep no local copy of what the plugin provides: the agents, the plugin's
-skills, the shared linter, the spawn-logger scripts, or a settings.json hook
-or permission that runs them. Each failure names the file or setting and says
+skills, the shared linter, the spawn logger, its hook_payload.ps1 helper
+unless a project script still uses it, or a settings.json hook or permission
+that runs them. Each failure names the file or setting and says
 what to do. The check is skipped when this is omitted.
 #>
 [CmdletBinding()]
@@ -80,11 +81,14 @@ function Read-KitFile {
 # Agents load from agents/ and skills from skills/ at the plugin root, under
 # the agrippa: prefix. A project never keeps a copy of them. The four kit
 # skills are the methodology's working skills; plan and handoff are entry
-# points.
+# points. install and upgrade set a project up; an older kit never copied
+# them, so a project skill with one of those names is not a leftover copy.
 $agentNames = @('repo-scout', 'plan-reviewer', 'design-reviewer', 'validator')
 $skillNames = @('design-first', 'systematic-debugging', 'verify-before-done', 'receiving-review')
 $pluginSkillNames = @('plan', 'handoff')
 $allSkillNames = $skillNames + $pluginSkillNames
+$setupSkillNames = @('install', 'upgrade')
+$shippedSkillNames = $allSkillNames + $setupSkillNames
 $planningNames = @('SPEC', 'PLAN', 'PACKETS', 'STATUS', 'EVIDENCE')
 
 $required = @(
@@ -118,7 +122,7 @@ $required = @(
     'templates/hooks/README.md'
 )
 $required += @($agentNames | ForEach-Object { "agents/$_.md" })
-$required += @($allSkillNames | ForEach-Object { "skills/$_/SKILL.md" })
+$required += @($shippedSkillNames | ForEach-Object { "skills/$_/SKILL.md" })
 $required += @($planningNames | ForEach-Object { "skills/plan/templates/$_.md" })
 
 # Development files are not shipped with the plugin.
@@ -154,7 +158,7 @@ foreach ($file in $agentFiles) {
 }
 $skillFolders = @(Get-ChildItem -LiteralPath (Join-Path $kitRoot 'skills') -Force -ErrorAction SilentlyContinue | ForEach-Object { $_.Name })
 foreach ($folder in $skillFolders) {
-    Add-Check ($allSkillNames -contains $folder) "Unexpected entry in plugins/agrippa/skills/: $folder. Only the skills $($allSkillNames -join ', ') ship there."
+    Add-Check ($shippedSkillNames -contains $folder) "Unexpected entry in plugins/agrippa/skills/: $folder. Only the skills $($shippedSkillNames -join ', ') ship there."
 }
 # The agents and kit skills used to be templates copied into each project.
 foreach ($oldFolder in @('templates/agents', 'templates/skills', 'commands')) {
@@ -239,8 +243,8 @@ function Test-Clauses {
 }
 
 Test-Clauses 'README' $readme @(
-    'Setup prompt: project with no planning methodology',
-    'Setup prompt: upgrade an older planning methodology',
+    '/agrippa:install',
+    '/agrippa:upgrade',
     'never application\s+behavior changes',
     '\[PROJECT: \.\.\.\]',
     'run-smoke-test\.ps1',
@@ -444,10 +448,52 @@ Test-Clauses 'SPEC template' $spec @(
 )
 Test-Clauses 'UPGRADING' $upgrading @(
     '## Recognize the generation',
+    '\| G4: plugin',
     '### From G1',
     '### From G2',
+    '### From G3',
+    'tools/log_subagent_spawns\.ps1` \| Delete',
+    'tools/hook_payload\.ps1` \| Delete',
+    'tools/validate_plan_workspace\.ps1` \| Delete',
     'Never edit, move, rename, or bulk-convert'
 )
+# The install and upgrade skills replace the setup prompts and keep their
+# safeguards: read-only discovery, questions for material choices, every
+# settings change shown before it is written, and, for upgrades, the dated-plan
+# manifest, the mapping shown before any edit, and a confirmed deletion.
+$installSkill = Read-KitFile 'skills/install/SKILL.md'
+$upgradeSkill = Read-KitFile 'skills/upgrade/SKILL.md'
+$setupClauses = @(
+    '(?m)^description:.*only when the user explicitly asks',
+    'Never change application code',
+    'AskUserQuestion',
+    'read-only',
+    'extraKnownMarketplaces\.agrippa',
+    '`ref`',
+    'agrippa@agrippa',
+    'complete\s+proposed content',
+    'write\s+nothing until',
+    'Never add a permission rule',
+    'Install-marker scan',
+    'dev/validate-kit\.ps1 -InstalledRepo',
+    'run-smoke-test\.ps1 -RepoRoot',
+    '\$\{CLAUDE_PLUGIN_ROOT\}/templates/'
+)
+Test-Clauses 'Skill install' $installSkill ($setupClauses + @(
+    'Never copy the plugin',
+    '/agrippa:upgrade'
+))
+Test-Clauses 'Skill upgrade' $upgradeSkill ($setupClauses + @(
+    'SHA-256 manifest',
+    'Get-FileHash -Algorithm SHA256',
+    'mapping is shown to the user before any edit',
+    'Every deletion is confirmed',
+    'Never\s+offer a single\s+"delete all" choice',
+    'never edited, moved, renamed, or converted',
+    'From G3',
+    '\$\{CLAUDE_PLUGIN_ROOT\}/UPGRADING\.md',
+    'docs/planning/MIGRATION\.md'
+))
 Add-Check ($plansReadme -match '(?s)SPEC\.md.*PLAN\.md.*PACKETS\.md.*STATUS\.md.*EVIDENCE\.md') 'plans README must name all five workspace artifacts.'
 Add-Check ($adoption -match 'run-smoke-test\.ps1') 'Adoption checklist must require the smoke test.'
 Add-Check ($workspaceLinter -match 'checks shape, never truth') 'Workspace linter lacks the shape-not-truth disclaimer.'
@@ -516,14 +562,46 @@ foreach ($file in (Get-ChildItem -LiteralPath $kitRoot -Recurse -File)) {
     $content = [IO.File]::ReadAllText($file.FullName, [Text.Encoding]::UTF8)
     Add-Check (-not $content.Contains('[PROJECT:')) "plugins/agrippa/$relative must be project-neutral: it contains a [PROJECT: ...] slot. Move the fact into a project document and read it from there."
 }
-foreach ($name in $allSkillNames) {
+# Every install-time blank in a project-side template is a [PROJECT: ...] slot,
+# so the install-marker scan finds any that are left. A plain [...] is a
+# per-plan placeholder and belongs only in the plan skill's templates. Slots
+# may nest brackets, and Install note comments may quote code, so both are
+# removed before the search.
+foreach ($file in (Get-ChildItem -LiteralPath (Join-Path $kitRoot 'templates') -Recurse -File -Filter '*.md')) {
+    $relative = $file.FullName.Substring($kitRoot.Length).TrimStart('\', '/').Replace('\', '/')
+    $content = [regex]::Replace([IO.File]::ReadAllText($file.FullName, [Text.Encoding]::UTF8), '(?s)<!--.*?-->', '')
+    $outside = New-Object System.Text.StringBuilder
+    $depth = 0
+    for ($i = 0; $i -lt $content.Length; $i++) {
+        if ($depth -eq 0 -and [string]::CompareOrdinal($content, $i, '[PROJECT:', 0, 9) -eq 0) {
+            $depth = 1
+            $i += 8
+            continue
+        }
+        if ($depth -gt 0) {
+            if ($content[$i] -eq '[') { $depth++ }
+            elseif ($content[$i] -eq ']') { $depth-- }
+            continue
+        }
+        [void]$outside.Append($content[$i])
+    }
+    $plain = [regex]::Match($outside.ToString(), '\[[^\[\]\r\n]*\](?!\()')
+    Add-Check (-not $plain.Success) "plugins/agrippa/$relative has the plain placeholder $($plain.Value) outside a [PROJECT: ...] slot. Make it a [PROJECT: ...] slot so the install-marker scan finds it when it is left unfilled."
+}
+foreach ($name in $shippedSkillNames) {
     $text = Read-KitFile "skills/$name/SKILL.md"
     Add-Check ($text -match "(?m)^name:\s*$([regex]::Escape($name))\s*$") "skills/$name/SKILL.md frontmatter name must be '$name', matching its folder with no prefix."
     Add-Check ($text -match '(?m)^description:\s*\S') "skills/$name/SKILL.md is missing a frontmatter description."
+    # A plugin skill with this flag is not offered at all in the desktop app,
+    # not even as a slash command. A skill that must wait for the user says so
+    # in its description instead.
+    Add-Check ($text -notmatch '(?m)^disable-model-invocation:') "skills/$name/SKILL.md must not set disable-model-invocation: the desktop app then hides the plugin skill entirely. Say in the description that it runs only when the user explicitly asks."
 }
+Add-Check ((Read-KitFile 'skills/handoff/SKILL.md') -match '(?m)^description:.*only when the user explicitly asks') 'Skill handoff description must say it runs only when the user explicitly asks.'
 # Plugin text points to its own agents and skills by their agrippa: names, never
-# at the project copy paths an older kit installed. UPGRADING.md and the
-# README's upgrade prompt name those paths so an upgrade can delete them.
+# at the project copy paths an older kit installed. UPGRADING.md names those
+# paths so an upgrade can delete them, and the README names them for the
+# -InstalledRepo check.
 $copyPathPattern = '\.claude/(agents/(' + (($agentNames | ForEach-Object { [regex]::Escape($_) }) -join '|') + ')\.md|skills/(' + (($allSkillNames | ForEach-Object { [regex]::Escape($_) }) -join '|') + ')/|commands/(' + (($pluginSkillNames | ForEach-Object { [regex]::Escape($_) }) -join '|') + ')\.md)'
 foreach ($file in (Get-ChildItem -LiteralPath $kitRoot -Recurse -File)) {
     $relative = $file.FullName.Substring($kitRoot.Length).TrimStart('\', '/').Replace('\', '/')
@@ -733,16 +811,30 @@ if ($InstalledRepo) {
         Add-ProjectCheck (-not (Test-Path -LiteralPath (Join-Path $projectRoot 'tools/validate_plan_workspace.ps1'))) 'tools/validate_plan_workspace.ps1 is a local copy of the shared linter. Delete it; plans run agrippa-lint from the plugin, and project rules stay in tools/validate_plan_workspace.local.ps1.'
 
         # The spawn logger's payload helper may also serve the project's own
-        # edit-lint hook. It is left over only when nothing else uses it.
-        foreach ($folder in @('tools', '.claude/hooks')) {
+        # edit-lint hook. It is left over only when no other script in either
+        # hook folder and no settings.json hook command names it.
+        $hookFolders = @('tools', '.claude/hooks')
+        $helperUsers = @()
+        foreach ($folder in $hookFolders) {
+            $folderPath = Join-Path $projectRoot $folder
+            if (Test-Path -LiteralPath $folderPath -PathType Container) {
+                $helperUsers += @(Get-ChildItem -LiteralPath $folderPath -Filter '*.ps1' -File |
+                    Where-Object { $_.Name -ne 'hook_payload.ps1' -and $_.Name -ne 'log_subagent_spawns.ps1' } |
+                    Where-Object { [IO.File]::ReadAllText($_.FullName, [Text.Encoding]::UTF8).Contains('hook_payload.ps1') } |
+                    ForEach-Object { "$folder/$($_.Name)" })
+            }
+        }
+        if ($null -ne $settings -and $null -ne $settings.hooks) {
+            foreach ($hookEvent in $settings.hooks.PSObject.Properties) {
+                $helperUsers += @(@($hookEvent.Value) | ForEach-Object { @($_.hooks) } | ForEach-Object { [string]$_.command } | Where-Object { $_ -match 'hook_payload\.ps1' })
+            }
+        }
+        foreach ($folder in $hookFolders) {
             $loggerPath = "$folder/log_subagent_spawns.ps1"
             Add-ProjectCheck (-not (Test-Path -LiteralPath (Join-Path $projectRoot $loggerPath))) "$loggerPath is a local copy of the spawn logger. Delete it; the plugin runs its own when the env block of .claude/settings.json sets AGRIPPA_SPAWN_LOG=1."
             $helperPath = "$folder/hook_payload.ps1"
             if (Test-Path -LiteralPath (Join-Path $projectRoot $helperPath) -PathType Leaf) {
-                $helperUsers = @(Get-ChildItem -LiteralPath (Join-Path $projectRoot $folder) -Filter '*.ps1' -File |
-                    Where-Object { $_.Name -ne 'hook_payload.ps1' -and $_.Name -ne 'log_subagent_spawns.ps1' } |
-                    Where-Object { [IO.File]::ReadAllText($_.FullName, [Text.Encoding]::UTF8).Contains('hook_payload.ps1') })
-                Add-ProjectCheck ($helperUsers.Count -gt 0) "$helperPath is the spawn logger's payload helper and no other script in $folder/ uses it. Delete it."
+                Add-ProjectCheck ($helperUsers.Count -gt 0) "$helperPath is a local copy of the spawn logger's payload helper, and no project script or settings.json hook uses it. Delete it; the plugin's spawn logger uses its own copy."
             }
         }
     }

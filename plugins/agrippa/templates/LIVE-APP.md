@@ -13,9 +13,9 @@ authoring tool, and no agent ever calls one.
 
 ## Server
 
-- Server name and tool prefix: `[PROJECT: name and prefix]`. Example from a
-  game project: the `godot-ai` live editor bridge, tool prefix
-  `mcp__godot-ai__`.
+- Server name and tool prefix: [PROJECT: the server name and its tool
+  prefix. Example from a game project: the `godot-ai` live editor bridge, tool
+  prefix `mcp__godot-ai__`.]
 - Preconditions: [PROJECT: what must be running and enabled before the tools
   answer. Example from a game project: the Godot editor open on this project
   with the bridge's editor plugin enabled.]
@@ -45,8 +45,11 @@ and means nothing.]
 | Runtime log | `[PROJECT: full tool name and source]` | Runtime errors |
 | Load or parse log | `[PROJECT: full tool name and source]` | Load and parse errors, which never reach the runtime log |
 
-Delete a row the bridge has no tool for. Example from a game project, with the
-`mcp__godot-ai__` prefix left off: state `editor_state`; session
+Delete a row the bridge has no tool for.
+
+<!-- Install note: an example from a game project, for shape only. Delete
+this comment once the section is filled.
+With the `mcp__godot-ai__` prefix left off: state `editor_state`; session
 `session_manage`; hierarchy `scene_get_hierarchy`; find `node_find`; properties
 `node_get_properties`; screenshot `editor_screenshot(source="game")`, or
 `source="viewport_2d"` for the editor's 2D viewport, because this is a 2D
@@ -54,6 +57,7 @@ project and the default `"viewport"` source is the empty 3D one; UI elements
 `game_manage(op="get_ui_elements")`, with `op="get_scene_tree"` and
 `op="get_node_info"` for runtime structure; runtime log
 `logs_read(source="game")`; load or parse log `logs_read(source="editor")`.
+-->
 
 ## Run tools
 
@@ -62,9 +66,12 @@ project and the default `"viewport"` source is the empty 3D one; UI elements
 | Run | `[PROJECT: full tool name]` | [PROJECT: the option that makes the run persist nothing] |
 | Stop | `[PROJECT: full tool name and operation]` | None |
 
-Example from a game project: run `mcp__godot-ai__project_run(autosave=false)`,
+<!-- Install note: an example from a game project, for shape only. Delete
+this comment once the section is filled.
+Run `mcp__godot-ai__project_run(autosave=false)`,
 always passing `autosave=false` so nothing is persisted; stop
 `mcp__godot-ai__project_manage(op="stop")`.
+-->
 
 Which agents run the app: `validator` only for a matrix row the packet marks as
 needing the live app or a GPU, and `design-reviewer` to see a change running.

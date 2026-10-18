@@ -73,6 +73,8 @@ The methodology has three layers, and the kit installs all of them.
 | `skills/plan/reference/ROUTING.md` | Not installed; the routing guide, a `plan` skill reference file |
 | `skills/plan/templates/*.md` | Not installed; the blank plan-workspace files, copied into each `plans/YYYY-MM-DD-<name>/` |
 | `skills/handoff/SKILL.md` | Not installed; the `/agrippa:handoff` skill, which writes a short session handoff |
+| `skills/install/SKILL.md` | Not installed; the `/agrippa:install` skill, which installs the methodology in a repository that has none |
+| `skills/upgrade/SKILL.md` | Not installed; the `/agrippa:upgrade` skill, which upgrades an older methodology using `UPGRADING.md` |
 | `LICENSE`, `NOTICE` | Not installed as methodology files; they stay with the kit folder. The Apache-2.0 license and the attribution notice that redistributed copies must carry |
 
 Two development files live outside this folder, in the `dev/` folder of the
@@ -106,13 +108,25 @@ Two kinds of brackets appear in the templates, and they are filled at
 different times:
 
 - `[PROJECT: ...]` is filled **once, at install time**, from repository
-  evidence. It always says what to fill in and usually gives an example from
-  the source repository. When the subject does not exist in the target (no
-  native code, no live-app bridge), delete the placeholder together with the
-  sentence, bullet, or marked optional block around it; never write "N/A".
+  evidence, or during an upgrade for `MIGRATION.md`. It always says what to
+  fill in and usually gives an example from the source repository. Every
+  install-time blank in the project-side templates (`templates/`) uses this
+  form, so the install-marker scan finds any that are left.
 - Plain `[...]` inside the `plan` skill's templates (`skills/plan/templates/`)
   is filled **per plan** by the planner, in the workspace copy, and stays in
   the templates.
+
+**When a subject does not apply.** Delete what does not apply and keep the
+structure the agents and skills read:
+
+- Delete the placeholder together with its sentence, bullet, table row, or
+  marked optional block. Never write "N/A".
+- Write `None` only where the slot itself offers it (a slot that says
+  `or None`). It records that the subject was checked and does not exist.
+- Keep every section heading, because the agents and skills read sections by
+  name, unless the template says to delete that section. When everything
+  under a kept heading is deleted, write one sentence there saying that this
+  repository has no such subject and how you know.
 
 The agents and skills, including the `plan` skill's guides and templates,
 contain no `[PROJECT: ...]` slot, and `dev/validate-kit.ps1` fails if one
@@ -125,7 +139,9 @@ one of those documents, never in an agent or skill.
 
 One more install-time marker is removed during install. A line or comment
 starting `Install note` is guidance for the installer; delete it once its
-file is filled. The scan below also looks for `optional live-app block`, the
+file is filled. An example from the source repository that is not inside a
+slot sits in an `Install note` comment; use it only as a shape, and delete it
+with the comment, because it holds another project's facts. The scan below also looks for `optional live-app block`, the
 marker an older kit used around agent sections; none may survive an upgrade.
 
 **Install-marker scan.** After install, a case-sensitive search for the
@@ -163,157 +179,53 @@ the project's `AGENTS.md` to read `# Agent Workflow`.
   `docs/agent_memory/live-app.md` lists those tools and every agent is told
   never to call them.
 
-## Setup prompt: project with no planning methodology
+## Installing in a project with no planning methodology
 
-Copy the kit folder, `plugins/agrippa/` in Agrippa, into the target
-repository. Keep an Agrippa checkout next to the target repository for the
-smoke test and the self-check. Start Claude Code at the target repository's
-root on a strong model at high effort, and paste:
+Enable the plugin for the session first. Either add the two entries from
+"Enabling the plugin in a project" to the target repository's
+`.claude/settings.json`, or install it once for yourself:
 
 ```text
-Install the planning methodology from the kit folder named `agrippa` in this
-repository. If more than one folder has that name, stop and ask which one to
-use.
-
-1. Read the kit completely before changing anything: README.md,
-   ADOPTION-CHECKLIST.md, and every file under templates/. The installed
-   methodology must match these templates; adapt only what is marked
-   `[PROJECT: ...]` or what conflicts with an existing stricter rule.
-
-2. Discover the repository, read-only. Record: any existing AGENTS.md and
-   CLAUDE.md files at any depth; existing .claude/agents, skills, commands,
-   settings.json hooks and permissions; languages, build systems, test
-   runners, lint and typecheck tools, and the exact commands that run them
-   (run each one once to prove it works, and note what it needs: working
-   directory, prerequisites, network, GPU, display, services); the natural
-   ownership areas; shared interfaces (public APIs, schemas, protocols,
-   persisted formats, saved configuration, ABIs, layouts) and their consumers;
-   base classes, hooks, config layers, registration funnels, and hot-path
-   subsystems; known red tests at HEAD; the dirty worktree. You may delegate
-   read-only discovery of large areas to subagents and keep the conclusions.
-
-3. Ask me with AskUserQuestion only about material choices the repository
-   cannot answer: ownership boundaries that are ambiguous, which interfaces
-   count as frozen, risk classes, and whether to install the optional hooks.
-   Recommend an option for each.
-
-4. Install every layout-table row whose destination is a repository path,
-   except the upgrade-only MIGRATION.md. Follow the placeholder convention in
-   the README: resolve every `[PROJECT: ...]` slot from what you found in step
-   2, using the source example only as a shape; delete or keep optional
-   blocks as described there; delete install notes. Create a per-directory
-   CLAUDE.md only for an ownership area with real rules to state. Never edit
-   the shared linter; if this repository has command invariants worth
-   enforcing in every plan, write tools/validate_plan_workspace.local.ps1 from
-   its template, otherwise do not install it. If I chose the optional hooks:
-   turn on the plugin's spawn logger with AGRIPPA_SPAWN_LOG=1 as
-   templates/hooks/README.md says; for the edit-lint hook, write the script
-   following every rule in templates/hooks/README.md and prove it by making
-   one deliberate lint error and reverting it, or leave it unwired and say
-   so; merge hooks and the permission allowlist into .claude/settings.json
-   without replacing existing entries. Enable the plugin in
-   .claude/settings.json as the README section "Enabling the plugin in a
-   project" shows. Never copy the plugin's agents, skills, linter, or spawn
-   logger into this repository. Do not change application code. Preserve
-   every unrelated user change.
-
-5. Validate, and paste the exact command and result for each:
-   - `dev/fixtures/run-smoke-test.ps1 -RepoRoot <this repository>` from the
-     Agrippa checkout must print PASS;
-   - the README's install-marker scan must find nothing;
-   - each command in docs/agent_memory/validation-commands.md must have been
-     run once and its result recorded;
-   - if a local linter file was installed, write one small real plan
-     workspace for a trivial change, lint it, and delete it;
-   - `dev/validate-kit.ps1 -InstalledRepo <this repository>` from the Agrippa
-     checkout must print PASS.
-
-6. Report: the files installed, each project-specific adaptation and the
-   evidence behind it, every ADOPTION-CHECKLIST item as done or not done with
-   the reason, and the one live smoke test left for me (a real "Make a plan"
-   request). Do not call the install complete while any checklist item is
-   unreported.
+/plugin marketplace add pxd5295/Agrippa
+/plugin install agrippa@agrippa
 ```
 
-## Setup prompt: upgrade an older planning methodology
+Then start Claude Code at the target repository's root on a strong model at
+high effort and run:
+
+```text
+/agrippa:install
+```
+
+The skill discovers the repository read-only, asks with `AskUserQuestion`
+only about choices the repository cannot answer, writes the project-side
+documents from `templates/`, and shows every `.claude/settings.json` change
+before it writes it. It changes no application code and copies no plugin file
+into the repository. It ends with the install-marker scan, its own checks,
+and two development checks that run from an Agrippa checkout:
+`dev/validate-kit.ps1 -InstalledRepo` and
+`dev/fixtures/run-smoke-test.ps1 -RepoRoot`. An optional argument names the
+release tag to pin.
+
+## Upgrading an older planning methodology
 
 Use this for any repository that already has planning rules: an earlier
-version of this methodology (including the dual-toolchain generation whose
-markers `UPGRADING.md` lists), an earlier copy of this kit, a current install
-that has drifted, or a different planning process. Paste:
+copied-in version of this kit, the dual-toolchain generation whose markers
+`UPGRADING.md` lists, a current install that has drifted, or a different
+planning process. Enable the plugin as above, then run:
 
 ```text
-Upgrade this repository's planning methodology to the one in the kit folder
-named `agrippa`. If more than one folder has that name, stop and ask which one
-to use.
-
-1. Read the kit completely before changing anything: README.md, UPGRADING.md,
-   ADOPTION-CHECKLIST.md, and every file under templates/. The result must
-   match these templates; adapt only what is marked `[PROJECT: ...]` or what
-   an existing stricter rule overrides.
-
-2. Inventory the current methodology, read-only: every AGENTS.md and CLAUDE.md
-   at any depth; .claude/agents, skills, commands, settings.json hooks and
-   permissions; any other toolchain's configuration or agent profiles (the
-   markers table in UPGRADING.md lists the known ones); planning guides,
-   routing docs, templates, shortcuts, and validators; docs/agent_memory or
-   equivalent contract docs; decision records; dated plan workspaces; the
-   validation commands actually in use (run each once); and the dirty
-   worktree. Identify the generation using the markers table in UPGRADING.md
-   and list the markers you found. Before any edit, record a SHA-256 manifest
-   of every file under the dated plan workspaces (they are often gitignored,
-   so git status cannot prove they were left alone).
-
-3. Before editing, write the rule mapping: one row per existing rule or
-   artifact with Retain, Merge, Replace, or Deprecate, its new location, and
-   the reason, starting from the mapping tables in UPGRADING.md. Keep the
-   stricter rule whenever old and new disagree. Show me the mapping and ask
-   with AskUserQuestion about every material conflict and every file you
-   propose to delete. Wait for my answers.
-
-4. Apply the mapping. Install or update every layout-table row whose
-   destination is a repository path, including docs/planning/MIGRATION.md
-   filled from the template. Follow the placeholder convention in the README,
-   carrying over the project facts the old methodology already recorded
-   (ownership areas, shared interfaces, commands, known traps) rather than
-   rediscovering them. Project-specific checks that an old linter enforced
-   move to tools/validate_plan_workspace.local.ps1; the shared linter is
-   replaced, never hand-merged. Install hooks and enable the plugin as in the
-   new-project prompt. Delete this repository's copies of what the plugin
-   now provides (agents in .claude/agents, the kit skills in .claude/skills,
-   .claude/commands/handoff.md, tools/validate_plan_workspace.ps1, the
-   spawn-logger scripts, and the settings.json hook entries and permissions
-   that run them) only after I confirmed each deletion in step 3.
-   Remove project-wide model or reasoning-effort pins and old toolchain
-   configuration only after I confirmed it in step 3; otherwise list it under
-   "Deprecated, awaiting confirmation". Never edit, move, rename, or convert a
-   dated plan workspace. Do not change application code. Preserve every
-   unrelated user change.
-
-5. Validate, and paste the exact command and result for each:
-   - `dev/fixtures/run-smoke-test.ps1 -RepoRoot <this repository>` from the
-     Agrippa checkout must print PASS;
-   - the README's install-marker scan must find nothing;
-   - a search of AGENTS.md, CLAUDE.md, docs/, and .claude/ for the old
-     toolchain's markers from UPGRADING.md must find nothing outside
-     MIGRATION.md, dated plan workspaces, and the kit folder;
-   - the dated-workspace manifest recomputed now must equal the one from
-     step 2;
-   - if a local linter file was installed, one existing recent workspace must
-     lint with no error from the local checks (freshness errors on landed
-     plans are expected);
-   - each command in docs/agent_memory/validation-commands.md must have been
-     run once and its result recorded;
-   - `dev/validate-kit.ps1 -InstalledRepo <this repository>` from the Agrippa
-     checkout must print PASS.
-   Record all of it in docs/planning/MIGRATION.md.
-
-6. Report: the generation found, the mapping, the files changed, each
-   adaptation and its evidence, every ADOPTION-CHECKLIST item as done or not
-   done with the reason, anything deprecated but not yet deleted, and the live
-   smoke tests left for me. Old workspaces failing the new linter is expected;
-   say so rather than fixing them.
+/agrippa:upgrade
 ```
+
+The skill identifies the generation with `UPGRADING.md` and records a SHA-256
+manifest of every dated plan workspace before its first edit. It shows a
+Retain, Merge, Replace, or Deprecate mapping before any edit, and asks with
+`AskUserQuestion` before every deletion. It never edits, moves, or converts a
+dated plan workspace, and it records the upgrade in
+`docs/planning/MIGRATION.md`. For a copied-in kit, the "From G3" section of
+`UPGRADING.md` says which copied files the plugin replaces and where their
+project facts move.
 
 ## Normal use after installation
 
@@ -331,8 +243,9 @@ needed. `/agrippa:handoff` writes a short brief when a session ends mid-plan.
 
 The kit is maintained in its own repository, Agrippa, and that copy is the
 source of truth. Change the methodology there first, run
-`dev/validate-kit.ps1`, and then upgrade each installed repository with the
-upgrade prompt above. A rule first tried out in an installed repository
+`dev/validate-kit.ps1`, and then upgrade each installed repository: change its
+marketplace `ref` to the new tag, or run `/agrippa:upgrade` when the project
+documents must change too. A rule first tried out in an installed repository
 reaches other repositories only after it is ported back to the kit.
 
 `dev/validate-kit.ps1` checks the plugin layout, that `plugin.json` and the
@@ -351,6 +264,7 @@ marketplace and enable `agrippa@agrippa`.
 `docs/agent_memory/validation-commands.md` must exist. It must keep no copy of
 what the plugin provides: the agents in `.claude/agents/`, the plugin's skills
 in `.claude/skills/`, `.claude/commands/handoff.md`,
-`tools/validate_plan_workspace.ps1`, the spawn-logger scripts, or a
+`tools/validate_plan_workspace.ps1`, the spawn logger, its
+`hook_payload.ps1` helper unless a project script still uses it, or a
 `settings.json` hook or permission that runs them. Each failure names the file
 or setting and what to do. Without `-InstalledRepo`, it checks only the kit.

@@ -153,14 +153,14 @@ Every plan-matrix row records a Sandbox value:
 
 | Purpose | Working directory | Style | Sandbox | Determinism | Exact command or manual check |
 |---|---|---|---|---|---|
-| Prerequisite | `[path]` | prerequisite | `[stance]` | deterministic | `[PROJECT: exact command, or delete the row]` |
-| Fast targeted unit check | `[path]` | unit | `[stance]` | deterministic | `[PROJECT: exact command]` |
-| Shared-interface gate | `[path]` | integration | `[stance]` | deterministic | `[PROJECT: exact command]` |
-| Build/typecheck | `[path]` | build | `[stance]` | deterministic | `[PROJECT: exact command]` |
-| Lint/format check | `[path]` | lint | sandboxed | deterministic | `[PROJECT: exact command]` |
-| Performance check | `[path]` | benchmark | `[stance]` | noisy-retry | `[PROJECT: exact bounded command and threshold]` |
-| Manual behavior check | `[path]` | manual | `[stance]` | manual | [PROJECT: observable procedure and pass condition] |
-| Complete applicable suite | `[path]` | full-suite | `[stance]` | `[determinism]` | `[PROJECT: exact command sequence or enumerated rows]` |
+| Prerequisite | `[PROJECT: path]` | prerequisite | `[PROJECT: stance]` | deterministic | `[PROJECT: exact command, or delete the row]` |
+| Fast targeted unit check | `[PROJECT: path]` | unit | `[PROJECT: stance]` | deterministic | `[PROJECT: exact command]` |
+| Shared-interface gate | `[PROJECT: path]` | integration | `[PROJECT: stance]` | deterministic | `[PROJECT: exact command]` |
+| Build/typecheck | `[PROJECT: path]` | build | `[PROJECT: stance]` | deterministic | `[PROJECT: exact command]` |
+| Lint/format check | `[PROJECT: path]` | lint | sandboxed | deterministic | `[PROJECT: exact command]` |
+| Performance check | `[PROJECT: path]` | benchmark | `[PROJECT: stance]` | noisy-retry | `[PROJECT: exact bounded command and threshold]` |
+| Manual behavior check | `[PROJECT: path]` | manual | `[PROJECT: stance]` | manual | [PROJECT: observable procedure and pass condition] |
+| Complete applicable suite | `[PROJECT: path]` | full-suite | `[PROJECT: stance]` | `[PROJECT: determinism]` | `[PROJECT: exact command sequence or enumerated rows]` |
 
 Allowed plan-matrix determinism values are `deterministic`, `noisy-retry`,
 `skips-headless`, and `manual`. Every validation row records Style, Sandbox,
@@ -181,7 +181,7 @@ target must be registered here before a plan can cite it.
 
 | Area or target | Exact command/check | Applies when | Expected duration/output bound |
 |---|---|---|---|
-| `[PROJECT: module/test target]` | `[exact command]` | [trigger] | [bound] |
+| `[PROJECT: module/test target]` | `[PROJECT: exact command]` | [PROJECT: trigger] | [PROJECT: bound] |
 
 ## Plan-matrix contract
 
