@@ -37,4 +37,4 @@ into other repositories.
 
 | Repository | Path from here | State on 2026-10-18 |
 |---|---|---|
-| nuro-battler | `../evolution-game/nuro-battler` | Installed. Its linter does not match the kit yet: the swap to the kit linter plus `tools/validate_plan_workspace.local.ps1` is uncommitted in its worktree `.claude/worktrees/elastic-williamson-89c0b4`. |
+| nuro-battler | `../evolution-game/nuro-battler` | Installed. Runs the kit linter unchanged, with its Godot rules in `tools/validate_plan_workspace.local.ps1`; `validate-kit.ps1 -InstalledRepo` passes. |
