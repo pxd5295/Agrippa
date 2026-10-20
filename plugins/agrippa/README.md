@@ -30,9 +30,13 @@ The methodology has three layers, and the kit installs all of them.
   `CLAUDE.md` files hold rules that matter only in one folder.
 - **On-demand guides.** The plugin's `plan` skill holds `agent-workflow.md`
   (lifecycle, interview, design states, design-reference planning, risk,
-  workspace shapes, evidence) and `ROUTING.md` (tier table, fork or fresh,
-  roster, packets, ownership, waves, launch, validator, review) as reference
-  files. They load only for planning or plan implementation.
+  workspace shapes, evidence), `ROUTING.md` (tier table, fork or fresh,
+  roster, packets, ownership, waves, launch, validator, review), and
+  `workspace-files.md` (what each workspace file owns, handoff files,
+  selective reads, linting) as reference files. They load only for planning
+  or plan implementation. The `design-first` skill holds
+  `decision-records.md`, the decision-record rules, which load only when a
+  record is written.
 - **Tools the rules call.** Four named agents, four skills, the plugin's
   `/agrippa:handoff` skill, the plan templates in the `plan` skill, the
   workspace linter that runs from the plugin as `agrippa-lint`,
@@ -46,13 +50,12 @@ The methodology has three layers, and the kit installs all of them.
 | `templates/AGENTS.md` | `AGENTS.md`, adapted and merged |
 | `templates/CLAUDE.md` | `CLAUDE.md` (root), adapted and merged |
 | `templates/directory-CLAUDE.md` | `<ownership area>/CLAUDE.md`, one per area that has real rules |
-| `templates/planning-CLAUDE.md` | `docs/planning/CLAUDE.md`, which says the guides and templates are in the plugin |
 | `templates/PROJECT-CONTRACTS.md` | `docs/agent_memory/project-contracts.md` |
 | `templates/VALIDATION-COMMANDS.md` | `docs/agent_memory/validation-commands.md` |
 | `templates/LIVE-APP.md` | `docs/agent_memory/live-app.md`, only when the project has an MCP server that observes the running application |
 | `templates/agent-memory-CLAUDE.md` | `docs/agent_memory/CLAUDE.md` |
-| `templates/decisions-README.md` | `docs/decisions/README.md` |
-| `templates/plans-README.md` | `plans/README.md` |
+| `templates/decisions-README.md` | `docs/decisions/README.md`, a short pointer that says what the folder holds. It has no rules; they are in the `design-first` skill |
+| `templates/plans-README.md` | `plans/README.md`, a short pointer that says what the folder holds. It has no rules; they are in the `plan` skill |
 | `agents/*.md` | Not installed; the plugin's agents `agrippa:repo-scout`, `agrippa:plan-reviewer`, `agrippa:design-reviewer`, and `agrippa:validator`. A project keeps no copy in `.claude/agents/` |
 | `skills/*/SKILL.md` | Not installed; the plugin's skills `agrippa:design-first`, `agrippa:systematic-debugging`, `agrippa:verify-before-done`, and `agrippa:receiving-review`, plus `plan` and `handoff` below. A project keeps no copy in `.claude/skills/` |
 | `templates/hooks/README.md` | Not installed; how to opt in to the plugin's spawn logger, the edit-lint hook a project writes for itself, and the permission allowlist |
@@ -71,6 +74,8 @@ The methodology has three layers, and the kit installs all of them.
 | `skills/plan/SKILL.md` | Not installed; the `/agrippa:plan` skill, the planning entry point |
 | `skills/plan/reference/agent-workflow.md` | Not installed; the lifecycle guide, a `plan` skill reference file |
 | `skills/plan/reference/ROUTING.md` | Not installed; the routing guide, a `plan` skill reference file |
+| `skills/plan/reference/workspace-files.md` | Not installed; what each plan-workspace file owns, handoff files, selective reads, soft budgets, and linting, a `plan` skill reference file |
+| `skills/design-first/reference/decision-records.md` | Not installed; where decision records go, when one is required, and their shape, a `design-first` skill reference file |
 | `skills/plan/templates/*.md` | Not installed; the blank plan-workspace files, copied into each `plans/YYYY-MM-DD-<name>/` |
 | `skills/handoff/SKILL.md` | Not installed; the `/agrippa:handoff` skill, which writes a short session handoff |
 | `skills/install/SKILL.md` | Not installed; the `/agrippa:install` skill, which installs the methodology in a repository that has none |
@@ -172,7 +177,7 @@ the project's `AGENTS.md` to read `# Agent Workflow`.
   focused questions in chat and record the answers the same way.
 - The `engineering:architecture` and `engineering:system-design` skills (the
   `engineering` plugin) write decision records. Without them, write the record
-  by hand in the shape `docs/decisions/README.md` gives.
+  by hand in the shape the `design-first` skill's `decision-records.md` gives.
 - The named agents have no `tools:` allowlist. Their `disallowedTools` lines
   remove the editing tools, so a project's MCP tools reach them without being
   listed. A live-app bridge's authoring tools reach them too, which is why
@@ -266,5 +271,9 @@ what the plugin provides: the agents in `.claude/agents/`, the plugin's skills
 in `.claude/skills/`, `.claude/commands/handoff.md`,
 `tools/validate_plan_workspace.ps1`, the spawn logger, its
 `hook_payload.ps1` helper unless a project script still uses it, or a
-`settings.json` hook or permission that runs them. Each failure names the file
-or setting and what to do. Without `-InstalledRepo`, it checks only the kit.
+`settings.json` hook or permission that runs them. It must also keep no full
+copy of the rules that now ship in the skills: a `plans/README.md` or
+`docs/decisions/README.md` with the old methodology sections instead of the
+short pointer, or the old `docs/planning/CLAUDE.md`. Each failure names the
+file or setting and what to do. Without `-InstalledRepo`, it checks only the
+kit.

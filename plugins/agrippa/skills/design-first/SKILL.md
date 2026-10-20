@@ -49,8 +49,8 @@ first, then the `CLAUDE.md` in the subfolder you are about to edit.
    new ownership area is a new subsystem and runs `engineering:system-design`
    first. A change to a shared interface listed in "Shared and public
    interfaces" needs a decision record from `engineering:architecture` first.
-   Both are saved under `docs/decisions/` (see its README) before the first
-   edit.
+   Both are saved under `docs/decisions/` before the first edit, in the shape
+   `${CLAUDE_SKILL_DIR}/reference/decision-records.md` gives.
 
 ## 2. Decide placement with these rules
 

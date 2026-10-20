@@ -14,6 +14,8 @@ files, carry no prefix of their own, are named with the agrippa: prefix in the
 core rules, and are never pointed to at a project copy path. The agents remove
 the editing tools with disallowedTools instead of listing an allowlist. No
 shipped file outside templates/ and the README contains a [PROJECT: ...] slot.
+The plans and decisions README templates stay short pointers, and their
+rules are in the plan and design-first skills' reference files.
 The core rules and templates still carry the methodology's required clauses,
 the core rules stay under the 10,000-character hook context cap, and the
 injection hook prints them. The spawn logger is wired and does nothing
@@ -36,8 +38,11 @@ docs/agent_memory/project-contracts.md and validation-commands.md, and it must
 keep no local copy of what the plugin provides: the agents, the plugin's
 skills, the shared linter, the spawn logger, its hook_payload.ps1 helper
 unless a project script still uses it, or a settings.json hook or permission
-that runs them. Each failure names the file or setting and says
-what to do. The check is skipped when this is omitted.
+that runs them. It must also keep no full copy of the rules that now ship in
+the plan and design-first skills: plans/README.md and docs/decisions/README.md
+are short pointers, and the old docs/planning/CLAUDE.md is gone. Each failure
+names the file or setting and says what to do. The check is skipped when this
+is omitted.
 #>
 [CmdletBinding()]
 param(
@@ -107,10 +112,11 @@ $required = @(
     'hooks/hooks.json',
     'skills/plan/reference/agent-workflow.md',
     'skills/plan/reference/ROUTING.md',
+    'skills/plan/reference/workspace-files.md',
+    'skills/design-first/reference/decision-records.md',
     'templates/AGENTS.md',
     'templates/CLAUDE.md',
     'templates/directory-CLAUDE.md',
-    'templates/planning-CLAUDE.md',
     'templates/PROJECT-CONTRACTS.md',
     'templates/VALIDATION-COMMANDS.md',
     'templates/LIVE-APP.md',
@@ -216,7 +222,8 @@ $routing = Read-KitFile 'skills/plan/reference/ROUTING.md'
 $plan = Read-KitFile 'skills/plan/templates/PLAN.md'
 $packets = Read-KitFile 'skills/plan/templates/PACKETS.md'
 $spec = Read-KitFile 'skills/plan/templates/SPEC.md'
-$plansReadme = Read-KitFile 'templates/plans-README.md'
+$workspaceFiles = Read-KitFile 'skills/plan/reference/workspace-files.md'
+$decisionRecords = Read-KitFile 'skills/design-first/reference/decision-records.md'
 $workspaceLinter = Read-KitFile 'scripts/validate_plan_workspace.ps1'
 
 # --- Every template, script, hook, agent, skill, and bin file is listed in the README layout table
@@ -452,6 +459,8 @@ Test-Clauses 'UPGRADING' $upgrading @(
     '### From G1',
     '### From G2',
     '### From G3',
+    '### From G4 v0\.1\.0',
+    'docs/planning/CLAUDE\.md` \| Delete',
     'tools/log_subagent_spawns\.ps1` \| Delete',
     'tools/hook_payload\.ps1` \| Delete',
     'tools/validate_plan_workspace\.ps1` \| Delete',
@@ -494,7 +503,31 @@ Test-Clauses 'Skill upgrade' $upgradeSkill ($setupClauses + @(
     '\$\{CLAUDE_PLUGIN_ROOT\}/UPGRADING\.md',
     'docs/planning/MIGRATION\.md'
 ))
-Add-Check ($plansReadme -match '(?s)SPEC\.md.*PLAN\.md.*PACKETS\.md.*STATUS\.md.*EVIDENCE\.md') 'plans README must name all five workspace artifacts.'
+Add-Check ($workspaceFiles -match '(?s)SPEC\.md.*PLAN\.md.*PACKETS\.md.*STATUS\.md.*EVIDENCE\.md') 'Plan skill workspace-files.md must name all five workspace artifacts.'
+Test-Clauses 'Plan skill workspace-files.md' $workspaceFiles @(
+    '## Artifact contract',
+    '## Selective reads and soft budgets',
+    'handoff-YYYY-MM-DD',
+    'agrippa-lint -PlanPath',
+    'checks shape,\s+never truth'
+)
+Test-Clauses 'Design-first skill decision-records.md' $decisionRecords @(
+    'docs/decisions/',
+    '## When a record is required',
+    '## Shape',
+    'engineering:architecture',
+    'engineering:system-design',
+    'never edited to change its decision'
+)
+Add-Check ($coreRules -match 'use the shape in `agrippa:design-first`') 'Core rules must point to agrippa:design-first for the decision-record shape.'
+# The plans and decisions READMEs a project gets are pointers for people who
+# browse it without the plugin. The rules they used to hold ship in the plan
+# and design-first skills, so a pointer must stay short and hold no sections.
+foreach ($pointer in @('templates/plans-README.md', 'templates/decisions-README.md')) {
+    $pointerText = Read-KitFile $pointer
+    Add-Check ($pointerText.Length -lt 600 -and $pointerText -notmatch '(?m)^## ') "plugins/agrippa/$pointer must stay a short pointer with no sections; its rules belong in a plugin skill."
+    Add-Check ($pointerText.Contains('https://github.com/pxd5295/Agrippa')) "plugins/agrippa/$pointer must link to the Agrippa repository."
+}
 Add-Check ($adoption -match 'run-smoke-test\.ps1') 'Adoption checklist must require the smoke test.'
 Add-Check ($workspaceLinter -match 'checks shape, never truth') 'Workspace linter lacks the shape-not-truth disclaimer.'
 Add-Check ($workspaceLinter -match 'validate_plan_workspace\.local\.ps1') 'Workspace linter does not load the local extension file.'
@@ -616,9 +649,11 @@ foreach ($file in (Get-ChildItem -LiteralPath $kitRoot -Recurse -File)) {
 # ${CLAUDE_SKILL_DIR}, which Claude Code substitutes, so they resolve wherever
 # the plugin is installed.
 $planSkill = Read-KitFile 'skills/plan/SKILL.md'
-foreach ($reference in @('reference/agent-workflow.md', 'reference/ROUTING.md', 'templates/')) {
+foreach ($reference in @('reference/agent-workflow.md', 'reference/ROUTING.md', 'reference/workspace-files.md', 'templates/')) {
     Add-Check ($planSkill.Contains('${CLAUDE_SKILL_DIR}/' + $reference)) "Skill plan does not point to `${CLAUDE_SKILL_DIR}/$reference."
 }
+$designFirstSkill = Read-KitFile 'skills/design-first/SKILL.md'
+Add-Check ($designFirstSkill.Contains('${CLAUDE_SKILL_DIR}/reference/decision-records.md')) 'Skill design-first does not point to ${CLAUDE_SKILL_DIR}/reference/decision-records.md.'
 Add-Check ($planSkill -match 'agrippa-lint -PlanPath' -and $planSkill -match 'Bash tool') 'Skill plan must lint with agrippa-lint through the Bash tool.'
 Add-Check ($plan -match 'agrippa-lint -PlanPath' -and $plan -match 'Bash tool') 'PLAN template must name the agrippa-lint row and say it runs through the Bash tool.'
 $validatorAgent = Read-KitFile 'agents/validator.md'
@@ -809,6 +844,27 @@ if ($InstalledRepo) {
             Add-ProjectCheck (-not (Test-Path -LiteralPath (Join-Path $projectRoot $path))) "$path is a local command that the plugin skill /agrippa:$name replaces. Delete it."
         }
         Add-ProjectCheck (-not (Test-Path -LiteralPath (Join-Path $projectRoot 'tools/validate_plan_workspace.ps1'))) 'tools/validate_plan_workspace.ps1 is a local copy of the shared linter. Delete it; plans run agrippa-lint from the plugin, and project rules stay in tools/validate_plan_workspace.local.ps1.'
+
+        # Up to v0.1.0 an install copied the plan-workspace and decision-record
+        # rules into these READMEs. The rules now ship in the plan and
+        # design-first skills, and the project keeps a short pointer. A
+        # section heading that only the full copy had marks a leftover.
+        $fullCopies = @(
+            @('plans/README.md', '(?m)^## (Artifact contract|Selective reads)', 'templates/plans-README.md', 'plan'),
+            @('docs/decisions/README.md', '(?m)^## (When a record is required|Shape)\s*$', 'templates/decisions-README.md', 'design-first')
+        )
+        foreach ($copy in $fullCopies) {
+            $copyPath = Join-Path $projectRoot $copy[0]
+            if (Test-Path -LiteralPath $copyPath -PathType Leaf) {
+                $copyText = [IO.File]::ReadAllText($copyPath, [Text.Encoding]::UTF8)
+                Add-ProjectCheck ($copyText -notmatch $copy[1]) "$($copy[0]) is a full copy of rules that now ship in the plugin skill agrippa:$($copy[3]). Move any project rule in it into ""Project rules"" in AGENTS.md, then replace it with the short pointer plugins/agrippa/$($copy[2]), as ""From G4 v0.1.0"" in UPGRADING.md says."
+            }
+        }
+        $planningNote = Join-Path $projectRoot 'docs/planning/CLAUDE.md'
+        if (Test-Path -LiteralPath $planningNote -PathType Leaf) {
+            $planningText = [IO.File]::ReadAllText($planningNote, [Text.Encoding]::UTF8)
+            Add-ProjectCheck ($planningText -notmatch '^\s*# docs/planning/') 'docs/planning/CLAUDE.md is the kit''s old note about the planning guides and templates, which now ship in the plugin skill agrippa:plan. Delete it, as "From G4 v0.1.0" in UPGRADING.md says.'
+        }
 
         # The spawn logger's payload helper may also serve the project's own
         # edit-lint hook. It is left over only when no other script in either

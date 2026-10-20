@@ -1,5 +1,8 @@
 # Planning Workflow Migration
 
+This file records how this repository adopted or upgraded the Agrippa
+planning methodology. It is a record: never edit its decisions afterwards.
+
 ## Scope and date
 
 - Date: [PROJECT: YYYY-MM-DD]

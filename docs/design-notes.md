@@ -241,6 +241,44 @@ prints that file as `additionalContext`.
   inside the project. Whether the `env` block reaches a plugin hook was not
   tested in a live session; Phase 8 checks it with the spawn log.
 
+## Generic project files moved into the plugin (2026-10-19)
+
+Up to v0.1.0, `/agrippa:install` copied three templates with no
+`[PROJECT: ...]` slot into every project in full: `plans/README.md`,
+`docs/decisions/README.md`, and `docs/planning/CLAUDE.md`. They held only
+methodology, so every project carried a copy that would drift from the
+plugin.
+
+- **Where the rules went.** The plan-workspace rules (artifact contract,
+  handoff files, selective reads, soft budgets, linting outside Claude Code)
+  are the `plan` skill's `reference/workspace-files.md`. The decision-record
+  rules are the `design-first` skill's `reference/decision-records.md`,
+  because a shared-interface change needs a record whether or not it has a
+  plan workspace, and `design-first` is the skill that runs before that first
+  edit. The core rules named `docs/decisions/README.md` for the record shape;
+  they now name `agrippa:design-first`, which made them 4 characters shorter.
+- **Pointer READMEs stay.** A project keeps a short `plans/README.md` and
+  `docs/decisions/README.md` that say what the folder holds and link to the
+  Agrippa repository, with no rules. Someone browsing the repository on
+  GitHub, or a collaborator without the plugin, otherwise finds a folder of
+  dated files with no explanation. `docs/decisions/` also has to exist before
+  the first record is written. The pointers stay free of rules so they cannot
+  drift; `validate-kit.ps1` fails if a pointer template grows a section.
+- **`docs/planning/CLAUDE.md` is gone.** It only said that the guides and
+  templates are in the plugin and that a local copy must not be kept. A
+  freshly installed project has nothing else in `docs/planning/`, and an
+  upgraded one has only `MIGRATION.md`, which now says itself that it is a
+  record. The no-copy rule moved into the `plan` skill.
+- **`docs/agent_memory/CLAUDE.md` stays whole.** Its editing rules are generic,
+  but they work because Claude Code loads a folder's `CLAUDE.md` whenever a
+  session touches a file in that folder. A skill has no such trigger, and the
+  core rules have no room. Splitting the file would leave the project copy
+  holding only its one slot while the rules lost the moment they are needed.
+- **Upgrades.** `UPGRADING.md` "From G4 v0.1.0" replaces a full copy with
+  the pointer and deletes `docs/planning/CLAUDE.md`.
+  `validate-kit.ps1 -InstalledRepo` recognizes a full copy by a section heading
+  that every earlier version had and the pointer never has.
+
 ## Linter rules that are easy to trip over
 
 These cost three lint rounds (62 errors down to 0) on one nuro-battler plan.

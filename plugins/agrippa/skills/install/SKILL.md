@@ -12,9 +12,11 @@ only. Never change application code, and preserve every unrelated user
 change, including uncommitted ones.
 
 The plugin already provides the core rules, the agents, the skills, the plan
-templates, the linter, and the spawn logger. The project keeps only its own
-facts. So this skill writes project documents and settings, and never copies a
-plugin file into the repository.
+templates, the plan-workspace and decision-record rules, the linter, and the
+spawn logger. The project keeps only its own facts, plus two short pointer
+READMEs for people who browse it without the plugin. So this skill writes
+project documents and settings, and never copies a plugin file into the
+repository.
 
 The kit files this skill uses are in the plugin:
 
@@ -107,6 +109,9 @@ Write every layout-table row whose destination is a repository path, except
   once its file is filled.
 - Merge into an existing `AGENTS.md` or `CLAUDE.md`; never drop the
   repository's own rules. Keep the stricter rule when the two disagree.
+- Write `plans/README.md` and `docs/decisions/README.md` from their templates
+  unchanged. They only say what each folder holds and where the rules are;
+  never add rules to them.
 - Write a per-directory `CLAUDE.md` only for an ownership area with real rules
   to state.
 - Write `docs/agent_memory/live-app.md` only when the project has an MCP
@@ -175,7 +180,8 @@ Run each check below and paste the exact command and its result.
 - **No local copies.** `.claude/agents/`, `.claude/skills/`, and
   `.claude/commands/` hold nothing named after a plugin agent or skill, and
   `tools/` has no `validate_plan_workspace.ps1`, `log_subagent_spawns.ps1`, or
-  `hook_payload.ps1`.
+  `hook_payload.ps1`. `plans/README.md` and `docs/decisions/README.md` match
+  their pointer templates.
 - **Validation commands.** Each command in `validation-commands.md` was run
   once before this step, and its result is recorded. Run any command that
   step 5 added to the catalog and step 3 did not run.

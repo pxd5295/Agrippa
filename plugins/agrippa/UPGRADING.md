@@ -23,7 +23,8 @@ to recognize their markers to remove them. Nothing here is installed.
 A G4 repository moves to a newer release by changing the marketplace `ref` to
 the new tag. It can still drift from the templates; compare its project
 documents with them section by section and treat each difference as a mapping
-row.
+row. A repository installed at v0.1.0 also has three files whose rules now
+ship in the plugin; apply "From G4 v0.1.0" below.
 
 ## Rule mapping
 
@@ -69,7 +70,7 @@ Then apply every G2 row below, because G1 also lacks all of them.
 | No fork rule | Replace | `ROUTING.md` "Fork or fresh subagent" |
 | Validation column `Environment` | Replace | Column `Sandbox` with `sandboxed` / `outside-sandbox`. The linter accepts either name, so old workspaces still lint |
 | Planner reads not bounded | Replace | Core rules "Planner read ladder" |
-| No decision records | Replace | `docs/decisions/` with its README; required before a shared-interface change |
+| No decision records | Replace | `docs/decisions/` with its pointer README; required before a shared-interface change, in the shape the `agrippa:design-first` skill gives |
 | No folder-level rules | Replace | Per-directory `CLAUDE.md` files from `templates/directory-CLAUDE.md` |
 | No review procedure | Replace | The plugin skill `agrippa:receiving-review` |
 | No debugging or done-evidence procedure | Replace | The plugin skills `agrippa:systematic-debugging` and `agrippa:verify-before-done` |
@@ -106,7 +107,6 @@ user confirms it.
 | `docs/agent-workflow.md` | Delete | `agent-workflow.md` in the `plan` skill. Move any project facts added to it into `project-contracts.md` or `validation-commands.md` |
 | `docs/planning/ROUTING.md` | Delete | `ROUTING.md` in the `plan` skill. Move any project facts added to it into `project-contracts.md` |
 | `docs/planning/templates/*.md` | Delete | The templates in the `plan` skill, which the plugin's linter parses |
-| `docs/planning/CLAUDE.md` | Replace | Rewrite it from `templates/planning-CLAUDE.md`, which says the guides and templates are in the plugin |
 | `tools/validate_plan_workspace.ps1` | Delete | `agrippa-lint`, the plugin's linter. Keep `tools/validate_plan_workspace.local.ps1`; the plugin's linter loads it |
 | `tools/log_subagent_spawns.ps1` | Delete | The plugin's spawn logger, which runs when the `env` block of `.claude/settings.json` sets `AGRIPPA_SPAWN_LOG=1` |
 | `tools/hook_payload.ps1` | Delete | The plugin's copy serves its spawn logger. Keep the project's copy only when another project script, such as the edit-lint hook, dot-sources it |
@@ -116,6 +116,24 @@ user confirms it.
 | The edit-lint hook script and its wiring | Retain | It is the project's own and wraps the project's linter |
 | Project skills and commands that are not the kit's | Retain | They are the project's own |
 | Matrix rows that run `tools/validate_plan_workspace.ps1` in dated plan workspaces | Retain | Dated plans are records and are never edited. New plans run `agrippa-lint` |
+
+Then apply the "From G4 v0.1.0" rows below, because a G3 install has full
+copies of those files too.
+
+### From G4 v0.1.0
+
+Up to v0.1.0, an install copied three generic files into the project in full.
+Their rules now ship in the plugin: the plan-workspace rules in the `plan`
+skill's `workspace-files.md`, and the decision-record rules in the
+`design-first` skill's `decision-records.md`. A full copy left in the project
+drifts from the plugin, so it is replaced or deleted. `dev/validate-kit.ps1
+-InstalledRepo` reports each one.
+
+| v0.1.0 file | Disposition | What happens |
+|---|---|---|
+| `plans/README.md` with the sections "Artifact contract" and "Selective reads and soft budgets" | Replace | Overwrite it with `templates/plans-README.md`, a short pointer with no rules. Move any project rule added to it into "Project rules" in `AGENTS.md` first |
+| `docs/decisions/README.md` with the sections "When a record is required" and "Shape" | Replace | Overwrite it with `templates/decisions-README.md`, a short pointer with no rules. Move any project rule added to it into "Project rules" in `AGENTS.md` first |
+| `docs/planning/CLAUDE.md` | Delete | The guides and templates it pointed to are in the `plan` skill, which also says a project keeps no copy of them. `docs/planning/` keeps only `MIGRATION.md`, which says itself that it is a record |
 
 ### Always
 

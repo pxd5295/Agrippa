@@ -23,7 +23,7 @@ The kit files this skill uses are in the plugin:
 
 | File | Use |
 |---|---|
-| `${CLAUDE_PLUGIN_ROOT}/UPGRADING.md` | The generation markers and the rule mapping for each generation, including "From G3" |
+| `${CLAUDE_PLUGIN_ROOT}/UPGRADING.md` | The generation markers and the rule mapping for each generation, including "From G3" and "From G4 v0.1.0" |
 | `${CLAUDE_PLUGIN_ROOT}/README.md` | The layout table, "Enabling the plugin in a project", the placeholder convention, and the install-marker scan |
 | `${CLAUDE_PLUGIN_ROOT}/ADOPTION-CHECKLIST.md` | Every item is done or reported at the end |
 | `${CLAUDE_PLUGIN_ROOT}/templates/` | The project-side documents, including `MIGRATION.md` |
@@ -108,6 +108,10 @@ Wait for every answer before step 4.
   rediscovering them. A copied-in agent or
   skill that was filled at install time is a data source: move each of its
   project facts into the document section "From G3" names before deleting it.
+- Replace a full copy of `plans/README.md` or `docs/decisions/README.md` with
+  the short pointer from its template, and delete `docs/planning/CLAUDE.md`
+  once the user confirms, as "From G4 v0.1.0" in `UPGRADING.md` says. Move
+  any project rule added to those files into `AGENTS.md` first.
 - Move project-specific checks that an old linter enforced into
   `tools/validate_plan_workspace.local.ps1`. The shared linter runs from the
   plugin; never hand-merge it.

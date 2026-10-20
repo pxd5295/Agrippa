@@ -37,7 +37,7 @@ named as not done, with the reason.
 - [ ] Root `CLAUDE.md` imports `AGENTS.md` (`@AGENTS.md`) and lists any
       project skills.
 - [ ] Each ownership area with real rules has a per-directory `CLAUDE.md`;
-      `docs/agent_memory/CLAUDE.md` and `docs/planning/CLAUDE.md` exist.
+      `docs/agent_memory/CLAUDE.md` exists.
 - [ ] No project-wide pin of the lead's model or reasoning effort exists.
 
 ## Project facts
@@ -48,8 +48,12 @@ named as not done, with the reason.
       sandbox stance, determinism, verdict and error-line rules, retry rules,
       prerequisites, known red at `HEAD`, targeted checks, and the full-suite
       inventory.
-- [ ] `docs/decisions/README.md` exists, and the `engineering:*` skills are
-      available or the hand-written fallback is noted.
+- [ ] `docs/decisions/README.md` and `plans/README.md` exist as the short
+      pointers from `templates/`, with no copy of the rules the `plan` and
+      `design-first` skills hold, and `docs/planning/` has no `CLAUDE.md`
+      from an older kit.
+- [ ] The `engineering:*` skills are available, or the hand-written fallback
+      is noted.
 - [ ] The README's install-marker scan finds nothing outside the kit folder.
 
 ## Agents, skills, commands, hooks

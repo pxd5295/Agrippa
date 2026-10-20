@@ -75,7 +75,7 @@ that table in `project-contracts.md`.
   `engineering:architecture` skill as `docs/decisions/YYYY-MM-DD-<slug>.md`. A
   new subsystem (class family, native worker, editor panel, service, or
   ownership area) also runs `engineering:system-design` into that record.
-  Without those skills, use the shape in `docs/decisions/README.md`.
+  Without those skills, use the shape in `agrippa:design-first`.
 
 Use the `design-first` skill for the design statement and placement before the
 first edit. Any diff touching more than one file, a base class, a shared
