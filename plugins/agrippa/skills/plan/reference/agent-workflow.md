@@ -246,9 +246,37 @@ continuity, escalation, and review. Treat each allocation row as atomic.
 Run the smallest relevant checks during a milestone and the immediate
 shared-contract gate; run the complete applicable suite once after integration.
 Expand earlier only when evidence exposes unexpected coupling. The validation
-catalog owns exact syntax, prerequisites, inventory, determinism, and retry
-rules. Read its "Invocation traps" section before the first run, because it
+catalog, `docs/agent_memory/validation-commands.md`, owns exact syntax,
+prerequisites, the inventory, and each command's matrix values; the retry and
+pre-existing-failure rules are in the `agrippa:verify-before-done` skill. Read
+the catalog's "Invocation traps" section before the first run, because it
 names the invocation rules that most often go wrong.
+
+### Validation matrix values
+
+Every matrix row records Style, Sandbox, Determinism, and When, with the
+Style, Sandbox, and Determinism values copied from the catalog's row for that
+command. Allowed Determinism values are `deterministic`, `noisy-retry`,
+`skips-headless`, and `manual`. The Sandbox value is one of:
+
+- `sandboxed`: the command reads and writes only inside the workspace and
+  needs no network, GPU, display, or external service;
+- `outside-sandbox`: the command writes caches or user data outside the
+  workspace, or needs network, credentials, a GPU, a display, or a service.
+
+A plan cites only a target registered in the catalog's "Full-suite inventory";
+one representative test is never the whole suite. Before implementing a plan,
+run its matrix commands once to confirm that every named target exists and
+executes; a speculative matrix is the main way the process fails quietly.
+Every matrix row is a headless command. A row that needs the live app or a GPU
+says so in its packet, and that mark is the only case for running the app
+through the project's live-app bridge.
+
+The project's durable command invariants (one required binary, an invocation
+shape per target kind, a prerequisite that must come first, a required working
+directory) are checks in `tools/validate_plan_workspace.local.ps1`, which
+`agrippa-lint` loads from the repository. The shared linter is never edited
+for them, and it checks shape and freshness, never semantic truth.
 
 Keep `STATUS.md` small: phase, planner, owner, assigned/actual tier, remaining
 work, blockers, next action, and gates. Append commands, outcomes, routing,

@@ -20,8 +20,11 @@ source, plans, configuration, or documentation. Stop if a command would
 require source changes, an undeclared external action, or an unbounded
 interactive run.
 
-Apply the noisy-retry rule only when the packet permits it, and report every
-attempt. Follow `docs/agent_memory/validation-commands.md` for the exact
+The noisy-retry rule is: run once in isolation, retry once only when the
+output itself identifies environmental noise, and record both outcomes. An
+assertion or correctness failure never retries into green. Apply the rule only
+to a row whose packet marks it `noisy-retry`, and report every attempt. Follow
+`docs/agent_memory/validation-commands.md` for the exact
 invocation shape, required working directory, and sandbox stance of each
 command; do not substitute a remembered variant. Read its "Invocation traps"
 section before the first run.

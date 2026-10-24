@@ -1,11 +1,9 @@
 # Agent Workflow
 
-This repository uses the Agrippa planning methodology. The `agrippa` plugin
-adds its core rules to every session: request boundaries, Engineering
-standards, the definition of done, the planning trigger and size gate,
-implementation launch, the roster and skills, the planner read ladder, and
-validation reach. This file holds only this repository's project contracts and
-project rules. Where a rule here is stricter than a core rule, this one wins.
+This repository uses the Agrippa planning methodology, whose core rules the
+`agrippa` plugin adds to every session. This file holds only this repository's
+project contracts and project rules. Where a rule here is stricter than a core
+rule, this one wins.
 
 ## Project contracts
 
@@ -37,18 +35,12 @@ and no reference. Sidecar files (for example `.uid` or `.meta`) move, rename,
 and delete in the same change as the file they name.]
 
 [PROJECT: optional. Delete this paragraph if the project has no MCP server
-that observes the running application. Name the server, what it is preferred
-for (what the UI actually renders, the live object tree, editor-side load
-errors, anything needing a GPU or a real display), and that every row in a
-plan's validation matrix stays a headless command. Name any bridge test runner
-whose discovery conventions do not match this repository's tests, so it is
-never used for the suite. If the bridge is unreachable, say so and name the
-headless command run instead; never report a visual or GPU-dependent check as
-done when the bridge was down and nothing replaced it. If the bridge can also
-author (create nodes, edit scenes, save resources), say that its edits write
-real files, that it is the sanctioned path for tool-serialized files rather
-than an exception to the rule above, and that such edits need the user's
-go-ahead and belong in a change the user can see.]
+that observes the running application. Otherwise one or two sentences: name
+the server, say that `docs/agent_memory/live-app.md` describes its tools and
+traps, and, if the bridge can also author (create nodes, edit scenes, save
+resources), say that its edits write real files, that it is the sanctioned
+path for the tool-serialized files named above, and that such edits need the
+user's go-ahead and belong in a change the user can see.]
 
 [PROJECT: optional. Name any subsystem whose state, geometry, or dispatch
 changes must pass a dedicated equivalence or compatibility gate before

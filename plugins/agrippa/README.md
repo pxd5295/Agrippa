@@ -274,6 +274,8 @@ in `.claude/skills/`, `.claude/commands/handoff.md`,
 `settings.json` hook or permission that runs them. It must also keep no full
 copy of the rules that now ship in the skills: a `plans/README.md` or
 `docs/decisions/README.md` with the old methodology sections instead of the
-short pointer, or the old `docs/planning/CLAUDE.md`. Each failure names the
-file or setting and what to do. Without `-InstalledRepo`, it checks only the
-kit.
+short pointer, the old `docs/planning/CLAUDE.md`, or the generic rule
+sentences that templates up to v0.1.1 wrote into `project-contracts.md`,
+`validation-commands.md`, `live-app.md`, and `AGENTS.md`, which it recognizes
+by their template wording. Each failure names the file or setting and what to
+do. Without `-InstalledRepo`, it checks only the kit.

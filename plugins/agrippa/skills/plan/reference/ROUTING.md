@@ -27,8 +27,10 @@ because Haiku is weakest with large files or output.
 
 Tier inputs are: long-context need, files touched, ownership areas,
 shared-interface touch, risk flags, design state, and validation determinism.
-Do not pick from a model menu; apply the first matching cell and record the
-inputs in the stage. Dispatch shape is a separate choice, below.
+A stage's risk flags come from "High-risk change classes" in
+`docs/agent_memory/project-contracts.md`, and any risk flag keeps the stage
+off Haiku. Do not pick from a model menu; apply the first matching cell and
+record the inputs in the stage. Dispatch shape is a separate choice, below.
 
 Reasoning effort is the finer lever inside a tier: escalate `low → medium →
 high` before escalating the model. The Agent tool sets `model` per spawn; the

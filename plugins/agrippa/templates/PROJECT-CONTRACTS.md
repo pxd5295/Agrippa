@@ -17,10 +17,6 @@ native runtime and a GPU inference path."]
 
 ## Ownership areas
 
-Treat these as separate writer boundaries unless a plan explicitly combines
-them after freezing the shared contract. An area whose code has rules of its
-own carries a `CLAUDE.md` at its root stating them.
-
 - `[PROJECT: path or module]`: [PROJECT: responsibility, authoritative
   interface, primary tests].
 - `[PROJECT: path or module]`: [PROJECT: responsibility, authoritative
@@ -37,10 +33,9 @@ this comment once the section is filled.
 
 ## Architecture owners
 
-The Engineering standards in the Agrippa core rules and the `design-first`
-skill place every change at an existing owner, and they name the owners only
-by the row kinds below. List the owners here so placement is a lookup, not a
-search. Delete a row that provably does not apply.
+> Install note: the core rules and the `design-first` skill name owners only
+> by the row kinds below, so fill every row that applies with a `file:symbol`
+> and delete a row that provably does not apply. Then delete this note.
 
 | Owner kind | Where it lives | What it owns |
 |---|---|---|
@@ -104,7 +99,7 @@ this comment once the section is filled.
 ## Contract documents
 
 The contract documents in `docs/agent_memory/` besides this file and
-`validation-commands.md`, one row each. Plans and reviewers cite them by path.
+`validation-commands.md`, one row each.
 
 | Document | What it owns |
 |---|---|
@@ -121,12 +116,10 @@ tokens (`ui-style-tokens.md`), and generation performance notes
 
 ## Shared and public interfaces
 
-Establish these contracts before parallel consumers. A plan that changes or
-deletes a symbol records an `rg` consumer census with file:line snippets and
-pre-authorizes only the enumerated ownership expansion. A change to any row
-starts with a decision record in `docs/decisions/` before the first edit.
-Reviewers give these rows extra scrutiny. A constant of one of these
-interfaces comes only from its contract source.
+> Install note: one row per interface whose change needs a decision record,
+> a consumer census, and reviewer scrutiny under the core rules. Each row's
+> contract source is the one file its constants come from. Delete this note
+> once the table is filled.
 
 | Interface | Contract source | Owners/consumers | Compatibility gate |
 |---|---|---|---|
@@ -150,14 +143,11 @@ The V10 sensor and brain constants come only from
 | Concurrency/performance | [PROJECT: trigger] | [PROJECT: deterministic equivalence or baseline/target] |
 | Deployment/external system | [PROJECT: trigger] | [PROJECT: approval, credential, or environment boundary] |
 
-Delete rows that provably do not apply; add project-specific risks discovered
-from code and architecture references. These rows feed the `Risk flags` field
-of every plan stage, and a risk flag keeps a stage off Haiku.
-
-<!-- Install note: an example from a game project, for shape only. Delete
-this comment once the section is filled.
-The Native/ABI trigger is any change to native dispatch, which
-needs the equivalence gate after a rebuild of both build configs.
+<!-- Install note: delete rows that provably do not apply, and add
+project-specific risks discovered from code and architecture references.
+An example from a game project, for shape only: the Native/ABI trigger is any
+change to native dispatch, which needs the equivalence gate after a rebuild
+of both build configs. Delete this comment once the section is filled.
 -->
 
 ## Debugging map
@@ -199,8 +189,7 @@ setter ran, have both mattered.
 
 - [PROJECT: required SDK/runtime/tool versions and read-only discovery
   commands.]
-- Checks that need network, credentials, a GPU, a display, services, or user
-  action, and what a headless or sandboxed run silently skips, are listed under
-  "Environment limits" in `docs/agent_memory/validation-commands.md`.
-- Preserve dirty user-owned changes and distinguish existing failures or
-  environment limits from regressions introduced by the active change.
+- [PROJECT: the environment every check here assumes (operating system, shell,
+  a required display or GPU, services), with the checks that do not run
+  without it. The per-command limits are under "Environment limits" in
+  `docs/agent_memory/validation-commands.md`.]

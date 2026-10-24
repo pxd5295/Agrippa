@@ -26,6 +26,7 @@ The kit files this skill uses are in the plugin:
 | `${CLAUDE_PLUGIN_ROOT}/ADOPTION-CHECKLIST.md` | Every item is done or reported at the end |
 | `${CLAUDE_PLUGIN_ROOT}/templates/` | The project-side documents |
 | `${CLAUDE_PLUGIN_ROOT}/templates/hooks/README.md` | The spawn-logger opt-in, the edit-lint hook rules, and the permission allowlist |
+| `${CLAUDE_PLUGIN_ROOT}/skills/plan/reference/agent-workflow.md` | Its "Validation matrix values" section, which defines the Sandbox and Determinism values the command catalog records |
 | `${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json` | The plugin version, which names the release tag to pin |
 
 ## 1. Check that this is a new install
@@ -105,6 +106,12 @@ Write every layout-table row whose destination is a repository path, except
   does not apply": delete the slot with its sentence, bullet, table row, or
   optional block; write `None` only where the slot offers it; keep section
   headings, with one sentence under a heading whose content all went.
+- Fill the Sandbox and Determinism columns of the command catalog in
+  `validation-commands.md` with the values "Validation matrix values" in the
+  `plan` skill's `agent-workflow.md` defines, from what step 3 found about
+  each command. The project documents hold the repository's facts only; the
+  rules for using them already ship in the plugin's skills, so never copy a
+  rule into them.
 - Delete every `Install note` line or comment, including the example comments,
   once its file is filled.
 - Merge into an existing `AGENTS.md` or `CLAUDE.md`; never drop the

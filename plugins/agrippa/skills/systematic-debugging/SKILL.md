@@ -129,6 +129,5 @@ Any of these thoughts means going back to phase 1:
 
 It does not replace the design statement for the fix itself; that still
 comes from `design-first`. It does not decide whether a failing benchmark is
-environmental noise; the noisy-retry rule in
-`docs/agent_memory/validation-commands.md` does, and a correctness failure
-is never retried into green.
+environmental noise; the noisy-retry rule in `agrippa:verify-before-done`
+does, and a correctness failure is never retried into green.

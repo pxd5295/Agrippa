@@ -6,10 +6,10 @@
 > file as "no bridge". Fill every install-time placeholder by calling the
 > bridge's tools once, then delete this note.
 
-The Agrippa agents have every tool except the editing tools, so they can call
-this server's tools. They may call only the tools listed under "Read-only
-tools" and "Run tools" below. Every other tool of this server counts as an
-authoring tool, and no agent ever calls one.
+This file names the project's bridge to the running application. The Agrippa
+agents and the `verify-before-done` skill read its sections by name; which
+tools each agent may call, and the rules for using the bridge, are in the
+plugin, not here.
 
 ## Server
 
@@ -73,15 +73,9 @@ always passing `autosave=false` so nothing is persisted; stop
 `mcp__godot-ai__project_manage(op="stop")`.
 -->
 
-Which agents run the app: `validator` only for a matrix row the packet marks as
-needing the live app or a GPU, and `design-reviewer` to see a change running.
-`repo-scout` and `plan-reviewer` never start the app.
-
 ## Authoring tools
 
-These tools write real files or change project state. No Agrippa agent calls
-them. The lead uses one only with the user's go-ahead, in a change the user can
-see.
+These tools write real files or change project state.
 
 - [PROJECT: every authoring tool by full name. Example from a game project:
   `mcp__godot-ai__node_create`, `node_manage`, `node_set_property`,
@@ -97,10 +91,7 @@ see.
 text when the structure, element types, or a property's real value matters.
 Example from a game project: scene files (`.tscn`) and resource files (`.tres`)
 are engine-serialized, so prefer the hierarchy, find, and properties tools for
-those facts.] Cite a bridge-sourced fact as
-`<resource path>::<element path>` and say it came from the live app. When the
-bridge is unreachable, read the file as text and mark those facts as
-text-sourced.
+those facts.]
 
 ## Layout checks
 
@@ -116,20 +107,3 @@ or delete this section. Example from a game project: do not use the bridge's
 `test_run`. It discovers `test_*.gd` files and calls their `test_*` methods,
 which does not match this repository's `extends SceneTree` scripts and `.tscn`
 scene tests.]
-
-## Rules
-
-- Confirm the active session with the state tool, and the session tool when
-  more than one instance may be open, before trusting any answer.
-- Start the app only with the run tool's no-persist option, and stop what you
-  started before reporting.
-- A screenshot of a backgrounded or minimized window can return the last
-  rendered frame and flag it as stale. A stale frame is no evidence.
-- Read the load or parse log as well as the runtime log. A boot-time parse
-  error never reaches the runtime log and leaves a clean-looking one.
-- Every row in a plan's validation matrix stays a headless command. A row the
-  packet marks as needing the live app or a GPU is the only case for running
-  the app through the bridge.
-- If the bridge is unreachable, say so and name the headless command run
-  instead. Never report a visual or GPU-dependent check as done when the
-  bridge was down and nothing replaced it.

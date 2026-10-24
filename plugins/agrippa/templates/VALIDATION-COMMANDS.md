@@ -5,7 +5,10 @@
 > from this catalog verbatim. A representative command establishes syntax
 > only; it is never the complete suite by implication. The Agrippa agents and
 > skills read the sections of this file by name, so keep the section headings
-> as they are and delete a section only when it provably does not apply.
+> as they are and delete a section only when it provably does not apply. This
+> file holds this repository's commands and facts only; the rules for using
+> them (retries, pre-existing failures, matrix values) are in the plugin's
+> skills, so do not copy them in here.
 
 Run commands from `[PROJECT: repository root / named working directory]` using
 `[PROJECT: shell]` unless a row states otherwise.
@@ -19,14 +22,8 @@ Run commands from `[PROJECT: repository root / named working directory]` using
   session is described under "Session setup" and becomes the first row of
   every plan's validation matrix.
 - Invocation shape per target kind and the bounded-run rule: see "Run caps".
-- Retry rule: performance and benchmark gates are `noisy-retry`: run once in
-  isolation and retry once only when the output identifies environmental
-  noise; record both outcomes. Assertion and correctness failures never retry
-  into green.
-- Existing-failure rule: prove a failure is pre-existing by running the same
-  target at `HEAD` in a worktree or stash, not by recalling it. Keep the
-  current list of known red targets here: [PROJECT: targets red at HEAD, with
-  the date checked].
+- Known red targets at `HEAD`: [PROJECT: targets red at HEAD, with the date
+  checked, or `None`].
 - One at a time: see "Shared log paths".
 
 ## Session setup
@@ -140,14 +137,9 @@ capture is not allowed.]
 
 ## Sandbox stance
 
-Every plan-matrix row records a Sandbox value:
-
-- `sandboxed` — the command reads and writes only inside the workspace and
-  needs no network, GPU, display, or external service.
-- `outside-sandbox` — the command writes caches or user data outside the
-  workspace, or needs network, credentials, a GPU, a display, or a service.
-
-[PROJECT: name which targets are `outside-sandbox` and why.]
+[PROJECT: name which targets are `outside-sandbox` and why, or say that every
+target is `sandboxed`. The two values are defined under "Validation matrix
+values" in the `plan` skill's `agent-workflow.md`.]
 
 ## Command catalog
 
@@ -162,10 +154,6 @@ Every plan-matrix row records a Sandbox value:
 | Manual behavior check | `[PROJECT: path]` | manual | `[PROJECT: stance]` | manual | [PROJECT: observable procedure and pass condition] |
 | Complete applicable suite | `[PROJECT: path]` | full-suite | `[PROJECT: stance]` | `[PROJECT: determinism]` | `[PROJECT: exact command sequence or enumerated rows]` |
 
-Allowed plan-matrix determinism values are `deterministic`, `noisy-retry`,
-`skips-headless`, and `manual`. Every validation row records Style, Sandbox,
-Determinism, and When.
-
 ## Live application bridge
 
 [PROJECT: optional. Delete this section if the project has no MCP server that
@@ -175,24 +163,11 @@ its traps are in `docs/agent_memory/live-app.md`.]
 
 ## Full-suite inventory
 
-List every target that can be applicable and the observation that makes it
-applicable. Do not use a single representative test as the complete suite. A
-target must be registered here before a plan can cite it.
-
 | Area or target | Exact command/check | Applies when | Expected duration/output bound |
 |---|---|---|---|
 | `[PROJECT: module/test target]` | `[PROJECT: exact command]` | [PROJECT: trigger] | [PROJECT: bound] |
 
-## Plan-matrix contract
-
-- Commands are copied verbatim into a plan's validation matrix, with this
-  catalog's Style, Sandbox, and Determinism values.
-- Before implementing a plan, run its matrix commands once to confirm every
-  named target exists and executes; a speculative matrix is the main way the
-  process fails quietly.
-- Durable command invariants (one required binary, an invocation shape per
-  target kind, a prerequisite that must come first, a required working
-  directory) are mirrored as checks in
-  `tools/validate_plan_workspace.local.ps1`, which the shared linter loads.
-  Never edit the shared linter for them. The linter checks shape and
-  freshness, never semantic truth.
+<!-- Install note: list every target that can be applicable and the
+observation that makes it applicable, one row each. A plan can cite only a
+target registered here, so a single representative test is never the whole
+suite. Delete this comment once the table is filled. -->

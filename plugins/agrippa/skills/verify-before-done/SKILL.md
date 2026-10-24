@@ -32,9 +32,11 @@ Run this before every positive status statement, including "fixed",
      how a run exits 0 without one in this toolchain.
    - Grep for the runtime's error marker. "Error grep" names the marker and
      whether the harness enforces it.
-   - Count the failures the output names. Compare against the known
-     pre-existing red for that target, and prove "pre-existing" by running
-     the same target at `HEAD` in a worktree or stash, not by recalling it.
+   - Count the failures the output names. Compare against the known red
+     targets at `HEAD` that "Runtime and invocation rules" in the validation
+     catalog lists, and prove "pre-existing" by running the same target at
+     `HEAD` in a worktree or stash, not by recalling it or by trusting that
+     list alone.
    - Check that the run lasted long enough to mean anything. A frame or
      time cap may count something other than seconds. "Run caps" names the
      cap and its unit.
@@ -45,6 +47,28 @@ Run this before every positive status statement, including "fixed",
 Skipping a step and reporting anyway is false reporting, whatever the
 intent.
 
+## Retries
+
+Performance and benchmark gates are `noisy-retry`: run once in isolation, and
+retry once only when the output itself identifies environmental noise. Record
+both outcomes. Every other target runs once, and an assertion or correctness
+failure is never retried into green; a second run that passes is a flaky test
+to report, not a pass.
+
+## Live-app bridge
+
+When `docs/agent_memory/live-app.md` exists, the project has a bridge to the
+running application, and a visual or GPU-dependent claim is checked through
+it. Confirm the active session with the bridge's state tool first, and with
+its session tool when more than one instance may be open, because git
+worktrees carry the same tooling. Start the app only with the run tool's
+no-persist option, and stop what you started before reporting. Read the load
+or parse log as well as the runtime log, because a boot-time parse error never
+reaches the runtime log. A screenshot flagged as stale, or taken from a
+backgrounded window, is no evidence. If the bridge is unreachable, say so and
+name the headless command you ran instead; never report a visual or
+GPU-dependent check as done when the bridge was down and nothing replaced it.
+
 ## What each claim needs
 
 | Claim | Evidence that counts |
@@ -54,6 +78,7 @@ intent.
 | Native builds | The build exits 0 for every configuration, and the running process was restarted before any test ran against the new build. "Build" in the validation catalog gives the command and configurations |
 | Gated change safe | The subsystem's gate passed on the fresh build. The "Gated subsystems" row of "Architecture owners" in `docs/agent_memory/project-contracts.md` names the subsystems and gate targets |
 | GPU path works | A run in an environment that has the GPU or display, because a headless or CI run may only ever exercise a CPU fallback. "Environment limits" in the validation catalog names that environment |
+| Visual check passes | A capture from the running app through the live-app bridge, or the in-app capture path "UI capture" in the validation catalog names, read against the frozen design or the acceptance text. A headless pass never replaces it, and a bridge that was down means the check did not run |
 | Bug fixed | The check that reproduced the original symptom now passes, and it was seen failing before the fix |
 | No perf regression | A baseline and an after measurement from the same target, with the noisy-retry rule applied once at most and both outcomes recorded. "Performance evidence" in the validation catalog names the authoritative measurement for production performance claims |
 | Plan stage complete | Every Acceptance ID and required Validation ID passed, or the exact remaining gap is named |
@@ -85,5 +110,4 @@ Rewrite the sentence, then go run the command, if you are about to write:
 It does not choose which targets a change needs; the plan's validation
 matrix or the design statement does that. It does not make a red target
 green by rerunning it. Correctness failures are never retried, and benchmark
-retries follow the noisy-retry rule in
-`docs/agent_memory/validation-commands.md`.
+retries follow the noisy-retry rule above.

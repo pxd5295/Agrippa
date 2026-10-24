@@ -460,6 +460,7 @@ Test-Clauses 'UPGRADING' $upgrading @(
     '### From G2',
     '### From G3',
     '### From G4 v0\.1\.0',
+    '### From G4 v0\.1\.1',
     'docs/planning/CLAUDE\.md` \| Delete',
     'tools/log_subagent_spawns\.ps1` \| Delete',
     'tools/hook_payload\.ps1` \| Delete',
@@ -860,6 +861,43 @@ if ($InstalledRepo) {
                 Add-ProjectCheck ($copyText -notmatch $copy[1]) "$($copy[0]) is a full copy of rules that now ship in the plugin skill agrippa:$($copy[3]). Move any project rule in it into ""Project rules"" in AGENTS.md, then replace it with the short pointer plugins/agrippa/$($copy[2]), as ""From G4 v0.1.0"" in UPGRADING.md says."
             }
         }
+        # Up to v0.1.1 the project-document templates carried generic rule
+        # text beside the project's facts, so every install copied it. The
+        # rules now ship in the plan skill, verify-before-done, and the agents.
+        # A leftover is recognized by the template's wording; an install may
+        # have rewrapped the lines, so every space matches any whitespace.
+        $genericRules = @(
+            @('docs/agent_memory/validation-commands.md', 'Retry rule: performance and benchmark gates are `noisy-retry`', 'the noisy-retry rule, now in the plugin skill agrippa:verify-before-done ("Retries")'),
+            @('docs/agent_memory/validation-commands.md', 'Existing-failure rule: prove a failure is pre-existing', 'the pre-existing-failure rule, now in the plugin skill agrippa:verify-before-done; keep the red-target list as a "Known red targets at `HEAD`" bullet'),
+            @('docs/agent_memory/validation-commands.md', 'Every plan-matrix row records a Sandbox value', 'the Sandbox value definitions, now under "Validation matrix values" in the plan skill''s agent-workflow.md'),
+            @('docs/agent_memory/validation-commands.md', 'Allowed plan-matrix determinism values are', 'the allowed Determinism values, now under "Validation matrix values" in the plan skill''s agent-workflow.md'),
+            @('docs/agent_memory/validation-commands.md', 'Do not use a single representative test as the complete suite', 'the "Full-suite inventory" opening paragraph, now under "Validation matrix values" in the plan skill''s agent-workflow.md'),
+            @('docs/agent_memory/validation-commands.md', 'Commands are copied verbatim into a plan''s validation matrix', 'the "Plan-matrix contract" section, now under "Validation matrix values" in the plan skill''s agent-workflow.md'),
+            @('docs/agent_memory/project-contracts.md', 'Treat these as separate writer boundaries unless a plan explicitly combines', 'the "Ownership areas" opening paragraph, which restates the core rules'),
+            @('docs/agent_memory/project-contracts.md', 'List the owners here so placement is a lookup', 'the "Architecture owners" opening paragraph, which the template now carries only as an install note'),
+            @('docs/agent_memory/project-contracts.md', 'Plans and reviewers cite them by path', 'the "Contract documents" rule sentence, which the agents already follow'),
+            @('docs/agent_memory/project-contracts.md', 'records an `rg` consumer census with file:line snippets', 'the "Shared and public interfaces" opening paragraph, now in the core rules, the design-first skill, and the plan skill''s agent-workflow.md'),
+            @('docs/agent_memory/project-contracts.md', 'a risk flag keeps a stage off Haiku', 'the risk-flag rule, now in the plan skill''s ROUTING.md'),
+            @('docs/agent_memory/project-contracts.md', 'distinguish existing failures or environment limits from regressions', 'the last two "Environment boundaries" bullets, which the plugin skill agrippa:verify-before-done already states'),
+            @('docs/agent_memory/live-app.md', 'They may call only the tools listed under', 'the opening paragraph about which tools the agents may call, which every plugin agent already states'),
+            @('docs/agent_memory/live-app.md', 'Which agents run the app:', 'the "Which agents run the app" paragraph, which the plugin agents already state'),
+            @('docs/agent_memory/live-app.md', 'Cite a bridge-sourced fact as', 'the citation sentences under "Serialized files", which the plugin agent agrippa:repo-scout already states'),
+            @('docs/agent_memory/live-app.md', '(?m)^## Rules\s*$', 'the "Rules" section, now in the plugin agents and the plugin skill agrippa:verify-before-done ("Live-app bridge")'),
+            @('AGENTS.md', 'adds its core rules to every session: request boundaries, Engineering', 'the opening paragraph''s list of core-rule sections, which goes stale; the template now has one sentence'),
+            @('AGENTS.md', 'never report a visual or GPU-dependent check as done when the bridge was down', 'the live-app paragraph''s bridge rules, now in the plugin agents and agrippa:verify-before-done; keep one or two sentences pointing to live-app.md')
+        )
+        foreach ($rule in $genericRules) {
+            $rulePath = Join-Path $projectRoot $rule[0]
+            if (Test-Path -LiteralPath $rulePath -PathType Leaf) {
+                $ruleText = [IO.File]::ReadAllText($rulePath, [Text.Encoding]::UTF8)
+                $pattern = $rule[1]
+                if (-not $pattern.StartsWith('(?m)')) {
+                    $pattern = ([regex]::Escape($pattern) -replace '\\ ', '\s+')
+                }
+                Add-ProjectCheck ($ruleText -notmatch $pattern) "$($rule[0]) still holds $($rule[2]). Delete the copy, keeping the heading and the project's facts, as ""From G4 v0.1.1"" in UPGRADING.md says."
+            }
+        }
+
         $planningNote = Join-Path $projectRoot 'docs/planning/CLAUDE.md'
         if (Test-Path -LiteralPath $planningNote -PathType Leaf) {
             $planningText = [IO.File]::ReadAllText($planningNote, [Text.Encoding]::UTF8)

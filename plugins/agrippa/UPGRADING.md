@@ -24,7 +24,9 @@ A G4 repository moves to a newer release by changing the marketplace `ref` to
 the new tag. It can still drift from the templates; compare its project
 documents with them section by section and treat each difference as a mapping
 row. A repository installed at v0.1.0 also has three files whose rules now
-ship in the plugin; apply "From G4 v0.1.0" below.
+ship in the plugin; apply "From G4 v0.1.0" below. A repository installed at
+v0.1.0 or v0.1.1 also has generic rule text inside its project documents;
+apply "From G4 v0.1.1" below.
 
 ## Rule mapping
 
@@ -116,9 +118,12 @@ user confirms it.
 | The edit-lint hook script and its wiring | Retain | It is the project's own and wraps the project's linter |
 | Project skills and commands that are not the kit's | Retain | They are the project's own |
 | Matrix rows that run `tools/validate_plan_workspace.ps1` in dated plan workspaces | Retain | Dated plans are records and are never edited. New plans run `agrippa-lint` |
+| Generic rules written into `docs/agent_memory/validation-commands.md`: the noisy-retry rule, the pre-existing-failure rule, the Sandbox value definitions, the allowed Determinism values, the "copy commands verbatim" and "run the matrix once before implementing" rules, and the local-linter rule | Delete | The `plan` skill's `agent-workflow.md` ("Validation matrix values") and the plugin skill `agrippa:verify-before-done` ("Retries"). G3 reworded these and mixed them with project facts, so read each bullet and keep only the project fact in it |
+| Project facts under a `## Plan-matrix contract` heading in `validation-commands.md` | Move | Into a section that stays, such as "Full-suite inventory", "Performance evidence", or "Invocation traps"; then delete the heading, which the current template does not have |
+| Live-app bridge rules in `AGENTS.md` or `validation-commands.md` (confirm the session, no-persist run, both logs, stale frames, headless matrix rows, bridge down means not done) | Delete | The plugin agents and `agrippa:verify-before-done` ("Live-app bridge"). `AGENTS.md` keeps one or two sentences naming the server and pointing to `live-app.md`, in the shape of `templates/AGENTS.md`; the Godot facts go to `live-app.md` |
 
 Then apply the "From G4 v0.1.0" rows below, because a G3 install has full
-copies of those files too.
+copies of those files too, and the "From G4 v0.1.1" rows after them.
 
 ### From G4 v0.1.0
 
@@ -134,6 +139,29 @@ drifts from the plugin, so it is replaced or deleted. `dev/validate-kit.ps1
 | `plans/README.md` with the sections "Artifact contract" and "Selective reads and soft budgets" | Replace | Overwrite it with `templates/plans-README.md`, a short pointer with no rules. Move any project rule added to it into "Project rules" in `AGENTS.md` first |
 | `docs/decisions/README.md` with the sections "When a record is required" and "Shape" | Replace | Overwrite it with `templates/decisions-README.md`, a short pointer with no rules. Move any project rule added to it into "Project rules" in `AGENTS.md` first |
 | `docs/planning/CLAUDE.md` | Delete | The guides and templates it pointed to are in the `plan` skill, which also says a project keeps no copy of them. `docs/planning/` keeps only `MIGRATION.md`, which says itself that it is a record |
+
+### From G4 v0.1.1
+
+Up to v0.1.1, the templates for `project-contracts.md`,
+`validation-commands.md`, `live-app.md`, and `AGENTS.md` carried generic rule
+text beside the project's facts, so every install copied it. Those rules now
+ship in the plugin: the matrix values and catalog rules in the `plan` skill's
+`agent-workflow.md`, the retry and bridge rules in `agrippa:verify-before-done`
+and the agents, and the risk-flag rule in `ROUTING.md`. A copy left in a
+project drifts from the plugin, so each is deleted; the section headings and
+the project's facts stay. `dev/validate-kit.ps1 -InstalledRepo` reports each
+copy it recognizes by its template wording.
+
+| v0.1.1 text | Disposition | What happens |
+|---|---|---|
+| `validation-commands.md`: the "Retry rule" and "Existing-failure rule" bullets under "Runtime and invocation rules" | Replace | Delete both. Keep the project's list of red targets as a "Known red targets at `HEAD`" bullet, with the date checked |
+| `validation-commands.md`: the two Sandbox value definitions under "Sandbox stance" | Delete | Keep the heading and the project's sentence naming its `outside-sandbox` targets |
+| `validation-commands.md`: the "Allowed plan-matrix determinism values" paragraph after the command catalog | Delete | Nothing replaces it |
+| `validation-commands.md`: the opening paragraph of "Full-suite inventory" | Delete | Keep the heading and the table |
+| `validation-commands.md`: the whole "Plan-matrix contract" section | Delete | If the project added facts under it, move them to a section that stays first |
+| `project-contracts.md`: the opening paragraphs of "Ownership areas", "Architecture owners", and "Shared and public interfaces", the "cite them by path" sentence under "Contract documents", the paragraph after the "High-risk change classes" table, and the last two bullets of "Environment boundaries" | Delete | Keep every heading, table, and project bullet. Any project fact inside one of those paragraphs moves into the table or a bullet under the same heading |
+| `live-app.md`: the opening paragraph about which tools the agents may call, the "Which agents run the app" paragraph, the second and third sentences of the "Authoring tools" introduction, the citation sentences under "Serialized files", and the whole "Rules" section | Delete | Keep the headings, the tables, and the project's facts |
+| `AGENTS.md`: the opening paragraph's list of core-rule sections, and the live-app paragraph's bridge rules | Replace | The shape of `templates/AGENTS.md`: one sentence saying the plugin adds the core rules, and one or two sentences naming the server and pointing to `live-app.md`. The generated-files paragraph stays |
 
 ### Always
 

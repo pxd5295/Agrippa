@@ -279,6 +279,55 @@ plugin.
   `validate-kit.ps1 -InstalledRepo` recognizes a full copy by a section heading
   that every earlier version had and the pointer never has.
 
+## Generic rules moved out of the project documents (2026-10-24)
+
+Up to v0.1.1 the templates for `project-contracts.md`,
+`validation-commands.md`, `live-app.md`, and `AGENTS.md` mixed the project's
+facts with rule text that was identical in every install: the noisy-retry and
+pre-existing-failure rules, the Sandbox and Determinism definitions, the
+"Full-suite inventory" and "Plan-matrix contract" rules, the consumer-census
+and decision-record paragraphs, the risk-flag rule, the live-app bridge rules,
+and a list of the core-rule sections in the `AGENTS.md` opening. Each install
+copied them, and each copy drifted from the plugin as the plugin changed. This
+continues the 2026-10-19 move of the pointer READMEs.
+
+- **Where the rules went.** Each rule went to the one skill or agent that
+  uses it. The matrix values, the inventory and verbatim-copy rules, and the
+  local-linter rule are a "Validation matrix values" section of the `plan`
+  skill's `agent-workflow.md`, because the lead writes the matrix from there.
+  The retry and pre-existing-failure rules are in `verify-before-done`, which
+  is the procedure for reading a run, and the `validator` restates the retry
+  rule because it runs rows without loading skills. The risk-flag rule is in
+  `ROUTING.md` under the tier table. The bridge rules were already in all four
+  agents; `verify-before-done` gained a "Live-app bridge" section for the lead,
+  which also uses the bridge and had read the rules only from the project's
+  copy.
+- **The installer still needs the definitions.** The Sandbox and Determinism
+  values are not pure deletions: the install skill fills those two catalog
+  columns and nowhere else defined them, so its kit-files table now names
+  `agent-workflow.md` and step 5 says where the values are.
+- **Install guidance became install notes.** Sentences that told the installer
+  what to do ("delete a row that provably does not apply", "list every
+  target") are `Install note` blocks or comments now, which the install deletes,
+  rather than prose the project keeps.
+- **Two rules stay in the project's `AGENTS.md`.** The generated-files rule
+  and the one-sentence bridge pointer with its authoring go-ahead stay, because
+  they must be loaded for every edit, including small ones that skip
+  `design-first`, and the core rules have no room (9,895 of 10,000
+  characters).
+- **Detection.** The project headings could not mark a leftover this time,
+  because "Sandbox stance" keeps a project slot and nuro-battler uses the
+  "Plan-matrix contract" heading for its own facts. So `validate-kit.ps1
+  -InstalledRepo` matches the template sentences themselves, with every space
+  allowed to be any whitespace because an install may rewrap lines. It catches
+  the template's wording only; nuro-battler's G3 copies are reworded, and the
+  "From G3" rows in `UPGRADING.md` tell the upgrade skill to remove them by
+  meaning.
+- **Not moved.** `UPGRADING.md` and `ADOPTION-CHECKLIST.md` stay at the plugin
+  root. Both the install and the upgrade skill read both files, so neither has
+  a single skill that could own it, and the root is where someone browsing the
+  repository expects `UPGRADING.md`.
+
 ## Linter rules that are easy to trip over
 
 These cost three lint rounds (62 errors down to 0) on one nuro-battler plan.

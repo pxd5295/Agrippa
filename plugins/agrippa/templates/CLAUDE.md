@@ -3,9 +3,7 @@
 @AGENTS.md
 
 `AGENTS.md` above holds this repository's project contracts and project rules.
-The methodology's core rules, including the roster, the skills, the planner
-read ladder, and validation reach, come from the `agrippa` plugin at session
-start.
+The methodology's core rules come from the `agrippa` plugin at session start.
 
 ## Project skills
 
