@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/scripts/inject_core_rules.ps1\" -HookEvent SessionStart"
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/inject_core_rules.mjs\" SessionStart"
           }
         ]
       }
@@ -16,7 +16,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/scripts/inject_core_rules.ps1\" -HookEvent SubagentStart"
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/inject_core_rules.mjs\" SubagentStart"
           }
         ]
       },
@@ -25,7 +25,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/scripts/log_subagent_spawns.ps1\"",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/log_subagent_spawns.mjs\"",
             "timeout": 10
           }
         ]
@@ -37,7 +37,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/scripts/log_subagent_spawns.ps1\"",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/log_subagent_spawns.mjs\"",
             "timeout": 10
           }
         ]

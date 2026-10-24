@@ -328,6 +328,40 @@ continues the 2026-10-19 move of the pointer READMEs.
   a single skill that could own it, and the root is where someone browsing the
   repository expects `UPGRADING.md`.
 
+## Hooks run on Node (2026-10-24)
+
+The three hook scripts were PowerShell, and `hooks/hooks.json` ran them as
+`powershell -File ...`. No `powershell` command exists on macOS or Linux,
+where PowerShell 7 is installed as `pwsh`, so on those systems every hook
+failed and the core rules never loaded. They are now
+`scripts/inject_core_rules.mjs` and `scripts/log_subagent_spawns.mjs`, and
+`hooks.json` runs them with `node`. This replaces the script names in "Core
+rules injection" and the PowerShell start-up cost in "Plugin skills and the
+spawn logger after Phase 4".
+
+- **Why Node rather than `pwsh`.** One hook command has to work on every OS,
+  and `node` is named the same everywhere. With PowerShell, the program is
+  `powershell` on a stock Windows machine and `pwsh` elsewhere, so the hook
+  would need a wrapper, and the wrapper would need a shell of its own. Node is
+  also installed more often than `pwsh`, especially on Windows. Neither is
+  guaranteed.
+- **No dependencies.** The scripts are ES modules that import only Node's
+  built-in modules, so the plugin needs no `package.json` or `npm install`.
+- **The UTF-8 workaround is gone.** Node writes strings to stdout as UTF-8,
+  so the byte-level write that Windows PowerShell 5.1 needed is not needed.
+- **`hook_payload.ps1` left the plugin.** It existed so two PowerShell hook
+  scripts could share the payload reader. Only the spawn logger reads a
+  payload, so the reader is now a function inside it. A project's own copy of
+  `tools/hook_payload.ps1` still serves the project's edit-lint hook, and
+  `validate-kit.ps1 -InstalledRepo` still checks it the same way.
+- **The event is a positional argument.** `inject_core_rules.mjs SessionStart`
+  replaces `-HookEvent SessionStart`, because Node has no built-in parameter
+  binding and one value does not need a flag.
+- **Still PowerShell.** The linter, `bin/agrippa-lint`, the smoke test, and
+  `validate-kit.ps1` are unchanged. Porting the linter also changes the
+  `tools/validate_plan_workspace.local.ps1` contract that installed projects
+  rely on, so it is a separate, breaking change.
+
 ## Linter rules that are easy to trip over
 
 These cost three lint rounds (62 errors down to 0) on one nuro-battler plan.

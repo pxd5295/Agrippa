@@ -111,7 +111,7 @@ user confirms it.
 | `docs/planning/templates/*.md` | Delete | The templates in the `plan` skill, which the plugin's linter parses |
 | `tools/validate_plan_workspace.ps1` | Delete | `agrippa-lint`, the plugin's linter. Keep `tools/validate_plan_workspace.local.ps1`; the plugin's linter loads it |
 | `tools/log_subagent_spawns.ps1` | Delete | The plugin's spawn logger, which runs when the `env` block of `.claude/settings.json` sets `AGRIPPA_SPAWN_LOG=1` |
-| `tools/hook_payload.ps1` | Delete | The plugin's copy serves its spawn logger. Keep the project's copy only when another project script, such as the edit-lint hook, dot-sources it |
+| `tools/hook_payload.ps1` | Delete | Nothing; the plugin's spawn logger does not need it. Keep the project's copy only when another project script, such as the edit-lint hook, dot-sources it |
 | `.claude/settings.json` hook entries that run `tools/log_subagent_spawns.ps1` | Delete | The plugin's `hooks/hooks.json`. Add `AGRIPPA_SPAWN_LOG=1` to the `env` block instead, or every spawn is logged twice |
 | `.claude/settings.json` permission for `tools/validate_plan_workspace.ps1` | Replace | `Bash(agrippa-lint:*)` |
 | No plugin declaration in `.claude/settings.json` | Replace | `extraKnownMarketplaces.agrippa` pinned with `ref`, and `enabledPlugins` `agrippa@agrippa`, as the README section "Enabling the plugin in a project" shows |

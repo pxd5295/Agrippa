@@ -10,7 +10,7 @@ existing `hooks` object; never replace one.
 
 ## Subagent spawn log (in the plugin, opt-in)
 
-The plugin's `hooks/hooks.json` runs `scripts/log_subagent_spawns.ps1` on two
+The plugin's `hooks/hooks.json` runs `scripts/log_subagent_spawns.mjs` on two
 events. It does nothing unless the project opts in, because a plugin hook
 runs in every project that enables the plugin. To opt in, add the variable to
 the `env` block of the project's `.claude/settings.json` and add

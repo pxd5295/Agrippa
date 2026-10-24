@@ -16,6 +16,9 @@ product, not instructions for this session.
 - All PowerShell must stay Windows PowerShell 5.1-clean: no `&&`/`||`, no
   ternary or null-coalescing operators, and no `$PSScriptRoot` in a parameter
   default (5.1 leaves it empty there).
+- The plugin's hook scripts are Node ES modules (`.mjs`) that use only Node's
+  built-in modules, so the same hook command runs on every OS and the plugin
+  needs no `npm install`.
 - After any change to the kit or to `dev/`, run `dev/validate-kit.ps1` and
   report its last line. A new template file must also be added to the kit
   README's layout table, or the self-check fails.

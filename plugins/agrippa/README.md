@@ -65,12 +65,11 @@ The methodology has three layers, and the kit installs all of them.
 | `ADOPTION-CHECKLIST.md` | Not installed; every item is completed or reported |
 | `.claude-plugin/plugin.json` | Not installed; the plugin manifest |
 | `scripts/core-rules.md` | Not installed; the core rules the plugin adds to every session, kept under 10,000 characters |
-| `scripts/inject_core_rules.ps1` | Not installed; prints `scripts/core-rules.md` as hook context |
+| `scripts/inject_core_rules.mjs` | Not installed; a Node script that prints `scripts/core-rules.md` as hook context |
 | `scripts/validate_plan_workspace.ps1` | Not installed; the shared plan-workspace linter, run from the plugin |
 | `bin/agrippa-lint` | Not installed; the plugin puts it on the Bash tool's PATH, and it runs `scripts/validate_plan_workspace.ps1` under `powershell` or `pwsh` |
-| `scripts/log_subagent_spawns.ps1` | Not installed; the spawn logger, which does nothing unless the project sets `AGRIPPA_SPAWN_LOG=1` |
-| `scripts/hook_payload.ps1` | Not installed; reads a hook payload for the spawn logger |
-| `hooks/hooks.json` | Not installed; runs `scripts/inject_core_rules.ps1` on `SessionStart` and `SubagentStart`, and `scripts/log_subagent_spawns.ps1` on `PreToolUse` for the Agent tool and on `SubagentStart` |
+| `scripts/log_subagent_spawns.mjs` | Not installed; the spawn logger, a Node script that does nothing unless the project sets `AGRIPPA_SPAWN_LOG=1` |
+| `hooks/hooks.json` | Not installed; runs `scripts/inject_core_rules.mjs` on `SessionStart` and `SubagentStart`, and `scripts/log_subagent_spawns.mjs` on `PreToolUse` for the Agent tool and on `SubagentStart`, all with `node` |
 | `skills/plan/SKILL.md` | Not installed; the `/agrippa:plan` skill, the planning entry point |
 | `skills/plan/reference/agent-workflow.md` | Not installed; the lifecycle guide, a `plan` skill reference file |
 | `skills/plan/reference/ROUTING.md` | Not installed; the routing guide, a `plan` skill reference file |
@@ -171,8 +170,12 @@ the project's `AGENTS.md` to read `# Agent Workflow`.
 
 ## Requirements and fallbacks
 
-- PowerShell for the linter, the smoke test, and the hooks: Windows PowerShell
-  5.1 or PowerShell 7 (`pwsh`) on macOS and Linux. All scripts are 5.1-clean.
+- Node.js for the hooks. They are ES modules that use only Node's built-in
+  modules, so the plugin needs no `npm install`. Without Node, the core rules
+  do not load.
+- PowerShell for the linter and the smoke test: Windows PowerShell 5.1 or
+  PowerShell 7 (`pwsh`) on macOS and Linux. All PowerShell scripts are
+  5.1-clean.
 - `AskUserQuestion` for the planning interview. Without it, ask the same
   focused questions in chat and record the answers the same way.
 - The `engineering:architecture` and `engineering:system-design` skills (the
@@ -269,7 +272,7 @@ marketplace and enable `agrippa@agrippa`.
 `docs/agent_memory/validation-commands.md` must exist. It must keep no copy of
 what the plugin provides: the agents in `.claude/agents/`, the plugin's skills
 in `.claude/skills/`, `.claude/commands/handoff.md`,
-`tools/validate_plan_workspace.ps1`, the spawn logger, its
+`tools/validate_plan_workspace.ps1`, the old PowerShell spawn logger, its
 `hook_payload.ps1` helper unless a project script still uses it, or a
 `settings.json` hook or permission that runs them. It must also keep no full
 copy of the rules that now ship in the skills: a `plans/README.md` or

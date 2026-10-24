@@ -18,12 +18,12 @@ The plans and decisions README templates stay short pointers, and their
 rules are in the plan and design-first skills' reference files.
 The core rules and templates still carry the methodology's required clauses,
 the core rules stay under the 10,000-character hook context cap, and the
-injection hook prints them. The spawn logger is wired and does nothing
-without AGRIPPA_SPAWN_LOG=1, and the agrippa-lint wrapper is an executable LF
-shell script that runs the plugin's linter. No vocabulary from an older
-toolchain survives outside UPGRADING.md and this script, text files are clean
-UTF-8 without trailing whitespace, every PowerShell script parses, and the two
-copies of LICENSE and of NOTICE are identical. It then builds a simulated
+injection hook prints them when run with node. The spawn logger is wired and
+does nothing without AGRIPPA_SPAWN_LOG=1, and the agrippa-lint wrapper is an
+executable LF shell script that runs the plugin's linter. No vocabulary from
+an older toolchain survives outside UPGRADING.md and this script, text files
+are clean UTF-8 without trailing whitespace, every PowerShell and Node script
+parses, and the two copies of LICENSE and of NOTICE are identical. It then builds a simulated
 project in a temporary git repository with no copy of the linter and runs
 `dev/fixtures/run-smoke-test.ps1` against it, which proves the plugin's linter
 accepts the valid fixture and rejects the broken one.
@@ -105,10 +105,9 @@ $required = @(
     'NOTICE',
     'bin/agrippa-lint',
     'scripts/core-rules.md',
-    'scripts/inject_core_rules.ps1',
+    'scripts/inject_core_rules.mjs',
     'scripts/validate_plan_workspace.ps1',
-    'scripts/log_subagent_spawns.ps1',
-    'scripts/hook_payload.ps1',
+    'scripts/log_subagent_spawns.mjs',
     'hooks/hooks.json',
     'skills/plan/reference/agent-workflow.md',
     'skills/plan/reference/ROUTING.md',
@@ -308,6 +307,16 @@ foreach ($section in @('## Engineering standards', '### Definition of done', '##
     Add-Check (-not $claude.Contains($section)) "CLAUDE template repeats the core rules section '$section'."
 }
 
+# The hooks are Node scripts, so the same hook command works on every OS.
+# Without Node on PATH the hook checks below cannot run them.
+$node = Get-Command node -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
+Add-Check ($null -ne $node) 'node is not on PATH. The plugin hooks run on Node.js; install it to run the hook checks.'
+if ($null -ne $node) {
+    $node = $node.Source
+} else {
+    $node = 'node'
+}
+
 # The hook must run the injection script on session and subagent start, and
 # the script must print the core rules unchanged as hook context.
 try {
@@ -321,11 +330,10 @@ foreach ($hookEvent in @('SessionStart', 'SubagentStart')) {
     if ($null -ne $hookConfig -and $null -ne $hookConfig.hooks.$hookEvent) {
         $commands = @($hookConfig.hooks.$hookEvent | ForEach-Object { $_.hooks } | ForEach-Object { $_.command })
     }
-    $wired = @($commands | Where-Object { $_ -match 'CLAUDE_PLUGIN_ROOT\}/scripts/inject_core_rules\.ps1' -and $_ -match "-HookEvent $hookEvent\b" })
-    Add-Check ($wired.Count -eq 1) "hooks/hooks.json must run scripts/inject_core_rules.ps1 -HookEvent $hookEvent once on $hookEvent."
-    $shell = (Get-Process -Id $PID).Path
+    $wired = @($commands | Where-Object { $_ -match '^node "\$\{CLAUDE_PLUGIN_ROOT\}/scripts/inject_core_rules\.mjs"' -and $_ -match " $hookEvent$" })
+    Add-Check ($wired.Count -eq 1) "hooks/hooks.json must run node scripts/inject_core_rules.mjs $hookEvent once on $hookEvent."
     $ErrorActionPreference = 'Continue'
-    $hookOutput = & $shell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $kitRoot 'scripts/inject_core_rules.ps1') -HookEvent $hookEvent 2>&1 | ForEach-Object { [string]$_ }
+    $hookOutput = & $node (Join-Path $kitRoot 'scripts/inject_core_rules.mjs') $hookEvent 2>&1 | ForEach-Object { [string]$_ }
     $hookExit = $LASTEXITCODE
     $ErrorActionPreference = 'Stop'
     $hookPayload = $null
@@ -338,7 +346,7 @@ foreach ($hookEvent in @('SessionStart', 'SubagentStart')) {
     if ($null -ne $hookPayload -and $hookPayload.hookSpecificOutput.hookEventName -eq $hookEvent) {
         $printed = [string]$hookPayload.hookSpecificOutput.additionalContext
     }
-    Add-Check ($hookExit -eq 0 -and $printed.Replace("`r`n", "`n") -ceq $coreRules.Replace("`r`n", "`n")) "inject_core_rules.ps1 -HookEvent $hookEvent did not print core-rules.md as $hookEvent additionalContext:`n$($hookOutput -join "`n")"
+    Add-Check ($hookExit -eq 0 -and $printed.Replace("`r`n", "`n") -ceq $coreRules.Replace("`r`n", "`n")) "inject_core_rules.mjs $hookEvent did not print core-rules.md as $hookEvent additionalContext:`n$($hookOutput -join "`n")"
 }
 
 # The spawn logger runs on PreToolUse for the Agent tool and on every
@@ -349,8 +357,8 @@ foreach ($wiring in @(@('PreToolUse', 'Agent|Task'), @('SubagentStart', '.*'))) 
     if ($null -ne $hookConfig -and $null -ne $hookConfig.hooks.$hookEvent) {
         $groups = @($hookConfig.hooks.$hookEvent | Where-Object { $_.matcher -eq $wiring[1] })
     }
-    $logCommands = @($groups | ForEach-Object { $_.hooks } | Where-Object { $_.command -match 'CLAUDE_PLUGIN_ROOT\}/scripts/log_subagent_spawns\.ps1' })
-    Add-Check ($logCommands.Count -eq 1) "hooks/hooks.json must run scripts/log_subagent_spawns.ps1 once on $hookEvent with matcher '$($wiring[1])'."
+    $logCommands = @($groups | ForEach-Object { $_.hooks } | Where-Object { $_.command -match '^node "\$\{CLAUDE_PLUGIN_ROOT\}/scripts/log_subagent_spawns\.mjs"$' })
+    Add-Check ($logCommands.Count -eq 1) "hooks/hooks.json must run node scripts/log_subagent_spawns.mjs once on $hookEvent with matcher '$($wiring[1])'."
 }
 $logProject = Join-Path ([IO.Path]::GetTempPath()) ('kit-log-' + [guid]::NewGuid().ToString('N').Substring(0, 8))
 $savedOptIn = $env:AGRIPPA_SPAWN_LOG
@@ -360,23 +368,22 @@ try {
     $logFile = Join-Path $logProject 'subagent-spawns.log'
     $logPayload = '{"hook_event_name":"PreToolUse","session_id":"kitcheck","tool_input":{"subagent_type":"agrippa:validator","model":"sonnet"}}'
     $env:CLAUDE_PROJECT_DIR = $logProject
-    $shell = (Get-Process -Id $PID).Path
-    $logScript = Join-Path $kitRoot 'scripts/log_subagent_spawns.ps1'
+    $logScript = Join-Path $kitRoot 'scripts/log_subagent_spawns.mjs'
     $ErrorActionPreference = 'Continue'
     $env:AGRIPPA_SPAWN_LOG = $null
-    $offOutput = $logPayload | & $shell -NoProfile -ExecutionPolicy Bypass -File $logScript 2>&1 | ForEach-Object { [string]$_ }
+    $offOutput = $logPayload | & $node $logScript 2>&1 | ForEach-Object { [string]$_ }
     $offExit = $LASTEXITCODE
     $offWrote = Test-Path -LiteralPath $logFile
     $env:AGRIPPA_SPAWN_LOG = '1'
-    $onOutput = $logPayload | & $shell -NoProfile -ExecutionPolicy Bypass -File $logScript 2>&1 | ForEach-Object { [string]$_ }
+    $onOutput = $logPayload | & $node $logScript 2>&1 | ForEach-Object { [string]$_ }
     $onExit = $LASTEXITCODE
     $ErrorActionPreference = 'Stop'
-    Add-Check ($offExit -eq 0 -and -not $offWrote -and -not $offOutput) "log_subagent_spawns.ps1 must exit 0 silently and write no log without AGRIPPA_SPAWN_LOG=1:`n$($offOutput -join "`n")"
+    Add-Check ($offExit -eq 0 -and -not $offWrote -and -not $offOutput) "log_subagent_spawns.mjs must exit 0 silently and write no log without AGRIPPA_SPAWN_LOG=1:`n$($offOutput -join "`n")"
     $logged = ''
     if (Test-Path -LiteralPath $logFile) {
         $logged = [IO.File]::ReadAllText($logFile)
     }
-    Add-Check ($onExit -eq 0 -and -not $onOutput -and $logged -match 'PreToolUse\s+agent=agrippa:validator model=sonnet') "log_subagent_spawns.ps1 with AGRIPPA_SPAWN_LOG=1 did not log the spawn to CLAUDE_PROJECT_DIR/subagent-spawns.log:`n$($onOutput -join "`n")$logged"
+    Add-Check ($onExit -eq 0 -and -not $onOutput -and $logged -match 'PreToolUse\s+agent=agrippa:validator model=sonnet') "log_subagent_spawns.mjs with AGRIPPA_SPAWN_LOG=1 did not log the spawn to CLAUDE_PROJECT_DIR/subagent-spawns.log:`n$($onOutput -join "`n")$logged"
 } finally {
     $ErrorActionPreference = 'Stop'
     $env:AGRIPPA_SPAWN_LOG = $savedOptIn
@@ -720,6 +727,16 @@ foreach ($script in ($checkedFiles | Where-Object { $_.Extension -eq '.ps1' })) 
     Add-Check ($parseErrors.Count -eq 0) "$($script.Name) has PowerShell parse errors: $($parseErrors.Message -join '; ')"
 }
 
+# --- Node scripts must parse -----------------------------------------------
+
+foreach ($script in ($checkedFiles | Where-Object { $_.Extension -eq '.mjs' })) {
+    $ErrorActionPreference = 'Continue'
+    $syntaxOutput = & $node --check $script.FullName 2>&1 | ForEach-Object { [string]$_ }
+    $syntaxExit = $LASTEXITCODE
+    $ErrorActionPreference = 'Stop'
+    Add-Check ($syntaxExit -eq 0) "$($script.Name) has Node syntax errors:`n$($syntaxOutput -join "`n")"
+}
+
 # --- End-to-end: simulated project plus the smoke test ---------------------
 
 # The simulated project is a git repository with only its own AGENTS.md. It
@@ -928,7 +945,7 @@ if ($InstalledRepo) {
             Add-ProjectCheck (-not (Test-Path -LiteralPath (Join-Path $projectRoot $loggerPath))) "$loggerPath is a local copy of the spawn logger. Delete it; the plugin runs its own when the env block of .claude/settings.json sets AGRIPPA_SPAWN_LOG=1."
             $helperPath = "$folder/hook_payload.ps1"
             if (Test-Path -LiteralPath (Join-Path $projectRoot $helperPath) -PathType Leaf) {
-                Add-ProjectCheck ($helperUsers.Count -gt 0) "$helperPath is a local copy of the spawn logger's payload helper, and no project script or settings.json hook uses it. Delete it; the plugin's spawn logger uses its own copy."
+                Add-ProjectCheck ($helperUsers.Count -gt 0) "$helperPath is a local copy of the old spawn logger's payload helper, and no project script or settings.json hook uses it. Delete it; the plugin's spawn logger does not need it."
             }
         }
     }
