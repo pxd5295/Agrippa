@@ -89,14 +89,14 @@ is intact and self-consistent.
 ## Enabling the plugin in a project
 
 A project enables the plugin in its committed `.claude/settings.json`. The
-marketplace's `ref` pins the release the project gets; use a release tag once
-Agrippa publishes one.
+marketplace's `ref` pins the release the project gets. Set it to a release
+tag, such as the current `v0.1.2`.
 
 ```json
 {
   "extraKnownMarketplaces": {
     "agrippa": {
-      "source": { "source": "github", "repo": "pxd5295/Agrippa", "ref": "v1.0.0" }
+      "source": { "source": "github", "repo": "pxd5295/Agrippa", "ref": "v0.1.2" }
     }
   },
   "enabledPlugins": { "agrippa@agrippa": true }
@@ -176,6 +176,8 @@ the project's `AGENTS.md` to read `# Agent Workflow`.
 - PowerShell for the linter and the smoke test: Windows PowerShell 5.1 or
   PowerShell 7 (`pwsh`) on macOS and Linux. All PowerShell scripts are
   5.1-clean.
+- A POSIX shell for `bin/agrippa-lint`, which runs through the Bash tool. On
+  Windows that is Git Bash, from Git for Windows.
 - `AskUserQuestion` for the planning interview. Without it, ask the same
   focused questions in chat and record the answers the same way.
 - The `engineering:architecture` and `engineering:system-design` skills (the

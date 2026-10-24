@@ -10,7 +10,7 @@
     {
       "name": "agrippa",
       "source": "./plugins/agrippa",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "description": "Planning and implementation methodology: plan workspaces, routed subagents, review skills, and the plan-workspace linter."
     }
   ]

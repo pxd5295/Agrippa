@@ -26,7 +26,9 @@ documents with them section by section and treat each difference as a mapping
 row. A repository installed at v0.1.0 also has three files whose rules now
 ship in the plugin; apply "From G4 v0.1.0" below. A repository installed at
 v0.1.0 or v0.1.1 also has generic rule text inside its project documents;
-apply "From G4 v0.1.1" below.
+apply "From G4 v0.1.1" below. From v0.1.2 the plugin's hooks run on Node.js
+instead of Windows PowerShell, so every machine that uses the plugin needs
+`node` on PATH; a project file does not change for this.
 
 ## Rule mapping
 

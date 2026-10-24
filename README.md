@@ -90,7 +90,7 @@ Add the marketplace and enable the plugin in the repository's committed
 {
   "extraKnownMarketplaces": {
     "agrippa": {
-      "source": { "source": "github", "repo": "pxd5295/Agrippa", "ref": "v0.1.1" }
+      "source": { "source": "github", "repo": "pxd5295/Agrippa", "ref": "v0.1.2" }
     }
   },
   "enabledPlugins": { "agrippa@agrippa": true }
@@ -130,9 +130,12 @@ and an exact resume prompt.
 
 ## Requirements
 
-- Node.js: the hooks that load the core rules run on it.
-- PowerShell: Windows PowerShell 5.1, or PowerShell 7 (`pwsh`) on macOS and
-  Linux. The linter and the smoke test run on it.
+- Node.js, on every OS. The hooks that add the core rules to every session
+  and subagent run on it, so without it the rules do not load.
+- PowerShell, for the plan linter: Windows PowerShell 5.1 on Windows, or
+  PowerShell 7 (`pwsh`) on macOS and Linux.
+- On Windows, Git for Windows. The linter runs as `agrippa-lint` through
+  Claude Code's Bash tool, which uses Git Bash.
 - Optional: the `engineering` plugin, whose `architecture` and `system-design`
   skills write decision records. Without it, the `design-first` skill gives
   the shape to write one by hand.
