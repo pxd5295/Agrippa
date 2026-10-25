@@ -20,7 +20,9 @@
 // AGRIPPA_LOW_USAGE and with the low-usage line after them, still under the
 // cap, when AGRIPPA_LOW_USAGE=1. The plan skill's low-usage.md names the seven
 // rules the mode replaces, the reviewers stop escalating in the mode, and the
-// install and upgrade skills offer it. The spawn logger is wired and
+// install and upgrade skills offer it. The install skill's interview follows
+// the planning interview's open-decisions procedure and records every entry
+// in the INSTALL.md template's decisions table. The spawn logger is wired and
 // does nothing without AGRIPPA_SPAWN_LOG=1, and the agrippa-lint wrapper is an
 // executable LF sh script that runs the plugin's Perl linter. No vocabulary
 // from an older toolchain, and no name of the plugin's former Node scripts,
@@ -265,6 +267,7 @@ const required = [
     'templates/agrippa-CLAUDE.md',
     'templates/decisions-README.md',
     'templates/plans-README.md',
+    'templates/INSTALL.md',
     'templates/MIGRATION.md',
     'templates/validate-plan-workspace.local.pl',
     'templates/hooks/README.md',
@@ -725,6 +728,38 @@ testClauses('Skill install', installSkill, [...setupClauses,
     // committed entry reaches every collaborator.
     'engineering@claude-plugins-official',
     'Recommend\\s+no',
+    // The install interview follows the planning interview: an open-decisions
+    // list first, inspection before any question, rounds with a recommended
+    // option, an end on an empty list or the user's go-ahead, and every entry
+    // recorded with how it was resolved. The slots only a maintainer can
+    // answer are asked in named rounds instead of guessed or deleted.
+    '## 4\\. Interview: list the open decisions, then ask',
+    'Never put one to the user',
+    'proceed on the recommendations',
+    '`Resolved by: default`',
+    '"Interview decisions" table in `\\.agrippa/INSTALL\\.md`',
+    '\\(per maintainer, YYYY-MM-DD\\)',
+    '\\*\\*Round 2, the debugging map\\.\\*\\*',
+    '\\*\\*Round 3, how the tests behave\\.\\*\\*',
+    'operating-system screen capture is allowed',
+    'whether `plans/` is tracked or gitignored',
+    'Two multi-select questions in one call',
+    'An unticked box is a no',
+    'the scope answer in round 0 never stands in for it',
+]);
+// The install record holds the interview decisions in the same shape as a
+// plan's SPEC.md table, so a later reader can tell a verified fact from an
+// answered one, plus the optional features and the install-time checks.
+testClauses('INSTALL template', readKitFile('templates/INSTALL.md'), [
+    '## Scope and date',
+    '## Interview decisions',
+    '\\| Topic \\| Decision \\| Resolved by \\| Rationale \\|',
+    '`inspection`',
+    '`user`',
+    '`default`',
+    '## Optional features',
+    '## Validation results',
+    'never edit its decisions',
 ]);
 // The survey skill writes the one on-demand knowledge document. It discovers
 // read-only, names the commit it describes, keeps the map out of the contract
@@ -772,6 +807,44 @@ testClauses('Skill upgrade', upgradeSkill, [...setupClauses,
     'templates/agrippa-CLAUDE\\.md',
     '\\$\\{CLAUDE_PLUGIN_ROOT\\}/UPGRADING\\.md',
     '\\.agrippa/MIGRATION\\.md',
+    // The upgrade interview shares the install interview's procedure, with the
+    // install rounds asked by reference so the two cannot drift: an
+    // open-decisions list that includes the mapping's own entries, the old
+    // documents read before any question, an end on an empty list or the
+    // user's go-ahead, every entry recorded with how it was resolved, and no
+    // default for a deletion or the permission allowlist.
+    '## 3\\. Interview: write the rule mapping, list the open decisions, then ask',
+    'step 4 of `\\$\\{CLAUDE_PLUGIN_ROOT\\}/skills/install/SKILL\\.md`',
+    'The old documents are the\\s+data source',
+    'Never\\s+put one to the user',
+    'proceed on the recommendations',
+    '`Resolved by: default`',
+    'A deletion has no default',
+    '"Interview decisions" table in `\\.agrippa/MIGRATION\\.md`',
+    '\\(per maintainer, YYYY-MM-DD\\)',
+    'asked by reference rather than copied',
+    '\\*\\*The mapping round\\*\\*',
+    '\\*\\*Rounds 1 to 4 of the install skill\\*\\*',
+    '\\*\\*Round 5 of the install skill\\*\\*',
+    'No row resolved by `default` is a deletion',
+]);
+// The upgrade record holds the same decisions table as the install record,
+// beside the upgrade-shaped sections (rule mapping, preservation audit), so a
+// later reader of either record can tell a verified fact from an answered one.
+testClauses('MIGRATION template', readKitFile('templates/MIGRATION.md'), [
+    '## Scope and date',
+    '## Existing workflow inventory',
+    '## Rule mapping',
+    '## Interview decisions',
+    '\\| Topic \\| Decision \\| Resolved by \\| Rationale \\|',
+    '`inspection`',
+    '`user`',
+    '`default`',
+    'a deletion is never resolved this way',
+    '## Historical preservation audit',
+    '## Deprecated, awaiting confirmation',
+    '## Validation and residual risks',
+    'never edit its decisions',
 ]);
 // Low-usage mode replaces exactly seven rules, named in the plan skill's
 // guide, which loads only when the injected line says the mode is on. The

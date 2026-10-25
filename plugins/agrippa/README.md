@@ -68,7 +68,8 @@ The methodology has three layers, and the kit installs all of them.
 | `skills/*/SKILL.md` | Not installed; the plugin's skills `agrippa:design-first`, `agrippa:systematic-debugging`, `agrippa:verify-before-done`, and `agrippa:receiving-review`, plus `plan` and `handoff` below. A project keeps no copy in `.claude/skills/` |
 | `templates/hooks/README.md` | Not installed; how to opt in to the plugin's spawn logger and its low-usage mode, the edit-lint hook a project writes for itself, and the permission allowlist |
 | `templates/validate-plan-workspace.local.pl` | `tools/validate_plan_workspace.local.pl`, only when the project has command invariants to enforce |
-| `templates/MIGRATION.md` | `.agrippa/MIGRATION.md`, upgrades only |
+| `templates/INSTALL.md` | `.agrippa/INSTALL.md`, installs only: the plugin version, every interview decision with how it was resolved, the optional features chosen, and the install-time check results. A record, never edited afterwards |
+| `templates/MIGRATION.md` | `.agrippa/MIGRATION.md`, upgrades only: the generation found, the rule mapping, every interview decision with how it was resolved, the preservation audit, and the upgrade-time check results. A record, never edited afterwards |
 | `UPGRADING.md` | Not installed; the generation markers and rule mapping for upgrades |
 | `ADOPTION-CHECKLIST.md` | Not installed; every item is completed or reported |
 | `.claude-plugin/plugin.json` | Not installed; the plugin manifest |
@@ -258,10 +259,14 @@ high effort and run:
 /agrippa:install
 ```
 
-The skill discovers the repository read-only, asks with `AskUserQuestion`
-only about choices the repository cannot answer, writes the project-side
-documents from `templates/`, and shows every `.claude/settings.json` change
-before it writes it. It changes no application code and copies no plugin file
+The skill discovers the repository read-only, then interviews the way the
+planning interview does: it lists every install-time decision, settles what
+the code can settle by reading, and asks with `AskUserQuestion` only the
+rest, in rounds, with a recommended option each, until none is left or the
+user says to proceed on the recommendations. Every decision, however it was
+resolved, becomes a row of `.agrippa/INSTALL.md`. It then writes the
+project-side documents from `templates/` and shows every
+`.claude/settings.json` change before it writes it. It changes no application code and copies no plugin file
 into the repository. It ends with the install-marker scan, its own checks,
 and two development checks that run from an Agrippa checkout:
 `node dev/validate-kit.mjs -InstalledRepo` and

@@ -25,6 +25,11 @@ unrecorded.
   commit. It is **not** a contract: nothing freezes against it, and a row is
   verified in the code before it is cited. [PROJECT: delete this bullet if
   the survey has not been run.]
+- `[PROJECT: INSTALL.md or MIGRATION.md, whichever this repository has]` —
+  the record of how this repository adopted or upgraded the methodology:
+  the plugin version, every interview decision with how it was resolved, the
+  optional features chosen, and the check results. A record, never edited
+  afterwards, and never a contract source.
 
 ## Rules for editing
 

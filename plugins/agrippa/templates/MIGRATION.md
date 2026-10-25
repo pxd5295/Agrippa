@@ -1,7 +1,10 @@
 # Planning Workflow Migration
 
-This file records how this repository adopted or upgraded the Agrippa
-planning methodology. It is a record: never edit its decisions afterwards.
+This file records how this repository upgraded to the Agrippa planning
+methodology: the generation found, the rule mapping, what the upgrade
+interview decided and how each decision was resolved, the preservation audit,
+and the upgrade-time check results. It is a record: never edit its decisions
+afterwards. A first install writes `INSTALL.md` instead.
 
 ## Scope and date
 
@@ -28,6 +31,22 @@ planning methodology. It is a record: never edit its decisions afterwards.
 | Existing source/rule | Disposition | New authoritative location | Rationale |
 |---|---|---|---|
 | `[PROJECT: path: rule]` | Retain / Merge / Replace / Deprecate | `[PROJECT: path/section]` | [PROJECT: Reason; stricter rule preserved] |
+
+## Interview decisions
+
+One row per decision the upgrade needed: each material conflict between an
+old rule and a new one, each proposed deletion, the pins and old toolchain
+configuration removed, every install-time slot the templates asked for, and
+each optional feature, including the entries inspection settled without a
+question. `Resolved by` is `inspection` (the code, the configuration, or an
+old document answered it; say what was read), `user` (a person answered it;
+the documents mark such facts `per maintainer`), or `default` (the user chose
+to proceed on the recommendations, or declined to answer, and the recommended
+option was taken; a deletion is never resolved this way).
+
+| Topic | Decision | Resolved by | Rationale |
+|---|---|---|---|
+| [PROJECT: the decision, for example "Delete the copied-in planner agent" or "Debugging map"] | [PROJECT: what was decided] | [PROJECT: inspection / user / default] | [PROJECT: the old document or code read, or the tradeoff the user accepted] |
 
 ## Methodology migration
 

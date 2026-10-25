@@ -971,6 +971,74 @@ that runs Claude Code's Bash tool does not already have.
   runs `node dev/validate-kit.mjs` on Ubuntu, macOS, and Windows would prove
   it at each push and is the recommended follow-up.
 
+## The install interview follows the planning interview (2026-10-25)
+
+Step 4 of the install skill was a list of nine question topics: three vague
+project-fact questions ("ownership boundaries that are ambiguous") and six
+yes/no opt-ins, each its own question, with a recommendation stated for only
+two of them. The planning interview, by contrast, has a procedure the kit
+already tests: list the open decisions, settle by reading what reading can
+settle, ask only the rest with a recommended option each, end on an empty list
+or the user's go-ahead, and record every entry with how it was resolved. The
+install step now follows that procedure, for these reasons.
+
+- **The templates need answers the code cannot give.** The debugging map
+  (runtime layers, probe convention, working counterparts, differences that
+  mattered before), the known messages and invocation traps, which targets are
+  flaky or red on purpose, the authoritative performance measurement, the
+  screen-capture policy, and where worktrees live are experience, not
+  structure. The old interview never asked for them, so an install either
+  guessed them or deleted the section. Each is now a question in a named
+  round, with "None for this project" as an option where the slot offers
+  `None`, so a deleted section is a recorded answer.
+- **A confirmed draft beats a blank.** Ownership areas, shared interfaces,
+  risk classes, and owner rows are drafted from inspection first and the user
+  is asked to accept or correct the draft row with its evidence. Reviewing a
+  proposal is a far easier question than "what are your ownership boundaries".
+- **Every answer is recorded with its provenance.** A new project document,
+  `.agrippa/INSTALL.md` from `templates/INSTALL.md`, holds an "Interview
+  decisions" table in the shape of a plan's `SPEC.md` table, with `Resolved
+  by` set to `inspection`, `user`, or `default`, plus the optional features
+  chosen and the install-time check results. A fact the user supplied and the
+  code cannot confirm is marked `(per maintainer, YYYY-MM-DD)` where it lands
+  in the documents, so a later reader can tell it from a `file:line` fact. The
+  upgrade record `MIGRATION.md` is upgrade-shaped (rule mapping, preservation
+  audit), so installs get their own short record rather than a half-empty
+  copy of it; `.agrippa/CLAUDE.md` names whichever the repository has.
+- **The opt-ins cost one call.** `AskUserQuestion` supports multi-select but
+  holds at most four options per question, so the six optional features are
+  two multi-select questions in one call: plugin features (area map, spawn
+  logger, low-usage mode, edit-lint hook) and committed-settings additions
+  (`engineering` plugin, permission allowlist). Every feature now has a
+  stated recommendation. A round-0 question lets the user take every
+  recommended default and answer only the project questions; the permission
+  allowlist is the one feature that round never answers, because the rule
+  that no permission is added without a yes to that specific question stays.
+- **The upgrade skill shares the procedure.** Later the same day, step 3 of
+  the upgrade skill got the same six-step procedure, with the install skill's
+  rounds asked by reference rather than copied, so the two question lists
+  cannot drift apart. The upgrade's open-decisions list adds its own entries
+  (each material conflict, each proposed deletion, the pins and old toolchain
+  configuration to remove) and its own round for them, between the install
+  skill's round 0 and round 1. Its inspection step reads the old documents as
+  the data source: a slot the old methodology already answered is carried
+  over with the old path as evidence and is never asked again, which is why
+  an upgrade from a filled-in methodology asks few project questions. Two
+  entries have no default, because "proceed on the recommendations" must not
+  turn into an unconfirmed edit: a deletion the user has not confirmed stays
+  under "Deprecated, awaiting confirmation", and the permission allowlist
+  keeps its own yes. Round 5 is asked for the four features an upgrade
+  offered before; the `engineering` plugin stays out for the reason the next
+  note gives, and the area map stays a `/agrippa:survey` run the user asks
+  for. `MIGRATION.md` records every entry in an "Interview decisions" table
+  of the same shape as `INSTALL.md`'s, so both records answer "why is this
+  here" the same way. The self-check requires the procedure's clauses in both
+  skills and the table in both templates.
+- **What is not proved.** Nothing yet proves either interview end to end; the
+  self-check requires the procedure's clauses and the record templates'
+  sections, and the live proof is still an install or upgrade run in a fresh
+  session.
+
 ## The install skill offers the engineering plugin (2026-10-25)
 
 The decision-record rule names the `engineering:architecture` and

@@ -23,7 +23,14 @@ named as not done, with the reason.
       risks.
 - [ ] Record the tests that are red at `HEAD` before any change.
 - [ ] Inspect the dirty worktree and preserve unrelated user changes.
-- [ ] Ask only material questions that repository inspection cannot answer.
+- [ ] The interview listed every install-time decision first, settled by
+      reading what reading could settle, asked the user only the rest in the
+      install skill's rounds with a recommended option each, and ended on an
+      empty list or the user's "proceed on the recommendations".
+- [ ] Every interview entry, including the ones inspection settled, is a row
+      of `.agrippa/INSTALL.md` with `Resolved by` set to `inspection`, `user`,
+      or `default`, and each user-supplied fact is marked `per maintainer` in
+      the document it landed in.
 - [ ] Upgrades: identify the generation from the `UPGRADING.md` markers and
       list the markers found.
 
@@ -63,6 +70,10 @@ named as not done, with the reason.
       enable the `engineering` plugin in the committed `.claude/settings.json`
       or has it installed for themselves, or the hand-written fallback is
       noted.
+- [ ] `.agrippa/INSTALL.md` exists with the plugin version and pinned `ref`,
+      the interview decisions, the optional features chosen, and the
+      validation results, or this was an upgrade and `.agrippa/MIGRATION.md`
+      holds the record instead.
 - [ ] The README's install-marker scan finds nothing outside the kit folder.
 
 ## Agents, skills, commands, hooks
@@ -171,5 +182,6 @@ named as not done, with the reason.
 - [ ] No historical dated workspace was edited, moved, or converted: a
       SHA-256 manifest taken before the first edit equals one taken after
       (`git status` proves nothing when `plans/` is gitignored).
-- [ ] `.agrippa/MIGRATION.md` records the generation, mapping,
-      adaptations, preservation audit, and residual smoke tests.
+- [ ] `.agrippa/MIGRATION.md` records the generation, mapping, interview
+      decisions with how each was resolved, adaptations, preservation audit,
+      and residual smoke tests.

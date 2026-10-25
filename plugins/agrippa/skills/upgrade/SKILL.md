@@ -28,6 +28,7 @@ The kit files this skill uses are in the plugin:
 | `${CLAUDE_PLUGIN_ROOT}/ADOPTION-CHECKLIST.md` | Every item is done or reported at the end |
 | `${CLAUDE_PLUGIN_ROOT}/templates/` | The project-side documents, including `MIGRATION.md` |
 | `${CLAUDE_PLUGIN_ROOT}/templates/hooks/README.md` | The spawn-logger opt-in, the low-usage mode opt-in, the edit-lint hook rules, and the permission allowlist |
+| `${CLAUDE_PLUGIN_ROOT}/skills/install/SKILL.md` | Its step 1 Perl check, its step 4 interview procedure and rounds, which step 3 here follows by reference, and its step 6 settings change |
 | `${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json` | The plugin version, which names the release tag to pin |
 
 ## 1. Check Perl and read the kit
@@ -86,36 +87,107 @@ Get-ChildItem -LiteralPath plans -Directory | Where-Object { $_.Name -match '^\d
 
 Say in chat how many files the manifest lists and where it is.
 
-## 3. Write the rule mapping, show it, and ask
+## 3. Interview: write the rule mapping, list the open decisions, then ask
 
 Before any edit, write the rule mapping: one row per existing rule or artifact,
 with its disposition (Retain, Merge, Replace, or Deprecate), its new location,
 and the reason. Start from the mapping tables in `UPGRADING.md` for each
 generation found. For a copied-in Agrippa kit, the "From G3" table says which
 copied files are deleted and which project facts move into which project
-document. Keep the stricter rule whenever old and new disagree.
+document. Keep the stricter rule whenever old and new disagree. The whole
+mapping is shown to the user before any edit, as the first thing the interview
+puts to them.
 
-Show the whole mapping to the user. Then ask with `AskUserQuestion`:
+The upgrade interview then follows the same procedure as the install
+interview, step 4 of `${CLAUDE_PLUGIN_ROOT}/skills/install/SKILL.md`, which
+follows the planning interview ("List the open decisions, then interview" in
+the `plan` skill's `agent-workflow.md`). It ends when no decision is left for
+the user to make, never after a set number of rounds, and every decision is
+recorded. The four safeguards shape it: the mapping is shown before any edit,
+every deletion is its own confirmed question, there is never a single "delete
+all" choice, and no dated plan workspace is touched.
 
-- about every material conflict between an old rule and a new one;
-- about every file you propose to delete. Each file is its own option or its
-  own question, so the user can keep any one of them. Never offer a single
-  "delete all" choice;
-- about removing project-wide model or reasoning-effort pins and old toolchain
-  configuration;
-- about the optional spawn logger, low-usage mode (`AGRIPPA_LOW_USAGE=1`),
-  the edit-lint hook, and the permission allowlist, as `/agrippa:install`
-  does. Never add a permission rule, and never set a permission mode, without
-  a yes to this question.
+1. **List the open decisions.** Write one entry per decision the upgrade
+   needs: every material conflict between an old rule and a new one; every
+   file the mapping proposes to delete; the removal of project-wide model or
+   reasoning-effort pins and of old toolchain configuration; every
+   install-time slot in the templates that the project documents will fill;
+   and each optional feature. Mark each entry `inspection` when the code, the
+   configuration, or an old document can answer it, or `user` when only a
+   person who works in the repository can. The install skill's table "Which
+   slots are usually which" applies to the template slots.
+2. **Resolve every inspection entry by reading.** The old documents are the
+   data source: the old `AGENTS.md` and `CLAUDE.md`, a copied-in agent or
+   skill that was filled at install time, the old project documents and
+   decision records, and the rules an old linter enforced. A slot the old
+   methodology already answered is an inspection entry with the old path as
+   its evidence, carried over rather than rediscovered or asked again. Never
+   put one to the user. An entry that reading cannot settle moves to the
+   user group with the evidence so far.
+3. **Draft before asking.** The mapping rows and the carried-over facts are
+   the drafts. A user question about one of them shows the row with its
+   evidence and asks the user to accept it or name the correction, because
+   confirming a draft is easier than answering a blank.
+4. **Ask in rounds.** Put the user entries to the user with
+   `AskUserQuestion`, in the rounds below. It takes at most four questions
+   per call and two to four options per question, so a round that needs more
+   is split across calls. The recommended option is first and is marked
+   `(Recommended)`, with its tradeoff in one sentence in its description.
+   Where a template slot offers `None`, one option is "None for this
+   project", so a deleted section is a recorded answer and never a guess.
+   Rounds continue while user entries remain, including entries that an
+   answer exposes. Without `AskUserQuestion`, ask the same focused questions
+   in chat and record the answers the same way.
+5. **End on an empty list.** The interview ends when the user group is empty,
+   or when the user says to proceed on the recommendations. An entry still
+   unresolved at that point takes the recommended option with
+   `Resolved by: default`, with two exceptions. A deletion has no default: a
+   file the user has not confirmed is kept and listed under "Deprecated,
+   awaiting confirmation". The permission allowlist has no default either:
+   never add a permission rule, and never set a permission mode, without a
+   yes to its own question. No entry is ever dropped.
+6. **Record every entry**, including the ones inspection settled, as a row of
+   the "Interview decisions" table in `.agrippa/MIGRATION.md`, with
+   `Resolved by` set to `inspection`, `user`, or `default`. A row resolved by
+   inspection says what was read, the old document's path included. A fact
+   the user supplied and the code cannot confirm is marked
+   `(per maintainer, YYYY-MM-DD)` where it lands in the project documents, so
+   a later reader can tell it from a `file:line` fact.
 
-`AskUserQuestion` takes at most four questions per call, so split a longer
-list across calls. Without `AskUserQuestion`, ask the same questions in chat.
+The rounds are the install skill's, asked by reference rather than copied
+here, with one round that only an upgrade has:
+
+- **Round 0, the scope of the interview**, as in the install skill. With the
+  first answer, round 5 asks only about the permission allowlist, and the
+  other optional features take their recommended answers with
+  `Resolved by: default`.
+- **The mapping round** comes next and is the upgrade's own: every material
+  conflict, with the stricter rule as the recommended option; every file
+  proposed for deletion, each its own question or its own option, so the
+  user can keep any one of them (never offer a single "delete all" choice);
+  and the removal of project-wide model or reasoning-effort pins and old
+  toolchain configuration.
+- **Rounds 1 to 4 of the install skill**, contracts, the debugging map, how
+  the tests behave, and environment and workflow, with the same questions
+  and recommendations, asked only for the entries the old documents left
+  open. A repository upgraded from a filled-in methodology usually leaves
+  few.
+- **Round 5 of the install skill**, with the same recommendations, for the
+  spawn logger, low-usage mode (`AGRIPPA_LOW_USAGE=1`), the edit-lint hook,
+  and the permission allowlist. The area map and the `engineering` plugin
+  are not offered in an upgrade: the user runs `/agrippa:survey` whenever
+  they want a map, and adding a plugin to settings that collaborators
+  already share is a team decision outside a methodology upgrade.
+
 Wait for every answer before step 4.
 
 ## 4. Apply the mapping
 
 - Write or update every layout-table row whose destination is a repository
-  path, including `.agrippa/MIGRATION.md` filled from its template.
+  path, including `.agrippa/MIGRATION.md` filled from its template. Its
+  "Interview decisions" table gets one row per entry from step 3, the ones
+  inspection settled included, each with `Resolved by` set. It is a record,
+  so nothing in it is edited after the upgrade.
 - Follow the README's placeholder convention, including its rule "When a
   subject does not apply", and never install an `Install note` example
   comment. Carry over the project facts the old methodology already recorded
@@ -178,6 +250,9 @@ installed", instead of running them.
   generations found, and for the old project-document paths, must find
   nothing outside `MIGRATION.md`, dated plan workspaces, and decision
   records. Use `git grep`, which searches the hidden folders.
+- **Upgrade record.** `.agrippa/MIGRATION.md` exists, and its "Interview
+  decisions" table has a row for every entry step 3 listed, each with
+  `Resolved by` set. No row resolved by `default` is a deletion.
 - **Local linter checks.** If `tools/validate_plan_workspace.local.pl`
   exists, lint one recent existing workspace through the Bash tool with
   `agrippa-lint -PlanPath plans/<name>`. It must report no `[Local]` error and
@@ -205,7 +280,9 @@ Both must print `PASS`. `-InstalledRepo` also fails until
 
 ## 6. Report
 
-Report the generation found and its markers, the mapping, the files changed and
+Report the generation found and its markers, the mapping, the interview
+decisions table from `.agrippa/MIGRATION.md` with how many entries
+inspection, the user, and the defaults settled, the files changed and
 deleted, each adaptation and its evidence, every settings change, every item in
 the adoption checklist as done or not done with the reason, anything
 deprecated but not yet deleted, and the live checks left for the user. Say

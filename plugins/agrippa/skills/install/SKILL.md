@@ -26,7 +26,7 @@ The kit files this skill uses are in the plugin:
 | `${CLAUDE_PLUGIN_ROOT}/ADOPTION-CHECKLIST.md` | Every item is done or reported at the end |
 | `${CLAUDE_PLUGIN_ROOT}/templates/` | The project-side documents |
 | `${CLAUDE_PLUGIN_ROOT}/templates/hooks/README.md` | The spawn-logger opt-in, the low-usage mode opt-in, the edit-lint hook rules, and the permission allowlist |
-| `${CLAUDE_PLUGIN_ROOT}/skills/plan/reference/agent-workflow.md` | Its "Validation matrix values" section, which defines the Sandbox and Determinism values the command catalog records |
+| `${CLAUDE_PLUGIN_ROOT}/skills/plan/reference/agent-workflow.md` | Its "List the open decisions, then interview" section, the procedure step 4 follows, and its "Validation matrix values" section, which defines the Sandbox and Determinism values the command catalog records |
 | `${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json` | The plugin version, which names the release tag to pin |
 
 ## 1. Check Perl, and that this is a new install
@@ -115,29 +115,119 @@ Change nothing in this step. Record:
 You may delegate read-only discovery of large areas to subagents and keep only
 their conclusions.
 
-## 4. Ask about material choices
+## 4. Interview: list the open decisions, then ask
 
-Use `AskUserQuestion` only for choices the repository cannot answer, and
-recommend an option for each. It takes at most four questions per call, so
-split a longer list across calls. Without `AskUserQuestion`, ask the same
-focused questions in chat. The usual questions are:
+The install interview follows the same procedure as the planning interview
+("List the open decisions, then interview" in the `plan` skill's
+`agent-workflow.md`). It ends when no decision is left for the user to make,
+never after a set number of rounds, and every decision is recorded.
 
-- ownership boundaries that are ambiguous;
-- which interfaces count as frozen;
-- the risk classes that apply;
-- whether to survey the folders into `.agrippa/area-map.md` once the
-  documents are written. The map is optional and read only during planning;
-  recommend it for a repository with more than a handful of folders;
-- whether to turn on the plugin's spawn logger;
-- whether to turn on the plugin's low-usage mode, for token limits that the
-  normal methodology would exhaust. Recommend no. Say in one sentence what it
-  trades: fewer review passes, cheaper tiers, one writer per wave, and
-  shallower planning reads, as "Low-usage mode" in `templates/hooks/README.md`
-  describes. A collaborator with different limits can override the committed
-  value in their own `.claude/settings.local.json`;
-- whether to write an edit-lint hook;
-- whether to enable the `engineering` plugin for this repository, whose
-  `architecture` and `system-design` skills write decision records. Recommend
+1. **List the open decisions.** Write one entry per install-time slot in the
+   templates, from what step 3 found. Mark each entry `inspection` when the
+   code or configuration can answer it, or `user` when only a person who
+   works in the repository can. The table below says which slots are usually
+   which.
+2. **Resolve every inspection entry by reading.** Never put one to the user.
+   An entry that reading cannot settle moves to the user group with the
+   evidence so far.
+3. **Draft before asking.** Draft the ownership areas, the shared interfaces,
+   the risk classes, and the architecture-owner rows from the inspection
+   entries, in memory, not yet written. A user question about one of these
+   shows the draft row with its evidence and asks the user to accept it or
+   name the correction, because confirming a draft is easier than answering a
+   blank.
+4. **Ask in rounds.** Put the user entries to the user with `AskUserQuestion`,
+   in the rounds below. It takes at most four questions per call and two to
+   four options per question, so a round that needs more is split across
+   calls. The recommended option is first and is marked `(Recommended)`, with
+   its tradeoff in one sentence in its description. Where the template slot
+   offers `None`, one option is "None for this project", so a deleted section
+   is a recorded answer and never a guess. Rounds continue while user entries
+   remain, including entries that an answer exposes. Without
+   `AskUserQuestion`, ask the same focused questions in chat and record the
+   answers the same way.
+5. **End on an empty list.** The interview ends when the user group is empty,
+   or when the user says to proceed on the recommendations. An entry still
+   unresolved at that point takes the recommended option with
+   `Resolved by: default`. It is never dropped.
+6. **Record every entry**, including the ones inspection settled, as a row of
+   the "Interview decisions" table in `.agrippa/INSTALL.md`, with
+   `Resolved by` set to `inspection`, `user`, or `default`. A row resolved by
+   inspection says what was read. A fact the user supplied and the code cannot
+   confirm is marked `(per maintainer, YYYY-MM-DD)` where it lands in the
+   project documents, so a later reader can tell it from a `file:line` fact.
+
+**Round 0, the scope of the interview.** One question, first: "Take the
+recommended answer for every optional feature, and ask me only about the
+project" `(Recommended)`, or "Ask me about each optional feature too". With
+the first answer, round 5 asks only about the permission allowlist and the
+other five features take their recommended answers with
+`Resolved by: default`.
+
+**Round 1, contracts.** Show the drafts and ask to accept or correct:
+
+- the ownership areas, where a folder could belong to more than one area or
+  the tests do not line up with the source tree;
+- which interfaces are frozen shared interfaces (an API, schema, protocol,
+  file format, persisted record, saved configuration, or layout) whose change
+  needs a decision record and a consumer census;
+- which high-risk change classes apply, and the trigger and gate for each;
+- any "Architecture owners" row the code did not settle, for example which
+  layer is the performance owner or which subsystem is gated.
+
+**Round 2, the debugging map.** These hold experience, not structure, and
+reading code rarely settles them:
+
+- the layers of the main runtime path, in order, with the check at each
+  boundary that says which side is wrong;
+- the naming convention for temporary probe files;
+- the working counterparts a failing path is usually compared against;
+- the kinds of difference that have mattered before, for example ordering or
+  lifecycle state.
+
+**Round 3, how the tests behave.** For `validation-commands.md`:
+
+- which targets are flaky and get `noisy-retry`, and which are red at `HEAD`
+  on purpose, with the date checked;
+- messages that mean something specific here, messages that are expected in
+  a headless or CI run, and the failure surfaces besides a failing test;
+- the invocation mistakes a validator must not make;
+- which commands write outside the workspace and so are `outside-sandbox`,
+  as "Validation matrix values" in the `plan` skill's `agent-workflow.md`
+  defines the two values;
+- which measurement is the authoritative evidence for a performance claim.
+
+**Round 4, environment and workflow.**
+
+- whether operating-system screen capture is allowed on this project's
+  machines, and how the rendered UI is captured in-app otherwise, for "UI
+  capture"; or that the project has no UI;
+- where git worktrees live, and the setup gap that breaks a fresh one, for
+  "Worktree and integration contracts";
+- whether `plans/` is tracked or gitignored. A gitignored `plans/` is why the
+  upgrade skill hashes dated workspaces instead of trusting `git status`;
+- when step 3 found an MCP server that observes the running application,
+  confirm it is the live-app bridge and that the authoring-tool list is
+  complete, for `.agrippa/live-app.md`.
+
+**Round 5, the optional features.** Two multi-select questions in one call,
+because a question holds at most four options. An unticked box is a no.
+
+- Plugin features: the area map, by loading `agrippa:survey` after the
+  documents are written (recommended when the repository has more than a
+  handful of folders; the map is optional and read only during planning);
+  the spawn logger (recommended; it is silent, gitignored, and shows which
+  spawns inherited the lead's model); low-usage mode, for token limits that
+  the normal methodology would exhaust (Recommend no. Say in one sentence
+  what it trades: fewer review passes, cheaper tiers, one writer per wave,
+  and shallower planning reads, as "Low-usage mode" in
+  `templates/hooks/README.md` describes. A collaborator with different limits
+  can override the committed value in their own `.claude/settings.local.json`);
+  and an edit-lint hook (recommend no unless the project already runs a
+  per-file linter; the hook is the project's own script, written to the rules
+  in `templates/hooks/README.md`).
+- Committed settings additions: the `engineering` plugin, whose
+  `architecture` and `system-design` skills write decision records (Recommend
   no. Say in one sentence what a yes does: it adds
   `"engineering@claude-plugins-official": true` to the committed
   `enabledPlugins`, so every collaborator who trusts the folder gets the whole
@@ -146,10 +236,28 @@ focused questions in chat. The usual questions are:
   gives the shape to write a decision record by hand, and that a person who
   wants the plugin only for themselves runs
   `/plugin install engineering@claude-plugins-official` instead, which leaves
-  the committed file alone;
-- whether to add the permission allowlist from `templates/hooks/README.md`.
+  the committed file alone); and the permission allowlist from
+  `templates/hooks/README.md` (recommended; it names only read-only git
+  commands, `agrippa-lint`, and the project's own test and build executables).
   Never add a permission rule, and never set a permission mode, without a yes
-  to this question.
+  to this question; the scope answer in round 0 never stands in for it.
+
+**Which slots are usually which.** The inspection column is answered from
+the code in step 2 of the procedure; the user column is asked in the round
+named.
+
+| Template section | Usually resolved by |
+|---|---|
+| `AGENTS.md` ownership bullets; `project-contracts.md` "Ownership areas", "Contract documents", "Shared and public interfaces", "Architecture owners" | inspection, confirmed in round 1 where the evidence is ambiguous |
+| `project-contracts.md` "High-risk change classes" | inspection for the rows the code shows (a native build, a schema version, a deployment script); round 1 for the trigger and gate wording |
+| `project-contracts.md` "Debugging map" | user, round 2 |
+| `project-contracts.md` "Worktree and integration contracts", "Environment boundaries" | inspection for tool versions and generated files; round 4 for worktrees and setup gaps |
+| `validation-commands.md` "Command catalog", "Full-suite inventory", "Build", "Run caps", "Session setup", "Runtime writes and caches", "Shared log paths" | inspection: each command was run once in step 3 |
+| `validation-commands.md` "Known messages", "Failure surfaces", "Invocation traps", "Performance evidence", known red targets, `noisy-retry` targets | user, round 3 |
+| `validation-commands.md` "Sandbox stance" | inspection from what each command wrote when run; round 3 to confirm |
+| `validation-commands.md` "UI capture", "Environment limits" | user, round 4, for the capture policy; inspection for the limits a run showed |
+| `live-app.md` | inspection by calling the bridge's tools once; round 4 to confirm the authoring-tool list |
+| Per-directory `CLAUDE.md` rules and traps | round 2 answers that name one folder; otherwise not written |
 
 ## 5. Write the project documents
 
@@ -175,6 +283,11 @@ Write every layout-table row whose destination is a repository path, except
 - Write `plans/README.md` and `.agrippa/decisions/README.md` from their templates
   unchanged. They only say what each folder holds and where the rules are;
   never add rules to them.
+- Write `.agrippa/INSTALL.md` from `templates/INSTALL.md`: the plugin version
+  and pinned `ref`, every interview entry from step 4 as a row of its
+  "Interview decisions" table, and each optional feature's answer. Its
+  "Validation results" table is filled in step 7. It is a record, so nothing
+  in it is edited after the install.
 - Write a per-directory `CLAUDE.md` only for an ownership area with real rules
   to state.
 - Write `.agrippa/live-app.md` only when the project has an MCP
@@ -248,7 +361,10 @@ run, with the reason "Perl is not installed", instead of running them.
   nothing.
 - **Project documents.** `.agrippa/project-contracts.md` and
   `.agrippa/validation-commands.md` exist, and each fact in them was
-  checked against the code.
+  checked against the code or is marked `per maintainer` with the date.
+  `.agrippa/INSTALL.md` exists, and its "Interview decisions" table has a row
+  for every install-time slot the templates asked for, each with
+  `Resolved by` set.
 - **Settings.** `.claude/settings.json` parses as JSON, declares
   `extraKnownMarketplaces.agrippa`, and enables `agrippa@agrippa`. A `github`
   or `git` source must carry a `ref`. A local `directory` source the user
@@ -268,6 +384,10 @@ run, with the reason "Perl is not installed", instead of running them.
   written, write one small real plan workspace for a trivial change, lint it
   through the Bash tool with `agrippa-lint -PlanPath plans/<name>`, and delete
   the workspace afterwards. `agrippa-lint` is on the Bash tool's PATH only.
+
+Record each check's result in the "Validation results" table of
+`.agrippa/INSTALL.md`, with the two development checks below as `Not run`
+when they were not.
 
 Then ask the user whether to commit the installed files and
 `.claude/settings.json` in one commit. The settings take effect for
@@ -293,8 +413,10 @@ Both must print `PASS`. `-InstalledRepo` also fails until
 ## 8. Report
 
 Report the files written, each project-specific adaptation with the evidence
-behind it, every settings change, and every item in the adoption checklist as
-done or not done with the reason. Items that describe the plugin's own
+behind it, the interview decisions table from `.agrippa/INSTALL.md` with how
+many entries inspection, the user, and the defaults settled, every settings
+change, and every item in the adoption checklist as done or not done with the
+reason. Items that describe the plugin's own
 behavior, such as "Planning behavior" and "Routing, execution, and quality",
 cannot be verified at install time. Report each of them as provided by the
 plugin and not yet verified, pending the live "Make a plan" check.
