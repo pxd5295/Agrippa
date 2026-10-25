@@ -154,8 +154,12 @@ To work on the plugin, see [CLAUDE.md](CLAUDE.md). Every change must leave
 
 ## License
 
-Apache License 2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE). You may use,
-modify, and redistribute Agrippa, including commercially, as long as the
-license and attribution travel with it and modified files say they were
-changed. The license does not grant use of the name Agrippa except to say
-where the work came from.
+Mozilla Public License 2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE). You
+may use, modify, and redistribute Agrippa, including commercially and as part
+of a proprietary system. A kit file that you change and then pass on must stay
+under this license with its source available; the files you add and the
+system around the kit may be under any terms. The files that Agrippa installs
+into your repository, and the plans, decision records, and code you produce
+with the methodology, are yours with no license obligation; `NOTICE` grants
+that permission. The license does not grant use of the name Agrippa except to
+say where the work came from.

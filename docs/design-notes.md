@@ -751,7 +751,41 @@ designs.
   area map, those entries decide whether a rule stays in the mode. The spawn
   log, when on, shows whether the tier and effort rules were followed.
 
-## Linter rules that are easy to trip over
+## License: Mozilla Public License 2.0 (2026-10-25)
+
+The kit moved from Apache 2.0 to the Mozilla Public License 2.0. The change
+started from a reading of the Corridor Key Licence 2.0, a Creative Commons
+BY-NC-SA base with additional terms that forbid resale and paid hosting,
+require public forks to be free, and charge large organisations per seat.
+Each of its conditions was put to the owner in turn, and the choices were:
+
+- Agrippa stays open source in the OSI sense, so no ban on selling it, on
+  paid hosted use, or on charging for forks, and no revenue threshold or
+  commercial agreement. Those are the three Corridor terms that make a license
+  source-available rather than open.
+- Agrippa may be the core of a larger proprietary system, but a kit file that
+  someone changes and passes on must stay open with its source available.
+  That is file-level copyleft triggered by distribution, which is the MPL 2.0
+  model (sections 3.1 to 3.3). Apache 2.0 has no such duty, and the GPL
+  family would pull the surrounding system in. Internal changes that never
+  leave the organisation carry no duty.
+- Contributions come in under the same license with no extra grant to the
+  owner, so everyone holds the same rights to them (MPL section 2.1 does
+  this on its own). Forks must keep the copyright notice but may rename the
+  project (section 3.4, and no trademark grant in 2.3).
+- Combining with GPL-family code stays allowed, so Exhibit B is not used.
+
+The MPL text is verbatim, because its section 10.3 requires a modified
+license to be renamed. The one addition Agrippa needs sits in `NOTICE`, where
+the copyright holder grants an additional permission: the documents the
+install and upgrade skills write from the templates, the plan workspace files,
+and the plans and code made with the methodology are the user's under any
+terms. Without it, a filled-in `AGENTS.md` in a closed repository would be a
+modified copy of a covered file. `NOTICE` also carries the Exhibit A notice
+for the whole kit folder in place of a header in each file, which Exhibit A
+allows and which keeps template text clean when it is copied into a project.
+`validate-kit.mjs` already required both files in both places and identical,
+so no check changed.
 
 These cost three lint rounds (62 errors down to 0) on one nuro-battler plan.
 The templates do not make them obvious, so they are candidates for either

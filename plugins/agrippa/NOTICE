@@ -1,5 +1,32 @@
 Agrippa
 Copyright 2026 Patrick Dalesio
 
-This product includes Agrippa, a planning and implementation methodology for
-Claude Code projects: https://github.com/pxd5295/Agrippa
+This Source Code Form is subject to the terms of the Mozilla Public
+License, v. 2.0. If a copy of the MPL was not distributed with this
+file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+This notice applies to every file in the kit folder in place of a header in
+each file, as Exhibit A of the license allows. The kit is Agrippa, a planning
+and implementation methodology for Claude Code projects:
+https://github.com/pxd5295/Agrippa
+
+Additional permission from the copyright holder
+-----------------------------------------------
+
+The kit's own files are Covered Software under the Mozilla Public License
+2.0. In addition to the rights that license grants, the copyright holder
+grants you permission to use, modify, and distribute the following under
+any terms you choose, with none of the license's obligations:
+
+1. The project documents that the install and upgrade skills write into
+   your repository from the kit's templates, and anything you write in
+   them.
+2. The plan workspace files created from the kit's templates, and anything
+   you write in them.
+3. The plans, specifications, decision records, and code that you produce
+   by using the methodology.
+
+This permission covers the files the kit writes into your repository and
+the work you do with the methodology. It does not cover copies of the kit
+itself, which remain under the Mozilla Public License 2.0 wherever they are
+installed or redistributed.

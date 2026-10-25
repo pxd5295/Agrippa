@@ -89,7 +89,7 @@ The methodology has three layers, and the kit installs all of them.
 | `skills/install/SKILL.md` | Not installed; the `/agrippa:install` skill, which installs the methodology in a repository that has none |
 | `skills/upgrade/SKILL.md` | Not installed; the `/agrippa:upgrade` skill, which upgrades an older methodology using `UPGRADING.md` |
 | `skills/survey/SKILL.md` | Not installed; the `/agrippa:survey` skill, which writes or refreshes `.agrippa/area-map.md` from repository evidence |
-| `LICENSE`, `NOTICE` | Not installed as methodology files; they stay with the kit folder. The Apache-2.0 license and the attribution notice that redistributed copies must carry |
+| `LICENSE`, `NOTICE` | Not installed as methodology files; they stay with the kit folder. The MPL-2.0 license, and the attribution notice that redistributed copies must carry, which also grants that installed documents and the work done with the methodology carry no license obligation |
 
 The project documents and the decision records live in `.agrippa/` at the
 repository root, a hidden folder named after the plugin, so that the kit never
