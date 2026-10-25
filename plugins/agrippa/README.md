@@ -99,22 +99,23 @@ any folder. Command-line `rg` skips hidden folders unless given `--hidden`;
 `git grep` and Claude Code's own search tools do not. Plan workspaces stay in
 `plans/`, where people work in them every day.
 
-Two development files live outside this folder, in the `dev/` folder of the
+The development tools live outside this folder, in the `dev/` folder of the
 Agrippa repository, and are never installed. `dev/fixtures/run-smoke-test.mjs`
-proves the plugin's linter, and `dev/validate-kit.mjs` checks that this kit
-is intact and self-consistent. Both run with `node`.
+proves the plugin's linter, `dev/validate-kit.mjs` checks that this kit is
+intact and self-consistent, and `dev/tool-paths.mjs` finds the `sh` and `perl`
+they run the plugin's scripts with. All run with `node`.
 
 ## Enabling the plugin in a project
 
 A project enables the plugin in its committed `.claude/settings.json`. The
 marketplace's `ref` pins the release the project gets. Set it to a release
-tag, such as the current `v0.3.1`.
+tag, such as the current `v0.4.0`.
 
 ```json
 {
   "extraKnownMarketplaces": {
     "agrippa": {
-      "source": { "source": "github", "repo": "pxd5295/Agrippa", "ref": "v0.3.1" }
+      "source": { "source": "github", "repo": "pxd5295/Agrippa", "ref": "v0.4.0" }
     }
   },
   "enabledPlugins": { "agrippa@agrippa": true }

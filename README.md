@@ -58,6 +58,12 @@ that need one.
   which spawns inherited the lead's model instead of the routed tier, and a
   documented pattern for an edit-lint hook that feeds lint findings back to
   the agent.
+- **Low-usage mode.** A project whose token limits the normal methodology
+  would exhaust sets one variable, `AGRIPPA_LOW_USAGE=1`, in its settings.
+  Seven rules are then replaced with cheaper ones (smaller reviews, Sonnet
+  instead of Opus for risk-flagged stages, one writer per wave, shallower
+  planning reads), every floor still holds, and nothing changes for a project
+  that leaves the variable unset.
 
 ## How it works
 
@@ -95,7 +101,7 @@ Add the marketplace and enable the plugin in the repository's committed
 {
   "extraKnownMarketplaces": {
     "agrippa": {
-      "source": { "source": "github", "repo": "pxd5295/Agrippa", "ref": "v0.3.1" }
+      "source": { "source": "github", "repo": "pxd5295/Agrippa", "ref": "v0.4.0" }
     }
   },
   "enabledPlugins": { "agrippa@agrippa": true }
