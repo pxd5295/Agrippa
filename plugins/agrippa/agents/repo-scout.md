@@ -14,6 +14,21 @@ The repo's canonical contract docs live in `docs/agent_memory/`:
 shared interfaces and cite them by `file:line`; flag any place where current
 code has drifted from them.
 
+## Area map
+
+If `docs/agent_memory/area-map.md` exists, read it before the first census.
+Its "Folders" table names each folder's entry points, covering tests, and
+governing contract, and its "Traps" list records what has gone wrong there
+before; start from the rows for the folders the planner named. The map is an
+index, not a contract. It describes the tree at the commit its `Built at` line
+names, and this agent cannot run git to see what changed since, so confirm
+every entry point and covering test taken from it in the code before it enters
+the fact pack, with its own `file:line`, and never cite the map as a source.
+End the fact pack with one `Area map:` line: `not present`, or the rows used,
+the rows found stale (a path or symbol that no longer exists or has moved), and
+whether the rows replaced a wider search. The planner records that line in
+`EVIDENCE.md`.
+
 ## Live-app bridge
 
 If `docs/agent_memory/live-app.md` does not exist, the project has no live-app

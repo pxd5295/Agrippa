@@ -43,8 +43,10 @@
 // the 0.2.0 linter no longer loads. It must also keep no full copy of the rules
 // that now ship in the plan and design-first skills: plans/README.md and
 // docs/decisions/README.md are short pointers, and the old
-// docs/planning/CLAUDE.md is gone. Each failure names the file or setting and
-// says what to do. The check is skipped when this is omitted.
+// docs/planning/CLAUDE.md is gone. A docs/agent_memory/area-map.md, when
+// present, names its Built at commit and carries no install marker. Each
+// failure names the file or setting and says what to do. The check is skipped
+// when this is omitted.
 //
 // Errors are printed one per stdout line, kit errors as `ERROR: ...` and
 // installed-repository errors as `INSTALLED REPO: ...`, warnings to stderr as
@@ -212,13 +214,14 @@ function readKitFile(relativePath) {
 // Agents load from agents/ and skills from skills/ at the plugin root, under
 // the agrippa: prefix. A project never keeps a copy of them. The four kit
 // skills are the methodology's working skills; plan and handoff are entry
-// points. install and upgrade set a project up; an older kit never copied
-// them, so a project skill with one of those names is not a leftover copy.
+// points. install, upgrade, and survey set a project up or write one of its
+// documents; an older kit never copied them, so a project skill with one of
+// those names is not a leftover copy.
 const agentNames = ['repo-scout', 'plan-reviewer', 'design-reviewer', 'validator'];
 const skillNames = ['design-first', 'systematic-debugging', 'verify-before-done', 'receiving-review'];
 const pluginSkillNames = ['plan', 'handoff'];
 const allSkillNames = [...skillNames, ...pluginSkillNames];
-const setupSkillNames = ['install', 'upgrade'];
+const setupSkillNames = ['install', 'upgrade', 'survey'];
 const shippedSkillNames = [...allSkillNames, ...setupSkillNames];
 const planningNames = ['SPEC', 'PLAN', 'PACKETS', 'STATUS', 'EVIDENCE'];
 
@@ -245,6 +248,7 @@ const required = [
     'templates/PROJECT-CONTRACTS.md',
     'templates/VALIDATION-COMMANDS.md',
     'templates/LIVE-APP.md',
+    'templates/AREA-MAP.md',
     'templates/agent-memory-CLAUDE.md',
     'templates/decisions-README.md',
     'templates/plans-README.md',
@@ -348,6 +352,10 @@ const spec = readKitFile('skills/plan/templates/SPEC.md');
 const workspaceFiles = readKitFile('skills/plan/reference/workspace-files.md');
 const decisionRecords = readKitFile('skills/design-first/reference/decision-records.md');
 const workspaceLinter = readKitFile('scripts/validate_plan_workspace.mjs');
+const areaMap = readKitFile('templates/AREA-MAP.md');
+const surveySkill = readKitFile('skills/survey/SKILL.md');
+const repoScout = readKitFile('agents/repo-scout.md');
+const evidence = readKitFile('skills/plan/templates/EVIDENCE.md');
 
 // --- Every template, script, hook, agent, skill, and bin file is listed in the README layout table
 
@@ -557,6 +565,8 @@ testClauses('Workflow template', workflow, [
     'checks shape, never truth',
     'Prompt-scenario contract',
     'Planning on Claude Fable 5\\.1',
+    'docs/agent_memory/area-map\\.md',
+    '`area map`\\s+entry',
 ]);
 testClauses('Routing template', routing, [
     '## Model-tier routing table',
@@ -640,7 +650,40 @@ const setupClauses = [
 testClauses('Skill install', installSkill, [...setupClauses,
     'Never copy the plugin',
     '/agrippa:upgrade',
+    '`agrippa:survey`',
 ]);
+// The survey skill writes the one on-demand knowledge document. It discovers
+// read-only, names the commit it describes, keeps the map out of the contract
+// table, and says how the map's gain is measured, so the knowledge layer grows
+// only on evidence.
+testClauses('Skill survey', surveySkill, [
+    '(?m)^description:.*only when the user explicitly asks',
+    'Never change application code',
+    'read-only',
+    '\\$\\{CLAUDE_PLUGIN_ROOT\\}/templates/AREA-MAP\\.md',
+    'docs/agent_memory/area-map\\.md',
+    '`Built at`',
+    'git diff --name-only',
+    'Never infer a trap',
+    '"Contract documents"',
+    'never\\s+write a per-directory `CLAUDE\\.md`',
+    'install-marker scan',
+    'AskUserQuestion',
+    '`area map`\\s+entry',
+]);
+testClauses('AREA-MAP template', areaMap, [
+    '(?m)^Built at:',
+    'It is not a contract',
+    '## Folders',
+    '\\| Folder \\| Ownership area \\| Entry points \\| Covering tests \\| Contract \\|',
+    '## Not mapped',
+    '## Traps',
+]);
+// The map is read by the scout, which has no git, so it verifies rows in the
+// code and reports what it used; the planner records that in EVIDENCE.md.
+addCheck(/## Area map/.test(repoScout) && /docs\/agent_memory\/area-map\.md/.test(repoScout) && /`Area map:` line/.test(repoScout), 'agents/repo-scout.md must read docs/agent_memory/area-map.md first and end its fact pack with an `Area map:` line.');
+addCheck(/area map/.test(evidence), 'EVIDENCE template must offer the `area map` entry kind.');
+addCheck(/area map/.test(workspaceFiles), 'Plan skill workspace-files.md must name the `area map` evidence entry.');
 testClauses('Skill upgrade', upgradeSkill, [...setupClauses,
     'SHA-256 manifest',
     'Get-FileHash -Algorithm SHA256',
@@ -1045,6 +1088,16 @@ if (installedRepo) {
             if (isFile(rulePath)) {
                 addProjectCheck(!ruleRegex(pattern).test(readText(rulePath)), `${document} still holds ${description}. Delete the copy, keeping the heading and the project's facts, as "From G4 v0.1.1" in UPGRADING.md says.`);
             }
+        }
+
+        // The area map is optional. When it exists, readers need the commit it
+        // describes to see what changed since, and the survey must have
+        // finished filling it.
+        const areaMapPath = join(projectRoot, 'docs', 'agent_memory', 'area-map.md');
+        if (isFile(areaMapPath)) {
+            const areaMapText = readText(areaMapPath);
+            addProjectCheck(/^Built at:\s*`[0-9a-f]{7,40}`/im.test(areaMapText), 'docs/agent_memory/area-map.md has no `Built at:` line naming the commit it describes. Run /agrippa:survey, which writes it; the planner needs it to see which folders changed since.');
+            addProjectCheck(!/\[PROJECT:|Install note/.test(areaMapText), 'docs/agent_memory/area-map.md still carries an install marker ([PROJECT: or Install note). Finish it with /agrippa:survey or delete it; a half-filled map misleads the planner.');
         }
 
         const planningNote = join(projectRoot, 'docs', 'planning', 'CLAUDE.md');

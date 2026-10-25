@@ -36,7 +36,12 @@ The methodology has three layers, and the kit installs all of them.
   selective reads, linting) as reference files. They load only for planning
   or plan implementation. The `design-first` skill holds
   `decision-records.md`, the decision-record rules, which load only when a
-  record is written.
+  record is written. A project may add one on-demand knowledge document,
+  `docs/agent_memory/area-map.md`, which `/agrippa:survey` builds from the
+  tree at a named commit: each folder's entry points, covering tests,
+  governing contract, and recorded traps. The planner and `repo-scout` read it
+  before a census and verify its rows in the code; it is never always-loaded
+  and never a contract source.
 - **Tools the rules call.** Four named agents, four skills, the plugin's
   `/agrippa:handoff` skill, the plan templates in the `plan` skill, the
   workspace linter that runs from the plugin as `agrippa-lint`,
@@ -53,6 +58,7 @@ The methodology has three layers, and the kit installs all of them.
 | `templates/PROJECT-CONTRACTS.md` | `docs/agent_memory/project-contracts.md` |
 | `templates/VALIDATION-COMMANDS.md` | `docs/agent_memory/validation-commands.md` |
 | `templates/LIVE-APP.md` | `docs/agent_memory/live-app.md`, only when the project has an MCP server that observes the running application |
+| `templates/AREA-MAP.md` | `docs/agent_memory/area-map.md`, only when the user runs `/agrippa:survey`; an on-demand index of folders with the commit it was built at |
 | `templates/agent-memory-CLAUDE.md` | `docs/agent_memory/CLAUDE.md` |
 | `templates/decisions-README.md` | `docs/decisions/README.md`, a short pointer that says what the folder holds. It has no rules; they are in the `design-first` skill |
 | `templates/plans-README.md` | `plans/README.md`, a short pointer that says what the folder holds. It has no rules; they are in the `plan` skill |
@@ -79,6 +85,7 @@ The methodology has three layers, and the kit installs all of them.
 | `skills/handoff/SKILL.md` | Not installed; the `/agrippa:handoff` skill, which writes a short session handoff |
 | `skills/install/SKILL.md` | Not installed; the `/agrippa:install` skill, which installs the methodology in a repository that has none |
 | `skills/upgrade/SKILL.md` | Not installed; the `/agrippa:upgrade` skill, which upgrades an older methodology using `UPGRADING.md` |
+| `skills/survey/SKILL.md` | Not installed; the `/agrippa:survey` skill, which writes or refreshes `docs/agent_memory/area-map.md` from repository evidence |
 | `LICENSE`, `NOTICE` | Not installed as methodology files; they stay with the kit folder. The Apache-2.0 license and the attribution notice that redistributed copies must carry |
 
 Two development files live outside this folder, in the `dev/` folder of the
@@ -137,8 +144,9 @@ contain no `[PROJECT: ...]` slot, and `dev/validate-kit.mjs` fails if one
 appears. They are project-neutral and
 read the project's facts from named sections of
 `docs/agent_memory/project-contracts.md`,
-`docs/agent_memory/validation-commands.md`, and, when the project has a
-live-app bridge, `docs/agent_memory/live-app.md`. So a project fact goes in
+`docs/agent_memory/validation-commands.md`, when the project has a
+live-app bridge, `docs/agent_memory/live-app.md`, and, when the project ran
+`/agrippa:survey`, `docs/agent_memory/area-map.md`. So a project fact goes in
 one of those documents, never in an agent or skill.
 
 One more install-time marker is removed during install. A line or comment
@@ -228,6 +236,27 @@ and two development checks that run from an Agrippa checkout:
 `node dev/fixtures/run-smoke-test.mjs -RepoRoot`. An optional argument names the
 release tag to pin.
 
+## Surveying the repository
+
+```text
+/agrippa:survey
+```
+
+The skill reads the tree read-only and writes `docs/agent_memory/area-map.md`
+from `templates/AREA-MAP.md`: one row per folder with its ownership area,
+entry points as `file:symbol`, covering tests, and governing contract, a list
+of folders deliberately not mapped, and the traps recorded in per-directory
+`CLAUDE.md` files, decision records, and plan evidence. The map's `Built at`
+line names the commit it describes. Run it again, with a folder as the
+argument to refresh only that folder, when the rows go stale.
+
+The map is on demand. Nothing about it is loaded at session start, because the
+one independent study of instruction files found more cost and no gain. The
+planner and `repo-scout` open it only when a plan touches a folder, verify the
+rows they use in the code, and record in the plan's `EVIDENCE.md` whether the
+map saved a read or misled. Those entries decide whether the map is kept,
+refreshed, or dropped, and whether a larger knowledge layer is worth building.
+
 ## Upgrading an older planning methodology
 
 Use this for any repository that already has planning rules: an earlier
@@ -295,5 +324,7 @@ copy of the rules that now ship in the skills: a `plans/README.md` or
 short pointer, the old `docs/planning/CLAUDE.md`, or the generic rule
 sentences that templates up to v0.1.1 wrote into `project-contracts.md`,
 `validation-commands.md`, `live-app.md`, and `AGENTS.md`, which it recognizes
-by their template wording. Each failure names the file or setting and what to
-do. Without `-InstalledRepo`, it checks only the kit.
+by their template wording. A `docs/agent_memory/area-map.md`, when present,
+must carry its `Built at` commit and no install marker. Each failure names the
+file or setting and what to do. Without `-InstalledRepo`, it checks only the
+kit.

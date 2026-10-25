@@ -89,6 +89,9 @@ focused questions in chat. The usual questions are:
 - ownership boundaries that are ambiguous;
 - which interfaces count as frozen;
 - the risk classes that apply;
+- whether to survey the folders into `docs/agent_memory/area-map.md` once the
+  documents are written. The map is optional and read only during planning;
+  recommend it for a repository with more than a handful of folders;
 - whether to turn on the plugin's spawn logger;
 - whether to write an edit-lint hook;
 - whether to add the permission allowlist from `templates/hooks/README.md`.
@@ -124,6 +127,10 @@ Write every layout-table row whose destination is a repository path, except
 - Write `docs/agent_memory/live-app.md` only when the project has an MCP
   server that observes the running application, and list every one of its
   authoring tools there.
+- Write `docs/agent_memory/area-map.md` only when the user said yes in step
+  4, and only by loading `agrippa:survey` and following it from its discovery
+  step; never fill `templates/AREA-MAP.md` by hand. Skip it otherwise; the
+  planner and `agrippa:repo-scout` treat a missing map as "no map".
 - Write `tools/validate_plan_workspace.local.mjs`, from
   `templates/validate-plan-workspace.local.mjs`, only when the repository has
   command invariants worth enforcing in every plan. Never copy or edit the

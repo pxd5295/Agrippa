@@ -51,7 +51,10 @@ there.
   action, and concise gate summaries. Delete obsolete launch fields after
   launch rather than accumulating history.
 - `EVIDENCE.md` is append-only and holds detailed command output, manual
-  checks, routing outcomes, escalations, and justified exceptions.
+  checks, routing outcomes, escalations, justified exceptions, and one
+  `area map` entry when the plan consulted `docs/agent_memory/area-map.md`
+  (the rows used, the rows found stale, and whether they saved a read or
+  misled).
 
 ## Selective reads and soft budgets
 

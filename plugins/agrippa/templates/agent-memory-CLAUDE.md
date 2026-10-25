@@ -13,6 +13,11 @@ cite them; they must stay accurate.
 - [PROJECT: one bullet per further contract file, saying what it owns and
   whether it is authoritative for a frozen interface. Mark a superseded file
   as quarantined rather than deleting it.]
+- `area-map.md` — an index of folders (entry points, covering tests,
+  governing contract, recorded traps) that `/agrippa:survey` builds at a named
+  commit. It is **not** a contract: nothing freezes against it, and a row is
+  verified in the code before it is cited. [PROJECT: delete this bullet if
+  the survey has not been run.]
 
 ## Rules for editing
 

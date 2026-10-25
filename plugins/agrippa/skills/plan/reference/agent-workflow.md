@@ -20,6 +20,18 @@ interfaces and consumers. Do not spawn planning subagents by default; the
 read-only `repo-scout` is allowed only when a broad census or long-context
 extraction would otherwise dominate, and its fact-pack value is recorded.
 
+If `docs/agent_memory/area-map.md` exists, open it first for the folders the
+change touches. Its rows name the entry points and covering tests to read and
+the contract that governs each folder, and its "Traps" list records what has
+gone wrong there before. Check its `Built at` commit with
+`git diff --name-only <commit> -- <folder>`: a row whose folder changed since
+is verified in the code before it is cited, and the map is never a
+`Contract source:`. Append one `area map` entry to `EVIDENCE.md` per plan
+that consulted it, saying which rows were used, which were stale, and whether
+they replaced a wider read or misled. Those entries decide whether the map is
+kept, refreshed with `/agrippa:survey`, or dropped, and whether any larger
+knowledge layer is worth building.
+
 For every symbol a plan deletes or changes, run the consumer census during
 planning. Record every call site in the frozen contract with `file:line` and a
 matching snippet. Pre-authorize the exact bounded ownership expansion needed

@@ -479,6 +479,52 @@ and upgrade skills print the two commands as `node <Agrippa>/dev/...`, and
   new name, and runs the smoke test with `process.execPath` rather than
   looking `node` up on PATH.
 
+## The knowledge layer grows on demand: the area map (2026-10-24)
+
+A proposal to deepen the plugin's knowledge layer at install time, with a
+`CLAUDE.md` in every subfolder and a generated wiki or code graph, and to
+retire `AGENTS.md` in their favour, became one on-demand document instead:
+`docs/agent_memory/area-map.md`, written by the new `/agrippa:survey` skill
+from `templates/AREA-MAP.md`. One row per folder gives its ownership area,
+entry points as `file:symbol`, covering tests, and governing contract; a
+"Not mapped" list names generated and vendored folders; a "Traps" list holds
+only incidents that are recorded somewhere. The `Built at` line names the
+commit the rows describe.
+
+- **Why not a `CLAUDE.md` per folder.** Claude Code loads every `CLAUDE.md`
+  on the path from the root to the edited file, so generated folder files are
+  always-loaded context. The only independent study of instruction files
+  (`docs/research-2026-08.md`, "Still open") found more than 20% extra cost
+  and no gain, and the kit's standing answer is to keep the always-loaded
+  pair lean. The install rule stays: one per-directory `CLAUDE.md` per area
+  with real rules, and the survey never writes one.
+- **Why `AGENTS.md` stays.** It holds decisions a survey cannot derive from
+  code: the ownership boundaries, which interfaces are frozen, and the
+  project rules stricter than the core. Derived facts go in the map, where
+  they are read only when a plan touches the folder.
+- **An index, not a contract.** Every earlier drift problem in these notes
+  came from a second copy of a fact. The map is therefore excluded from the
+  "Contract documents" table, is never a `Contract source:`, and every row a
+  reader uses is verified in the code first. `repo-scout` has no Bash, so it
+  cannot compare `Built at` with `HEAD`; the planner runs
+  `git diff --name-only <commit> -- <folder>` and the scout confirms each
+  entry point and covering test by `file:line` before it enters the fact
+  pack. The `agent-memory-CLAUDE.md` template says the same in the project.
+- **Measured before it grows.** Every plan that consults the map appends an
+  `area map` entry to `EVIDENCE.md` (rows used, rows stale, saved a read or
+  misled), and the scout ends its fact pack with an `Area map:` line for the
+  planner to record. The research note asked for exactly this kind of data.
+  A graph or wiki waits until those entries show a gain.
+- **A setup skill, outside the core rules.** `survey` is listed with
+  `install` and `upgrade` in `validate-kit.mjs`, not with the four working
+  skills, so the core-rules roster check does not require it and the rules
+  stay at 9,895 of 10,000 characters. The planner learns of the map from the
+  `plan` skill's `agent-workflow.md`, which already loads for every plan.
+- **Checks.** `validate-kit.mjs` requires the template and the skill, their
+  README layout rows, the clauses above in the skill, template, scout,
+  workflow guide, and evidence template, and, with `-InstalledRepo`, a
+  `Built at` commit and no install marker in a project's map.
+
 ## Linter rules that are easy to trip over
 
 These cost three lint rounds (62 errors down to 0) on one nuro-battler plan.

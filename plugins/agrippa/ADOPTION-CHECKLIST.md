@@ -52,6 +52,9 @@ named as not done, with the reason.
       pointers from `templates/`, with no copy of the rules the `plan` and
       `design-first` skills hold, and `docs/planning/` has no `CLAUDE.md`
       from an older kit.
+- [ ] `docs/agent_memory/area-map.md` was written by `/agrippa:survey` with a
+      `Built at` commit and every row checked against the tree, or the user
+      declined the survey and the file does not exist.
 - [ ] The `engineering:*` skills are available, or the hand-written fallback
       is noted.
 - [ ] The README's install-marker scan finds nothing outside the kit folder.
