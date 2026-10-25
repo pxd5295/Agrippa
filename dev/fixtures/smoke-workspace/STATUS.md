@@ -6,6 +6,7 @@
 
 - Planner: kit fixture
 - Phase: Planned
+- Low-usage mode: off
 - Risk class: Low
 - Active wave/stage: None
 - Progress: 0/2; remaining: M1, Integration

@@ -8,6 +8,7 @@
 
 - Planner: [Claude model, e.g. Opus / Sonnet]
 - Phase: Planned
+- Low-usage mode: [on or off, from the core rules at planning time]
 - Active wave/stage: None
 - Progress: 0/[total stages]; remaining: [ordered stages]
 - Current owner/allocation: [owner, assigned tier, actual tier, routing or `Unassigned`]

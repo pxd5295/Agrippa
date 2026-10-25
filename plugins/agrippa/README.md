@@ -34,7 +34,9 @@ The methodology has three layers, and the kit installs all of them.
   roster, packets, ownership, waves, launch, validator, review), and
   `workspace-files.md` (what each workspace file owns, handoff files,
   selective reads, linting) as reference files. They load only for planning
-  or plan implementation. The `design-first` skill holds
+  or plan implementation. A fourth, `low-usage.md`, loads only when the
+  project has opted in to low-usage mode (see "Normal use after
+  installation"). The `design-first` skill holds
   `decision-records.md`, the decision-record rules, which load only when a
   record is written. A project may add one on-demand knowledge document,
   `.agrippa/area-map.md`, which `/agrippa:survey` builds from the
@@ -64,14 +66,14 @@ The methodology has three layers, and the kit installs all of them.
 | `templates/plans-README.md` | `plans/README.md`, a short pointer that says what the folder holds. It has no rules; they are in the `plan` skill |
 | `agents/*.md` | Not installed; the plugin's agents `agrippa:repo-scout`, `agrippa:plan-reviewer`, `agrippa:design-reviewer`, and `agrippa:validator`. A project keeps no copy in `.claude/agents/` |
 | `skills/*/SKILL.md` | Not installed; the plugin's skills `agrippa:design-first`, `agrippa:systematic-debugging`, `agrippa:verify-before-done`, and `agrippa:receiving-review`, plus `plan` and `handoff` below. A project keeps no copy in `.claude/skills/` |
-| `templates/hooks/README.md` | Not installed; how to opt in to the plugin's spawn logger, the edit-lint hook a project writes for itself, and the permission allowlist |
+| `templates/hooks/README.md` | Not installed; how to opt in to the plugin's spawn logger and its low-usage mode, the edit-lint hook a project writes for itself, and the permission allowlist |
 | `templates/validate-plan-workspace.local.mjs` | `tools/validate_plan_workspace.local.mjs`, only when the project has command invariants to enforce |
 | `templates/MIGRATION.md` | `.agrippa/MIGRATION.md`, upgrades only |
 | `UPGRADING.md` | Not installed; the generation markers and rule mapping for upgrades |
 | `ADOPTION-CHECKLIST.md` | Not installed; every item is completed or reported |
 | `.claude-plugin/plugin.json` | Not installed; the plugin manifest |
 | `scripts/core-rules.md` | Not installed; the core rules the plugin adds to every session, kept under 10,000 characters |
-| `scripts/inject_core_rules.mjs` | Not installed; a Node script that prints `scripts/core-rules.md` as hook context |
+| `scripts/inject_core_rules.mjs` | Not installed; a Node script that prints `scripts/core-rules.md` as hook context, with the low-usage line after it only when the project sets `AGRIPPA_LOW_USAGE=1` |
 | `scripts/validate_plan_workspace.mjs` | Not installed; the shared plan-workspace linter, a Node script run from the plugin |
 | `bin/agrippa-lint` | Not installed; the plugin puts it on the Bash tool's PATH. It is a Node script that runs `scripts/validate_plan_workspace.mjs` and passes every argument through |
 | `scripts/log_subagent_spawns.mjs` | Not installed; the spawn logger, a Node script that does nothing unless the project sets `AGRIPPA_SPAWN_LOG=1` |
@@ -80,6 +82,7 @@ The methodology has three layers, and the kit installs all of them.
 | `skills/plan/reference/agent-workflow.md` | Not installed; the lifecycle guide, a `plan` skill reference file |
 | `skills/plan/reference/ROUTING.md` | Not installed; the routing guide, a `plan` skill reference file |
 | `skills/plan/reference/workspace-files.md` | Not installed; what each plan-workspace file owns, handoff files, selective reads, soft budgets, and linting, a `plan` skill reference file |
+| `skills/plan/reference/low-usage.md` | Not installed; the seven rules low-usage mode replaces with cheaper ones, a `plan` skill reference file read only when the project sets `AGRIPPA_LOW_USAGE=1` |
 | `skills/design-first/reference/decision-records.md` | Not installed; where decision records go, when one is required, and their shape, a `design-first` skill reference file |
 | `skills/plan/templates/*.md` | Not installed; the blank plan-workspace files, copied into each `plans/YYYY-MM-DD-<name>/` |
 | `skills/handoff/SKILL.md` | Not installed; the `/agrippa:handoff` skill, which writes a short session handoff |
@@ -304,6 +307,18 @@ implemented directly after a design statement. A plan ends with the first
 allocation and an exact resume prompt. `Implement plan [path]` then runs the
 lead plus routed subagents; no opt-in phrase or per-spawn confirmation is
 needed. `/agrippa:handoff` writes a short brief when a session ends mid-plan.
+
+**Low-usage mode.** A project whose token limits the normal methodology
+would exhaust sets `AGRIPPA_LOW_USAGE=1` in the `env` block of
+`.claude/settings.json`; `/agrippa:install` asks. The hook then appends one
+line to the core rules, and the `plan` skill's `low-usage.md` replaces seven
+rules with cheaper ones: a higher design-reviewer size floor, no reviewer
+self-escalation, Sonnet instead of Opus for risk-flagged stages, low spawn
+effort, one writer per wave, a wider skip-workspace gate, and shallower
+planning reads. Nothing else changes, every floor holds, and an absent
+variable is normal mode, so a normal session is not affected by the mode
+existing. "Low-usage mode" in `templates/hooks/README.md` has the details and
+the per-person override.
 
 ## Keeping the kit current
 

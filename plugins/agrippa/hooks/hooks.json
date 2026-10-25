@@ -1,5 +1,5 @@
 {
-  "description": "Adds the Agrippa core rules to every session at startup, resume, clear, and after compaction, and to every subagent. Logs subagent spawns to subagent-spawns.log only when the project sets AGRIPPA_SPAWN_LOG=1.",
+  "description": "Adds the Agrippa core rules to every session at startup, resume, clear, and after compaction, and to every subagent, with the low-usage line after them only when the project sets AGRIPPA_LOW_USAGE=1. Logs subagent spawns to subagent-spawns.log only when the project sets AGRIPPA_SPAWN_LOG=1.",
   "hooks": {
     "SessionStart": [
       {

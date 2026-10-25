@@ -6,7 +6,8 @@ subagent spawns that silently inherit the lead's model instead of the routed
 tier. The spawn logger ships in the agrippa plugin and only needs switching
 on. The edit-lint hook is the project's own: install its script under
 `tools/` and wire it in the project's `.claude/settings.json`. Merge into an
-existing `hooks` object; never replace one.
+existing `hooks` object; never replace one. Low-usage mode is not a hook, but
+it is switched on the same way, so it is described here too.
 
 ## Subagent spawn log (in the plugin, opt-in)
 
@@ -36,6 +37,47 @@ the normal shape for agents a dynamic workflow spawns.
 A project that still has its own copy of `tools/log_subagent_spawns.ps1`
 wired in `.claude/settings.json` removes that copy and its wiring when it
 opts in, or every spawn is logged twice.
+
+## Low-usage mode (in the plugin, opt-in)
+
+For token limits that the normal methodology would exhaust. The plugin's
+`SessionStart` and `SubagentStart` hook appends one line to the core rules
+when the project sets this variable, and nothing otherwise:
+
+```json
+{
+  "env": {
+    "AGRIPPA_LOW_USAGE": "1"
+  }
+}
+```
+
+The mode replaces seven rules with cheaper ones and changes nothing else.
+The two that apply to every change are in the appended line itself: the
+`design-reviewer` size floor rises from about 30 changed lines to about 80,
+and the `design-reviewer` and `plan-reviewer` agents never escalate
+themselves to Opus, naming the question they could not settle instead. The
+other five apply to plans and are in `low-usage.md`, a reference file of the
+`agrippa:plan` skill that loads only when the line is present: a risk-flagged
+stage routes to Sonnet at high effort instead of Opus, every spawn starts at
+low effort, each wave has one writer, a plan skips the workspace or uses the
+single-stage shape whenever one sequential writer can do the work, and
+planning reads stop at the third rung of the read ladder with the scout
+taking long reads. Every floor still holds: the design statement, the
+definition of done, the consumer census, the decision record, the linter,
+the `verify-before-done` gate, and the full suite at Integration. The lead's
+own model and reasoning effort are never touched.
+
+Token limits belong to a person, and the committed file belongs to the
+repository. A collaborator with different limits sets the variable to `"1"`
+or `"0"` in their own gitignored `.claude/settings.local.json`, which takes
+precedence over the committed value for that key. Any value other than `1`
+is normal mode. A committed value applies to a collaborator only once they
+trust the folder, like the rest of the committed settings.
+
+A plan written in the mode says `Low-usage mode: on` in `STATUS.md` and
+records in `EVIDENCE.md` each decision the mode changed, which is how the
+mode is judged over time.
 
 ## Edit-lint hook (pattern, write one per project)
 

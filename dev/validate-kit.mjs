@@ -16,7 +16,11 @@
 // rules are in the plan and design-first skills' reference files.
 // The core rules and templates still carry the methodology's required clauses,
 // the core rules stay under the 10,000-character hook context cap, and the
-// injection hook prints them when run with node. The spawn logger is wired and
+// injection hook prints them when run with node, unchanged without
+// AGRIPPA_LOW_USAGE and with the low-usage line after them, still under the
+// cap, when AGRIPPA_LOW_USAGE=1. The plan skill's low-usage.md names the seven
+// rules the mode replaces, the reviewers stop escalating in the mode, and the
+// install and upgrade skills offer it. The spawn logger is wired and
 // does nothing without AGRIPPA_SPAWN_LOG=1, and the agrippa-lint wrapper is an
 // executable LF Node script that runs the plugin's linter. No vocabulary from
 // an older toolchain survives outside UPGRADING.md and this script, text files
@@ -244,6 +248,7 @@ const required = [
     'skills/plan/reference/agent-workflow.md',
     'skills/plan/reference/ROUTING.md',
     'skills/plan/reference/workspace-files.md',
+    'skills/plan/reference/low-usage.md',
     'skills/design-first/reference/decision-records.md',
     'templates/AGENTS.md',
     'templates/CLAUDE.md',
@@ -359,6 +364,10 @@ const areaMap = readKitFile('templates/AREA-MAP.md');
 const surveySkill = readKitFile('skills/survey/SKILL.md');
 const repoScout = readKitFile('agents/repo-scout.md');
 const evidence = readKitFile('skills/plan/templates/EVIDENCE.md');
+const lowUsage = readKitFile('skills/plan/reference/low-usage.md');
+const statusTemplate = readKitFile('skills/plan/templates/STATUS.md');
+const hooksReadme = readKitFile('templates/hooks/README.md');
+const injectScript = readKitFile('scripts/inject_core_rules.mjs');
 
 // --- Every template, script, hook, agent, skill, and bin file is listed in the README layout table
 
@@ -495,24 +504,44 @@ function hookCommands(groups) {
         .flatMap((group) => asArray(group && group.hooks))
         .map((hook) => (hook && hook.command !== undefined && hook.command !== null ? String(hook.command) : ''));
 }
+// Low-usage mode is the one opt-in that changes the injected context. The
+// script exports the line it appends, so this check and the script cannot
+// disagree about it; the line must carry the two every-session rules and point
+// at the plan skill's guide for the rest.
+const lowUsageSource = /export const lowUsageLine = '([^']+)';/.exec(injectScript);
+addCheck(lowUsageSource !== null, 'scripts/inject_core_rules.mjs must export lowUsageLine, the one line it appends when AGRIPPA_LOW_USAGE=1.');
+const lowUsageLine = lowUsageSource === null ? '' : lowUsageSource[1];
+addCheck(/^Low-usage mode is on:/.test(lowUsageLine) && /80 lines/.test(lowUsageLine) && /never self-escalate/.test(lowUsageLine) && /low-usage\.md in agrippa:plan/.test(lowUsageLine), 'The low-usage line must start "Low-usage mode is on:", give the 80-line design-reviewer floor, say reviewers never self-escalate, and point at low-usage.md in agrippa:plan.');
+const normalizeContext = (text) => text.replace(/\r\n/g, '\n');
+const expectedContext = {
+    off: normalizeContext(coreRules),
+    on: `${normalizeContext(coreRules).replace(/\s+$/, '')}\n\n${lowUsageLine}\n`,
+};
+const hookEnvironment = { ...process.env };
+delete hookEnvironment.AGRIPPA_LOW_USAGE;
 for (const hookEvent of ['SessionStart', 'SubagentStart']) {
     const commands = hookCommands(hookGroups(hookEvent));
     const eventSuffix = new RegExp(` ${hookEvent}$`, 'i');
     const wired = commands.filter((command) => /^node "\$\{CLAUDE_PLUGIN_ROOT\}\/scripts\/inject_core_rules\.mjs"/i.test(command) && eventSuffix.test(command));
     addCheck(wired.length === 1, `hooks/hooks.json must run node scripts/inject_core_rules.mjs ${hookEvent} once on ${hookEvent}.`);
-    const hookRun = run(node, [join(kitRoot, 'scripts', 'inject_core_rules.mjs'), hookEvent]);
-    let hookPayload = null;
-    try {
-        hookPayload = JSON.parse(hookRun.stdout);
-    } catch {
-        hookPayload = null;
+    for (const mode of ['off', 'on']) {
+        const env = mode === 'on' ? { ...hookEnvironment, AGRIPPA_LOW_USAGE: '1' } : hookEnvironment;
+        const hookRun = run(node, [join(kitRoot, 'scripts', 'inject_core_rules.mjs'), hookEvent], { env });
+        let hookPayload = null;
+        try {
+            hookPayload = JSON.parse(hookRun.stdout);
+        } catch {
+            hookPayload = null;
+        }
+        let printed = '';
+        if (hookPayload !== null && hookPayload.hookSpecificOutput
+            && String(hookPayload.hookSpecificOutput.hookEventName).toLowerCase() === hookEvent.toLowerCase()) {
+            printed = String(hookPayload.hookSpecificOutput.additionalContext ?? '');
+        }
+        const described = mode === 'on' ? 'core-rules.md followed by the low-usage line, with AGRIPPA_LOW_USAGE=1,' : 'core-rules.md unchanged, without AGRIPPA_LOW_USAGE,';
+        addCheck(hookRun.exitCode === 0 && normalizeContext(printed) === expectedContext[mode], `inject_core_rules.mjs ${hookEvent} did not print ${described} as ${hookEvent} additionalContext:\n${hookRun.output}`);
+        addCheck(printed.length < 10000, `inject_core_rules.mjs ${hookEvent} with low-usage mode ${mode} prints ${printed.length} characters, over the 10,000-character hook context cap.`);
     }
-    let printed = '';
-    if (hookPayload !== null && hookPayload.hookSpecificOutput
-        && String(hookPayload.hookSpecificOutput.hookEventName).toLowerCase() === hookEvent.toLowerCase()) {
-        printed = String(hookPayload.hookSpecificOutput.additionalContext ?? '');
-    }
-    addCheck(hookRun.exitCode === 0 && printed.replace(/\r\n/g, '\n') === coreRules.replace(/\r\n/g, '\n'), `inject_core_rules.mjs ${hookEvent} did not print core-rules.md as ${hookEvent} additionalContext:\n${hookRun.output}`);
 }
 
 // The spawn logger runs on PreToolUse for the Agent tool and on every
@@ -664,6 +693,9 @@ const setupClauses = [
     'node --version',
     'Node\\.js is not\\s+installed',
     'Never\\s+write a\\s+shell-language copy',
+    // Low-usage mode is offered like the spawn logger: one question, and the
+    // env entry only on a yes.
+    'AGRIPPA_LOW_USAGE',
 ];
 testClauses('Skill install', installSkill, [...setupClauses,
     'Never copy the plugin',
@@ -716,6 +748,38 @@ testClauses('Skill upgrade', upgradeSkill, [...setupClauses,
     '\\$\\{CLAUDE_PLUGIN_ROOT\\}/UPGRADING\\.md',
     '\\.agrippa/MIGRATION\\.md',
 ]);
+// Low-usage mode replaces exactly seven rules, named in the plan skill's
+// guide, which loads only when the injected line says the mode is on. The
+// guide lists only the replacements, so a normal session is never affected
+// by it; the two every-session rules travel in the line itself and the two
+// reviewers read it to stop escalating. STATUS.md records the mode so a plan
+// shows what shaped it.
+testClauses('Plan skill low-usage.md', lowUsage, [
+    '# Low-usage mode',
+    'AGRIPPA_LOW_USAGE=1',
+    'changes nothing else',
+    '\\| Rule \\| Normal, in the file that owns it \\| Low-usage mode \\|',
+    '\\| Design-reviewer size floor \\|',
+    '\\| Reviewer self-escalation \\|',
+    '\\| Opus row of the tier table \\|',
+    '\\| Spawn reasoning effort \\|',
+    '\\| Concurrent writers \\|',
+    '\\| One-writer planning \\|',
+    '\\| Read depth and the scout \\|',
+    'never put to the user',
+    '`Resolved by: default`',
+    '`Low-usage mode: on`',
+    'EVIDENCE\\.md',
+]);
+addCheck((lowUsage.match(/^\| [^|]+ \| [^|]+ \| [^|]+ \|$/gm) || []).length === 8, 'Plan skill low-usage.md must have exactly seven rule rows under its header row; add a rule to the kit, the README, and this check together.');
+addCheck(/\$\{CLAUDE_SKILL_DIR\}\/reference\/low-usage\.md/.test(readKitFile('skills/plan/SKILL.md')) && /low-usage mode is on/i.test(readKitFile('skills/plan/SKILL.md')), 'Skill plan must list reference/low-usage.md and say it is read only when the core rules say low-usage mode is on.');
+addCheck(/^- Low-usage mode:/m.test(statusTemplate), 'STATUS template must carry the "Low-usage mode:" line under Current state.');
+for (const name of ['design-reviewer', 'plan-reviewer']) {
+    addCheck(/low-usage mode is\s+on, do not\s+escalate/i.test(readKitFile(`agents/${name}.md`)), `agents/${name}.md must say that in low-usage mode it does not escalate and names the question instead.`);
+}
+addCheck(/## Low-usage mode/.test(hooksReadme) && /"AGRIPPA_LOW_USAGE": "1"/.test(hooksReadme) && /settings\.local\.json/.test(hooksReadme), 'templates/hooks/README.md must describe low-usage mode, its env entry, and the per-person override in settings.local.json.');
+addCheck(/AGRIPPA_LOW_USAGE=1/.test(adoption), 'Adoption checklist must carry the low-usage mode item.');
+addCheck(/AGRIPPA_LOW_USAGE=1/.test(readme) && /low-usage\.md/.test(readme), 'README must describe low-usage mode and list low-usage.md.');
 addCheck(matches(workspaceFiles, '(?s)SPEC\\.md.*PLAN\\.md.*PACKETS\\.md.*STATUS\\.md.*EVIDENCE\\.md'), 'Plan skill workspace-files.md must name all five workspace artifacts.');
 testClauses('Plan skill workspace-files.md', workspaceFiles, [
     '## Artifact contract',
@@ -1034,6 +1098,13 @@ if (installedRepo) {
                     const loggerCommands = commands.filter((command) => /log_subagent_spawns\.ps1/i.test(command));
                     addProjectCheck(loggerCommands.length === 0, `.claude/settings.json hooks.${hookEvent} runs a local spawn logger (${loggerCommands.join('; ')}). Remove that hook entry; the plugin runs the spawn logger when the env block sets AGRIPPA_SPAWN_LOG=1.`);
                 }
+            }
+            // Low-usage mode is on only for the exact value "1"; "0" is an
+            // explicit off, usually a per-person override. Anything else is
+            // probably a typo that silently leaves the mode off.
+            if (settings.env !== undefined && settings.env !== null && settings.env.AGRIPPA_LOW_USAGE !== undefined) {
+                const lowUsageValue = String(settings.env.AGRIPPA_LOW_USAGE);
+                addProjectCheck(lowUsageValue === '1' || lowUsageValue === '0', `.claude/settings.json env.AGRIPPA_LOW_USAGE is '${lowUsageValue}'. The plugin turns low-usage mode on only for "1"; set it to "1", set it to "0", or remove it.`);
             }
             if (settings.permissions !== undefined && settings.permissions !== null) {
                 for (const list of ['allow', 'ask', 'deny']) {

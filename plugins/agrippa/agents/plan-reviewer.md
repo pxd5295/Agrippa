@@ -83,4 +83,6 @@ End with a clear verdict: acceptance IDs met, or the exact remaining gap.
 
 Escalate to Opus reasoning when the diff carries native, persistence, or
 security risk and the review needs deeper analysis than the assigned tier
-supports; report that you did so.
+supports; report that you did so. When the core rules say low-usage mode is
+on, do not escalate: name the question the assigned tier could not settle, and
+leave the decision to the lead.

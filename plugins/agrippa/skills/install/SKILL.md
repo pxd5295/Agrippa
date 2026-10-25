@@ -25,7 +25,7 @@ The kit files this skill uses are in the plugin:
 | `${CLAUDE_PLUGIN_ROOT}/README.md` | The layout table, "Enabling the plugin in a project", the placeholder convention, and the install-marker scan |
 | `${CLAUDE_PLUGIN_ROOT}/ADOPTION-CHECKLIST.md` | Every item is done or reported at the end |
 | `${CLAUDE_PLUGIN_ROOT}/templates/` | The project-side documents |
-| `${CLAUDE_PLUGIN_ROOT}/templates/hooks/README.md` | The spawn-logger opt-in, the edit-lint hook rules, and the permission allowlist |
+| `${CLAUDE_PLUGIN_ROOT}/templates/hooks/README.md` | The spawn-logger opt-in, the low-usage mode opt-in, the edit-lint hook rules, and the permission allowlist |
 | `${CLAUDE_PLUGIN_ROOT}/skills/plan/reference/agent-workflow.md` | Its "Validation matrix values" section, which defines the Sandbox and Determinism values the command catalog records |
 | `${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json` | The plugin version, which names the release tag to pin |
 
@@ -130,6 +130,12 @@ focused questions in chat. The usual questions are:
   documents are written. The map is optional and read only during planning;
   recommend it for a repository with more than a handful of folders;
 - whether to turn on the plugin's spawn logger;
+- whether to turn on the plugin's low-usage mode, for token limits that the
+  normal methodology would exhaust. Recommend no. Say in one sentence what it
+  trades: fewer review passes, cheaper tiers, one writer per wave, and
+  shallower planning reads, as "Low-usage mode" in `templates/hooks/README.md`
+  describes. A collaborator with different limits can override the committed
+  value in their own `.claude/settings.local.json`;
 - whether to write an edit-lint hook;
 - whether to add the permission allowlist from `templates/hooks/README.md`.
   Never add a permission rule, and never set a permission mode, without a yes
@@ -198,9 +204,11 @@ the existing file. Never replace or reorder its other entries, and never touch
 3. Add `"agrippa@agrippa": true` under `enabledPlugins`.
 4. If the user chose the spawn logger, add `"AGRIPPA_SPAWN_LOG": "1"` to the
    `env` block and `subagent-spawns.log` to `.gitignore`.
-5. If the user chose an edit-lint hook and it is proved, add its `PostToolUse`
+5. If the user chose low-usage mode, add `"AGRIPPA_LOW_USAGE": "1"` to the
+   `env` block. Write nothing for a no; an absent variable is normal mode.
+6. If the user chose an edit-lint hook and it is proved, add its `PostToolUse`
    entry to `hooks`.
-6. If the user said yes to the permission allowlist, add those rules to
+7. If the user said yes to the permission allowlist, add those rules to
    `permissions.allow`, including `Bash(agrippa-lint:*)` and the exact test and
    build executables from `validation-commands.md`.
 

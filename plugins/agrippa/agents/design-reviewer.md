@@ -128,4 +128,6 @@ Escalate to Opus reasoning when the diff touches a shared interface, a base
 class, or the highest-risk dispatch layer that the Native/ABI row of "High-risk
 change classes" in `.agrippa/project-contracts.md` names, and the
 placement question needs more analysis than the assigned tier supports; report
-that you did so.
+that you did so. When the core rules say low-usage mode is on, do not
+escalate: name the placement question the assigned tier could not settle, and
+leave the decision to the lead.

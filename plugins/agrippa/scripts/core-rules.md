@@ -10,9 +10,8 @@ spawns.
 
 Two guides load on demand, only for plan creation or implementation, never
 both eagerly. They are reference files of the `agrippa:plan` skill, which also
-holds the plan templates: `agent-workflow.md` (lifecycle, artifacts,
-interview, risk, evidence, acceptance, validation) and `ROUTING.md`
-(topology, tiers, packets, waves, ownership, launch, review).
+holds the plan templates: `agent-workflow.md` (lifecycle, evidence,
+validation) and `ROUTING.md` (tiers, packets, waves, review).
 
 ## Request boundaries and model freedom
 

@@ -27,7 +27,7 @@ The kit files this skill uses are in the plugin:
 | `${CLAUDE_PLUGIN_ROOT}/README.md` | The layout table, "Enabling the plugin in a project", the placeholder convention, and the install-marker scan |
 | `${CLAUDE_PLUGIN_ROOT}/ADOPTION-CHECKLIST.md` | Every item is done or reported at the end |
 | `${CLAUDE_PLUGIN_ROOT}/templates/` | The project-side documents, including `MIGRATION.md` |
-| `${CLAUDE_PLUGIN_ROOT}/templates/hooks/README.md` | The spawn-logger opt-in, the edit-lint hook rules, and the permission allowlist |
+| `${CLAUDE_PLUGIN_ROOT}/templates/hooks/README.md` | The spawn-logger opt-in, the low-usage mode opt-in, the edit-lint hook rules, and the permission allowlist |
 | `${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json` | The plugin version, which names the release tag to pin |
 
 ## 1. Check Node and read the kit
@@ -103,9 +103,10 @@ Show the whole mapping to the user. Then ask with `AskUserQuestion`:
   "delete all" choice;
 - about removing project-wide model or reasoning-effort pins and old toolchain
   configuration;
-- about the optional spawn logger, the edit-lint hook, and the permission
-  allowlist, as `/agrippa:install` does. Never add a permission rule, and
-  never set a permission mode, without a yes to this question.
+- about the optional spawn logger, low-usage mode (`AGRIPPA_LOW_USAGE=1`),
+  the edit-lint hook, and the permission allowlist, as `/agrippa:install`
+  does. Never add a permission rule, and never set a permission mode, without
+  a yes to this question.
 
 `AskUserQuestion` takes at most four questions per call, so split a longer
 list across calls. Without `AskUserQuestion`, ask the same questions in chat.

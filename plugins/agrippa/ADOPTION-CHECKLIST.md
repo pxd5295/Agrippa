@@ -87,6 +87,9 @@ named as not done, with the reason.
       with `AGRIPPA_SPAWN_LOG=1` in `.claude/settings.json` and
       `subagent-spawns.log` in `.gitignore`. An edit-lint hook follows the
       rules in `templates/hooks/README.md`.
+- [ ] Low-usage mode is on with `AGRIPPA_LOW_USAGE=1` in `.claude/settings.json`
+      and a new session's core rules end with the low-usage line, or the
+      variable is absent and the mode is reported as off.
 
 ## Planning behavior
 

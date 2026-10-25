@@ -666,6 +666,91 @@ adopted. The self-check requires the workflow guide to carry the sentence
 that rules the score out and the user's escape phrase, and the SPEC template
 to carry the `Resolved by` column. The linter does not read the table.
 
+## Low-usage mode: one switch, seven rules (2026-10-25)
+
+A project whose token limits the normal methodology would exhaust can set
+`AGRIPPA_LOW_USAGE=1` in the `env` block of `.claude/settings.json`. The
+`SessionStart` and `SubagentStart` hook then appends one line to the core
+rules, and the `plan` skill gains a reference file, `low-usage.md`, that the
+planner reads only when that line is present. The mode replaces seven rules
+with cheaper ones and nothing else. The study behind it compared four
+designs.
+
+- **Not three profiles.** The first proposal was low, medium, and high, with
+  the kit today as medium. A pass over every file found 27 levers, and 26 of
+  them had a distinct low value and 18 a distinct high value: 44 cells of
+  alternative behavior to keep in step with the normal text, each one a place
+  for the rules to drift. The high column was mostly "same as medium", which
+  gave the second reason: spending more never breaks a rule, so a user with
+  large limits can ask for an Opus reviewer or a full suite after each wave
+  in the moment. Spending less does break rules, and the core rules say the
+  stricter rule wins when a project's `AGENTS.md` disagrees, so a project has
+  no sanctioned way to loosen one. A low switch needs to exist; a high one
+  does not.
+- **Not per-rule toggles.** The cost levers are correlated: someone with
+  small limits wants all of them, and someone without wants none. Toggles
+  would create combinations nobody intends, one install question per toggle
+  on top of the seven the install already asks, and one injected line per
+  toggle against a hook context cap with 146 characters of headroom. Toggles
+  suit options that are independent of one another, which is what the kit
+  already uses them for: the spawn logger, the edit-lint hook, and the
+  permission allowlist. If a project ever needs to keep one rule at normal,
+  an exclusion list is a subtraction from a list that already exists and does
+  not reopen the maintenance problem; it waits for a project that asks.
+- **Why these seven.** Each one fires on every change, spawns a model, or
+  multiplies cost per writer: the design-reviewer size floor (30 to about
+  80 changed lines), no reviewer self-escalation to Opus, the risk row of the
+  tier table routed to Sonnet at high effort with Opus as the ceiling, every
+  spawn starting at low effort, one writer per wave, the skip-workspace gate
+  widened to any one-writer one-area change with the single-stage shape
+  whenever one sequential writer suffices, and planning reads stopped at the
+  third rung of the read ladder with `repo-scout` taking any census over
+  about 20 call sites or file over about 800 lines. Nineteen other low cells
+  from the study were left out because they save little (`EVIDENCE.md`
+  detail, soft budgets), are rare (fidelity capture cadence), or trade
+  correctness for tokens (trusting the known-red list without a run at
+  `HEAD`, cutting validation cadence). Validation cadence stays because a
+  regression found only at Integration costs a repair wave, which is more
+  than the targeted checks save.
+- **The interview is not in it.** The first draft capped the interview at
+  one round. The same day, "The interview ends on a list, not a count or a
+  score" replaced the round count with an exit condition, so a cap would
+  have put the count back. The user's escape, "proceed on the
+  recommendations", already carries the rest as `Bounded-choice`, and a mode
+  that did that silently would make per-decision trades the user never saw.
+  Instead the read-depth rule is bounded: a decision that reading could
+  settle but the three rungs did not is carried as a `Bounded-choice` whose
+  change observation is the skipped read, performed by the stage that owns
+  the code, and recorded as `Resolved by: default` with the deferred read in
+  the rationale. So the `Resolved by` column measures what the mode cost
+  without a new value.
+- **Floors.** The mode never moves the design statement, the definition of
+  done, the consumer census and covering tests, `Frozen` or `Bounded-choice`
+  only, the decision record, the linter, the `verify-before-done` gate, the
+  noisy-retry rule, the full suite at Integration, Haiku's limits, the
+  always-review conditions for a base class, a shared interface, or the
+  performance-owned subsystem, or the lead's own model and effort. A low
+  profile that dropped one would produce wrong plans rather than cheaper
+  ones.
+- **The mechanism follows the spawn logger.** A boolean in the `env` block,
+  read by a plugin hook, with nothing appended when it is unset, so a normal
+  session is unchanged by the mode existing. The script exports the line it
+  appends and `validate-kit.mjs` reads it from there, runs the hook with the
+  variable unset and set to `1`, and checks both outputs against the cap.
+  Two parentheticals in the core rules were shortened by 68 characters to
+  make room: the rules were at 9,854 of 10,000 and the line is 150. The guide
+  lists only the replacements and names the file that owns each normal rule,
+  so the normal column cannot drift from the text it describes. Claude Code
+  resolves `env` per variable across settings files with the local file
+  first, which is how a collaborator with different limits overrides the
+  committed value in `.claude/settings.local.json`, and the `env` block
+  reaches hook processes (settings and env-vars pages, read 2026-10-25). A
+  committed value reaches a collaborator only once they trust the folder.
+- **Measured before it grows.** `STATUS.md` records `Low-usage mode: on`, and
+  `EVIDENCE.md` gets an entry for each decision the mode changed. As with the
+  area map, those entries decide whether a rule stays in the mode. The spawn
+  log, when on, shows whether the tier and effort rules were followed.
+
 ## Linter rules that are easy to trip over
 
 These cost three lint rounds (62 errors down to 0) on one nuro-battler plan.

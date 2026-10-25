@@ -15,6 +15,7 @@ step needs; never load them all eagerly.
 | `${CLAUDE_SKILL_DIR}/reference/agent-workflow.md` | Plan creation: lifecycle, interview, design states, design-reference planning, risk, workspace shapes, evidence, and the launch read order |
 | `${CLAUDE_SKILL_DIR}/reference/ROUTING.md` | Assigning and dispatching stages: tier table, fork or fresh, roster, packets, ownership, waves, launch, validator, and review |
 | `${CLAUDE_SKILL_DIR}/reference/workspace-files.md` | What each workspace file owns, session handoff files, selective reads and soft budgets, and linting outside Claude Code |
+| `${CLAUDE_SKILL_DIR}/reference/low-usage.md` | Only when the core rules say low-usage mode is on: the seven rules the mode replaces with cheaper ones, and how a plan records what the mode changed |
 | `${CLAUDE_SKILL_DIR}/templates/` | `SPEC.md`, `PLAN.md`, `PACKETS.md`, `STATUS.md`, and `EVIDENCE.md`, the blank workspace files |
 
 The project's own facts are not in this skill. They are in
@@ -26,7 +27,9 @@ owners, shared interfaces, risk classes) and
 ## Make a plan
 
 1. Read `agent-workflow.md` and follow its lifecycle, and read
-   `workspace-files.md` for what each workspace file owns.
+   `workspace-files.md` for what each workspace file owns. When the core
+   rules say low-usage mode is on, read `low-usage.md` too; it replaces seven
+   rules of the other guides with cheaper ones.
 2. Create `plans/YYYY-MM-DD-short-name/` in the repository. If that folder
    exists, append `-2`, `-3`, and so on; never overwrite a workspace.
 3. Copy the five templates into it unchanged, then fill them in the copy.

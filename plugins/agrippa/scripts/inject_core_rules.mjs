@@ -11,10 +11,18 @@
 // after compaction, and to each subagent before its first prompt. Subagents do
 // not receive SessionStart context, so they need the second hook.
 //
+// When the project sets AGRIPPA_LOW_USAGE=1, normally in the `env` block of
+// its `.claude/settings.json`, one more line follows the rules: the two
+// low-usage rules every session needs (the design-reviewer size floor and the
+// reviewers' escalation) and a pointer to low-usage.md in the plan skill for
+// the rest. Nothing is appended otherwise, so a project that has not opted in
+// gets the rules unchanged.
+//
 // Claude Code caps each context string at 10,000 characters and shows only a
-// preview above that, so dev/validate-kit.mjs keeps core-rules.md under it. If
-// the file is missing, the script writes a short notice instead, so the
-// session learns the rules did not load. Uses only Node's built-in modules.
+// preview above that, so dev/validate-kit.mjs keeps core-rules.md, with and
+// without the low-usage line, under it. If the file is missing, the script
+// writes a short notice instead, so the session learns the rules did not
+// load. Uses only Node's built-in modules.
 
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -27,11 +35,18 @@ if (!hookEvents.includes(hookEvent)) {
     process.exit(1);
 }
 
+// The line a low-usage project gets after the rules. dev/validate-kit.mjs
+// checks the hook's output against the same text.
+export const lowUsageLine = 'Low-usage mode is on: the design-reviewer size floor is 80 lines, not 30; reviewers never self-escalate; before planning read low-usage.md in agrippa:plan.';
+
 const rulesPath = join(dirname(fileURLToPath(import.meta.url)), 'core-rules.md');
 let context;
 try {
     // Drop a byte-order mark so the context starts with the rules' own text.
     context = readFileSync(rulesPath, 'utf8').replace(/^﻿/, '');
+    if (process.env.AGRIPPA_LOW_USAGE === '1') {
+        context = `${context.replace(/\s+$/, '')}\n\n${lowUsageLine}\n`;
+    }
 } catch {
     context = `The agrippa plugin could not load its core rules: ${rulesPath} is missing. Tell the user before planning or editing.`;
 }
