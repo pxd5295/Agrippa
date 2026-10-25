@@ -23,7 +23,7 @@ The kit files this skill uses are in the plugin:
 
 | File | Use |
 |---|---|
-| `${CLAUDE_PLUGIN_ROOT}/UPGRADING.md` | The generation markers and the rule mapping for each generation, including "From G3", "From G4 v0.1.0", "From G4 v0.1.1", "From G4 v0.1.2", and "From G4 v0.2.0" |
+| `${CLAUDE_PLUGIN_ROOT}/UPGRADING.md` | The generation markers and the rule mapping for each generation, including "From G3", "From G4 v0.1.0", "From G4 v0.1.1", "From G4 v0.1.2", "From G4 v0.2.0", and "From G4 v0.3.0" |
 | `${CLAUDE_PLUGIN_ROOT}/README.md` | The layout table, "Enabling the plugin in a project", the placeholder convention, and the install-marker scan |
 | `${CLAUDE_PLUGIN_ROOT}/ADOPTION-CHECKLIST.md` | Every item is done or reported at the end |
 | `${CLAUDE_PLUGIN_ROOT}/templates/` | The project-side documents, including `MIGRATION.md` |
@@ -102,7 +102,7 @@ Wait for every answer before step 4.
 ## 4. Apply the mapping
 
 - Write or update every layout-table row whose destination is a repository
-  path, including `docs/planning/MIGRATION.md` filled from its template.
+  path, including `.agrippa/MIGRATION.md` filled from its template.
 - Follow the README's placeholder convention, including its rule "When a
   subject does not apply", and never install an `Install note` example
   comment. Carry over the project facts the old methodology already recorded
@@ -115,7 +115,9 @@ Wait for every answer before step 4.
   `.agrippa/CLAUDE.md` from `templates/agrippa-CLAUDE.md`, and replace every
   reference to the old paths outside dated plan workspaces and decision
   records. `git grep` finds the references; command-line `rg` skips the hidden
-  folder unless given `--hidden`.
+  folder unless given `--hidden`. Move an earlier upgrade's record from
+  `docs/planning/` to `.agrippa/MIGRATION.md` the same way, as "From G4
+  v0.3.0" says, and append this upgrade's sections to it.
 - Replace a full copy of `plans/README.md` or `.agrippa/decisions/README.md` with
   the short pointer from its template, and delete `docs/planning/CLAUDE.md`
   once the user confirms, as "From G4 v0.1.0" in `UPGRADING.md` says. Move
@@ -146,7 +148,7 @@ Wait for every answer before step 4.
 ## 5. Validate
 
 Run each check below, paste the exact command and its result, and record all
-of it in `docs/planning/MIGRATION.md`.
+of it in `.agrippa/MIGRATION.md`.
 
 - **Dated-plan manifest.** Recompute the manifest with the same command into a
   second file, and compare the two files. They must be identical.

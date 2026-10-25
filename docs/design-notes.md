@@ -541,8 +541,10 @@ work in them every day.
   nothing.
 - **Why both folders.** `docs/decisions/` had the same problem, and moving
   one without the other would have left the kit with two conventions.
-  `docs/planning/MIGRATION.md` is unchanged: it is written on upgrade only,
-  and whether it should also move is still open.
+  The upgrade record, written to `docs/planning/MIGRATION.md` up to 0.3.0,
+  followed in the next release as `.agrippa/MIGRATION.md`, with "From G4
+  v0.3.0" in `UPGRADING.md` as its one-row move, so that the kit claims
+  nothing under `docs/`.
 - **The folder `CLAUDE.md` still loads.** The earlier note that the folder's
   `CLAUDE.md` stays whole depends on Claude Code attaching a folder's
   `CLAUDE.md` when a session reads a file in that folder. A probe in the

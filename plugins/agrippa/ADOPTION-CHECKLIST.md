@@ -160,5 +160,5 @@ named as not done, with the reason.
 - [ ] No historical dated workspace was edited, moved, or converted: a
       SHA-256 manifest taken before the first edit equals one taken after
       (`git status` proves nothing when `plans/` is gitignored).
-- [ ] `docs/planning/MIGRATION.md` records the generation, mapping,
+- [ ] `.agrippa/MIGRATION.md` records the generation, mapping,
       adaptations, preservation audit, and residual smoke tests.

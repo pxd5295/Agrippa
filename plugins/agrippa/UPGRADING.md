@@ -34,11 +34,13 @@ instead of the PowerShell local file; a repository that has
 `tools/validate_plan_workspace.local.ps1` applies "From G4 v0.1.2" below.
 PowerShell is no longer required anywhere. Up to v0.2.0 the project documents
 and the decision records lived under `docs/`; a repository that has
-`docs/agent_memory/` or `docs/decisions/` applies "From G4 v0.2.0" below.
+`docs/agent_memory/` or `docs/decisions/` applies "From G4 v0.2.0" below. Up
+to v0.3.0 an upgrade wrote its record to `docs/planning/MIGRATION.md`; a
+repository that has that file applies "From G4 v0.3.0" below.
 
 ## Rule mapping
 
-Record one row per old rule in `docs/planning/MIGRATION.md`. Dispositions are
+Record one row per old rule in `.agrippa/MIGRATION.md`. Dispositions are
 Retain (keep as is), Merge (keep the stricter of old and new), Replace (the new
 rule supersedes it), and Deprecate (remove with no successor).
 
@@ -149,7 +151,7 @@ drifts from the plugin, so it is replaced or deleted. `dev/validate-kit.mjs
 |---|---|---|
 | `plans/README.md` with the sections "Artifact contract" and "Selective reads and soft budgets" | Replace | Overwrite it with `templates/plans-README.md`, a short pointer with no rules. Move any project rule added to it into "Project rules" in `AGENTS.md` first |
 | `docs/decisions/README.md` with the sections "When a record is required" and "Shape" | Replace | Overwrite it with `templates/decisions-README.md`, a short pointer with no rules. Move any project rule added to it into "Project rules" in `AGENTS.md` first |
-| `docs/planning/CLAUDE.md` | Delete | The guides and templates it pointed to are in the `plan` skill, which also says a project keeps no copy of them. `docs/planning/` keeps only `MIGRATION.md`, which says itself that it is a record |
+| `docs/planning/CLAUDE.md` | Delete | The guides and templates it pointed to are in the `plan` skill, which also says a project keeps no copy of them. Nothing of the kit's stays in `docs/planning/`; the upgrade record is `.agrippa/MIGRATION.md`, which says itself that it is a record |
 
 ### From G4 v0.1.1
 
@@ -222,6 +224,18 @@ given `--hidden`; `git grep` and Claude Code's own search tools search them.
 | `docs/agent_memory/CLAUDE.md` | Replace | Now `.agrippa/CLAUDE.md`. Rewrite it from `templates/agrippa-CLAUDE.md`, keeping the project's own bullets under "The files" |
 | References to the old paths in `AGENTS.md`, every `CLAUDE.md`, the project documents themselves, `plans/README.md`, `tools/validate_plan_workspace.local.mjs`, an edit-lint hook script, and `.claude/settings.json` permissions | Replace | The `.agrippa/` path. Find them with `git grep -n -e docs/agent_memory -e docs/decisions` |
 | References inside dated plan workspaces and decision records | Retain | They are records and are never edited; a reader follows the moved path |
+
+### From G4 v0.3.0
+
+Up to v0.3.0, an upgrade wrote its record to `docs/planning/MIGRATION.md`,
+the last kit file under `docs/`. It is now `.agrippa/MIGRATION.md`, beside
+the project documents, so the kit claims nothing under `docs/`. The file is a
+record and its content does not change.
+
+| v0.3.0 path | Disposition | What happens |
+|---|---|---|
+| `docs/planning/MIGRATION.md` | Move | `git mv docs/planning/MIGRATION.md .agrippa/MIGRATION.md`. A new upgrade appends its own section to the moved file rather than starting a second record |
+| An empty `docs/planning/` left behind | Delete | Remove the folder only if nothing of the project's own is in it |
 
 ### Always
 

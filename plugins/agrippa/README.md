@@ -66,7 +66,7 @@ The methodology has three layers, and the kit installs all of them.
 | `skills/*/SKILL.md` | Not installed; the plugin's skills `agrippa:design-first`, `agrippa:systematic-debugging`, `agrippa:verify-before-done`, and `agrippa:receiving-review`, plus `plan` and `handoff` below. A project keeps no copy in `.claude/skills/` |
 | `templates/hooks/README.md` | Not installed; how to opt in to the plugin's spawn logger, the edit-lint hook a project writes for itself, and the permission allowlist |
 | `templates/validate-plan-workspace.local.mjs` | `tools/validate_plan_workspace.local.mjs`, only when the project has command invariants to enforce |
-| `templates/MIGRATION.md` | `docs/planning/MIGRATION.md`, upgrades only |
+| `templates/MIGRATION.md` | `.agrippa/MIGRATION.md`, upgrades only |
 | `UPGRADING.md` | Not installed; the generation markers and rule mapping for upgrades |
 | `ADOPTION-CHECKLIST.md` | Not installed; every item is completed or reported |
 | `.claude-plugin/plugin.json` | Not installed; the plugin manifest |
@@ -282,7 +282,7 @@ manifest of every dated plan workspace before its first edit. It shows a
 Retain, Merge, Replace, or Deprecate mapping before any edit, and asks with
 `AskUserQuestion` before every deletion. It never edits, moves, or converts a
 dated plan workspace, and it records the upgrade in
-`docs/planning/MIGRATION.md`. For a copied-in kit, the "From G3" section of
+`.agrippa/MIGRATION.md`. For a copied-in kit, the "From G3" section of
 `UPGRADING.md` says which copied files the plugin replaces and where their
 project facts move.
 

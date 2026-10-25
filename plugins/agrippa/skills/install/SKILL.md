@@ -101,7 +101,7 @@ focused questions in chat. The usual questions are:
 ## 5. Write the project documents
 
 Write every layout-table row whose destination is a repository path, except
-`docs/planning/MIGRATION.md`, which is for upgrades only.
+`.agrippa/MIGRATION.md`, which is for upgrades only.
 
 - Follow the README's placeholder convention. Resolve every install-time slot
   from what step 3 found, using the template's example only as a shape.

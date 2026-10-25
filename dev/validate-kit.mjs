@@ -37,7 +37,8 @@
 // marketplace and enable agrippa@agrippa, it must have
 // .agrippa/project-contracts.md and validation-commands.md, with no
 // docs/agent_memory/ or docs/decisions/ folder left from a plugin before
-// 0.3.0, and it must keep no local copy of what the plugin provides: the
+// 0.3.0 and no docs/planning/MIGRATION.md from an upgrade before 0.3.1, and
+// it must keep no local copy of what the plugin provides: the
 // agents, the plugin's
 // skills, the shared linter, the spawn logger, its hook_payload.ps1 helper
 // unless a project script still uses it, a settings.json hook or permission
@@ -624,6 +625,8 @@ testClauses('UPGRADING', upgrading, [
     '### From G4 v0\\.2\\.0',
     '`docs/agent_memory/` and every file in it \\| Move \\| `git mv docs/agent_memory \\.agrippa`',
     '`docs/decisions/` and every record in it \\| Move \\| `git mv docs/decisions \\.agrippa/decisions`',
+    '### From G4 v0\\.3\\.0',
+    '`docs/planning/MIGRATION\\.md` \\| Move \\| `git mv docs/planning/MIGRATION\\.md \\.agrippa/MIGRATION\\.md`',
     'docs/planning/CLAUDE\\.md` \\| Delete',
     'tools/log_subagent_spawns\\.ps1` \\| Delete',
     'tools/hook_payload\\.ps1` \\| Delete',
@@ -698,9 +701,10 @@ testClauses('Skill upgrade', upgradeSkill, [...setupClauses,
     'never edited, moved, renamed, or converted',
     'From G3',
     'From G4 v0\\.2\\.0',
+    'From G4 v0\\.3\\.0',
     'templates/agrippa-CLAUDE\\.md',
     '\\$\\{CLAUDE_PLUGIN_ROOT\\}/UPGRADING\\.md',
-    'docs/planning/MIGRATION\\.md',
+    '\\.agrippa/MIGRATION\\.md',
 ]);
 addCheck(matches(workspaceFiles, '(?s)SPEC\\.md.*PLAN\\.md.*PACKETS\\.md.*STATUS\\.md.*EVIDENCE\\.md'), 'Plan skill workspace-files.md must name all five workspace artifacts.');
 testClauses('Plan skill workspace-files.md', workspaceFiles, [
@@ -874,10 +878,11 @@ const substringTerms = [
     'assigned profile',
     'workspace-write',
 ];
-// Up to 0.2.0 the project documents and decision records were under docs/.
-// They are in .agrippa/ now, so a shipped file that still names the old
-// folders would send a reader to a path an installed repository no longer has.
-const oldLayoutTerms = ['docs/agent_memory', 'docs/decisions'];
+// Up to 0.2.0 the project documents and decision records were under docs/,
+// and up to 0.3.0 the upgrade record was docs/planning/MIGRATION.md. They are
+// in .agrippa/ now, so a shipped file that still names the old paths would
+// send a reader to a path an installed repository no longer has.
+const oldLayoutTerms = ['docs/agent_memory', 'docs/decisions', 'docs/planning/MIGRATION'];
 // UPGRADING.md must name the old markers to recognize them, and this script
 // names them to search for them. Paths are relative to the repository root.
 const vocabularyExempt = ['plugins/agrippa/UPGRADING.md', 'dev/validate-kit.mjs'];
@@ -1125,6 +1130,10 @@ if (installedRepo) {
             addProjectCheck(/^Built at:\s*`[0-9a-f]{7,40}`/im.test(areaMapText), '.agrippa/area-map.md has no `Built at:` line naming the commit it describes. Run /agrippa:survey, which writes it; the planner needs it to see which folders changed since.');
             addProjectCheck(!/\[PROJECT:|Install note/.test(areaMapText), '.agrippa/area-map.md still carries an install marker ([PROJECT: or Install note). Finish it with /agrippa:survey or delete it; a half-filled map misleads the planner.');
         }
+
+        // Up to 0.3.0 an upgrade wrote its record under docs/planning/. It is
+        // .agrippa/MIGRATION.md now, so the old file is a leftover.
+        addProjectCheck(!isFile(join(projectRoot, 'docs', 'planning', 'MIGRATION.md')), 'docs/planning/MIGRATION.md is where upgrades up to 0.3.0 wrote their record; it now lives at .agrippa/MIGRATION.md. Move it with git mv, as "From G4 v0.3.0" in UPGRADING.md says.');
 
         const planningNote = join(projectRoot, 'docs', 'planning', 'CLAUDE.md');
         if (isFile(planningNote)) {
