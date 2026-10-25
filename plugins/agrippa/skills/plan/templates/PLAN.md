@@ -15,16 +15,26 @@ Wave 2: [Integration]
 ## Validation matrix
 
 Copy runnable commands from `.agrippa/validation-commands.md`. Each
-**Validation ID** is stable and maps to one or more acceptance IDs.
+**Validation ID** is stable and maps to one or more acceptance IDs. Write
+every ID out, separated by commas, here and in the stage records: the linter
+reads only the IDs that are written out, so a range written with a hyphen or
+"to" counts as its two ends and leaves the IDs between them unmapped.
 
 | Validation ID | Acceptance IDs | Exact command or check | Style | Sandbox | Determinism | When |
 |---|---|---|---|---|---|---|
 | V1 | A1 | `[exact prerequisite command from the catalog, if the toolchain needs one]` | [prerequisite / build] | [sandboxed / outside-sandbox] | deterministic | Before first test |
 | V2 | A1 | `[exact command or manual pass condition]` | [unit / integration / build / lint / benchmark / manual] | [sandboxed / outside-sandbox] | [deterministic / noisy-retry / skips-headless / manual] | M1 |
-| V3 | A1-A2 | `[full applicable suite]` | [style] | [stance] | [determinism] | Integration |
+| V3 | A1, A2 | `[full applicable suite]` | [style] | [stance] | [determinism] | Integration |
 
 Delete V1 when the catalog names no prerequisite. Style and Sandbox values come
 from `.agrippa/validation-commands.md`.
+
+Every file a command names with a folder and a source or test extension must
+already exist when the plan is linted (check 13), so a test file this plan
+creates cannot appear in the matrix. Add its cases to a test that already
+exists, or run it through a command that names only existing paths, such as
+the test runner given the test folder. The Integration record must keep the
+words "full applicable suite" (check 22).
 
 The workspace linter row is `agrippa-lint -PlanPath plans/YYYY-MM-DD-name`
 (`lint`, `sandboxed`, `deterministic`). It runs through the Bash tool, because
@@ -47,6 +57,11 @@ Paths are whole-file ownership in a shared checkout. Concurrent
 | `path/to/other.ext` | 1 | M2 | None |
 
 ## Milestones
+
+A `Bounded-choice` stage adds one more row to its field table, in this form:
+`| Bounded choice | Options: [A or B]; Default: [A]; Change observation: [what shows the choice changed] |`.
+The three labels each need their colon (check 7), and the row must not hold a
+Contract ID or any word with a `/` in it, which the linter reads as a path.
 
 ### M1: [Outcome-oriented title]
 
@@ -77,8 +92,8 @@ Paths are whole-file ownership in a shared checkout. Concurrent
 [For an Opus stage: describe the attempted planner-frozen split and why a
 cheaper bounded stage is unsafe. For lower tiers: `Not required by tier`.]
 
-For `Bounded-choice`, add a record that enumerates `Options`, `Default`, and the
-exact `Change observation`; it must not contain a bare path or Contract ID.
+For `Bounded-choice`, add the `Bounded choice` row described under
+"Milestones" above.
 
 Add one record per substantive milestone. An `Open` stage is invalid.
 
@@ -99,7 +114,7 @@ Add one record per substantive milestone. An `Open` stage is invalid.
 | Forbidden scope | Unrelated systems and user-owned changes |
 | Pre-authorized ownership expansion | [Exact bound or None] |
 | Work | Reconcile interfaces, run the full applicable suite, and perform the risk-required focused review. |
-| Acceptance IDs | A1-A[n] |
+| Acceptance IDs | A1, A2, [every further acceptance ID] |
 | Validation IDs | V3 |
 | Validation output | Bounded |
 | Parallel safety | Sequential integration |

@@ -3,6 +3,11 @@
 > Replace bracketed text. `SPEC.md` is the authoritative source for stable
 > acceptance IDs. Keep observable requirements here; sequencing belongs in
 > `PLAN.md`.
+>
+> The workspace linter reads a capital A, C, or V followed by digits, as a
+> whole word anywhere in `SPEC.md`, `PLAN.md`, `PACKETS.md`, or `STATUS.md`,
+> as an ID, and an ID the plan does not define fails. Write a product or
+> version name of that shape in lowercase or spell it out.
 
 ## Objective
 

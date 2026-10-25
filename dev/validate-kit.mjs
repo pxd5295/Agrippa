@@ -667,6 +667,35 @@ testClauses('SPEC template', spec, [
     'Decision record',
     '\\*\\*A1:\\*\\*',
 ]);
+
+// The lint traps in docs/design-notes.md each cost a nuro-battler plan a lint
+// round. The templates now state the rule beside the line it governs, and the
+// clauses below keep that wording from being dropped. The Bounded choice
+// example must sit before the first stage heading: the linter reads a stage's
+// whole text for the three labels, so an example inside a stage would satisfy
+// check 7 for a plan that never wrote the row.
+testClauses('PACKETS template lint-trap wording', packets, [
+    'single line\\s+number',
+    'exactly `Consumer census:`',
+    'snippet must appear in that line',
+    'read from its own line only',
+    '(?m)^Owned files: `',
+    'copied exactly, including backticks',
+    'any further\\s+`###` heading ends the packet',
+]);
+testClauses('PLAN template lint-trap wording', plan, [
+    'counts as its two ends',
+    'must\\s+already exist when the plan is linted',
+    'keep the\\s+words "full applicable suite"',
+    'Options: \\[A or B\\]; Default: \\[A\\]; Change observation:',
+    'word with a `/` in it',
+]);
+testClauses('SPEC template lint-trap wording', spec, [
+    'capital A, C, or V followed by digits',
+]);
+addCheck(!/\b[AV]\d+\s*(?:-|to)\s*[AV]/.test(plan), 'PLAN template writes an ID range; the linter reads only its two ends, so list every ID.');
+const boundedExample = plan.indexOf('Options: [A or B]');
+addCheck(boundedExample >= 0 && boundedExample < plan.indexOf('### M1:'), 'PLAN template must show the Bounded choice row before the first stage record, where the linter does not read it as stage text.');
 testClauses('UPGRADING', upgrading, [
     '## Recognize the generation',
     '\\| G4: plugin',

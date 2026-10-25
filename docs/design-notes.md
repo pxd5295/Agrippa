@@ -825,6 +825,9 @@ template wording or friendlier linter messages.
 - Any `V` followed by digits anywhere in a workspace (for example a product
   version name) is read as a validation ID and fails as undefined.
 
+The templates now state each of these rules beside the line it governs; see
+"The lint traps move into the templates (2026-10-25)" below.
+
 ## Node leaves the plugin: hooks on sh, linter on Perl (2026-10-25, release 0.4.0)
 
 Every user of the plugin had to install Node.js, because the two hook scripts,
@@ -1064,3 +1067,38 @@ logger and low-usage mode.
   collaborators already share settings, and adding a plugin to them is a
   team decision outside a methodology upgrade. The README tells a person how
   to enable it by hand either way.
+
+## The lint traps move into the templates (2026-10-25)
+
+The trap list under the license note cost one nuro-battler plan three lint
+rounds. Each trap was a rule the linter enforced but no template stated, and
+in two cases the template itself taught the trap: the packet's `Owned files:`
+was a bulleted list, which the linter reads only as far as the first bullet,
+and the Integration record wrote its acceptance IDs as a range, which the
+linter reads as its two ends. The fix is template wording only. No check
+changed, so the linter output and the local-checks contract are as they were.
+
+- **Where the wording goes.** `PACKETS.md` opens with a short list of the
+  line formats the linter parses (contract source, census, owned files,
+  acceptance and validation lines, one packet per stage), and its sample
+  packet writes `Owned files:` on one line. `PLAN.md` says to write every ID
+  out with commas, explains check 13 and the "full applicable suite" phrase
+  under the validation matrix, and shows the `Bounded choice` row. `SPEC.md`
+  warns about capital A, C, or V followed by digits in prose.
+- **Why some wording sits outside the stage records.** The linter reads a
+  stage's whole section, from its heading to the next stage heading or the end
+  of the file, when it looks for the bounded-choice labels and for "full
+  applicable suite". Guidance placed inside a stage record would satisfy those
+  checks for a plan that never wrote the real row or phrase. The bounded-choice
+  example therefore sits under "Milestones" before the first stage, and the
+  suite phrase is explained under the validation matrix. No guidance names a
+  concrete ID beyond the ones the templates define, because the linter would
+  read a copied example as a reference.
+- **How it was proven.** A scratch harness applied each recommended form to a
+  copy of the smoke fixture in a throwaway repository and linted it with the
+  plugin linter (PASS for all eight), then applied 17 trap variants on top and
+  confirmed each failed with the message the templates name. The self-check
+  gained 15 clauses that keep the wording and the bounded-choice placement in
+  the templates and forbid an ID range in `PLAN.md`.
+- **What is not proven.** Whether first-time planners now reach `PASS` in
+  fewer rounds can only be counted on new plans in installed repositories.
