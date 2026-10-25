@@ -1,101 +1,18 @@
 # Agrippa
 
-Agrippa is a Claude Code plugin that gives a repository a planning and
-implementation methodology. Enable it, run `/agrippa:install` once, and every
-Claude Code session in that repository follows the same engineering rules,
-plans larger changes in a structured workspace, implements them with routed
-subagents, and shows evidence before calling anything done.
+Agrippa is a Claude Code plugin that teaches the agent to plan before it
+builds. Once it is installed in a repository, every Claude Code session there
+follows the same engineering rules, plans larger changes in a structured
+workspace, and shows evidence before calling anything done.
 
-## What it does
+## Setup
 
-Left alone, an agent working on a non-trivial change tends to explore too
-widely, skip the design step, add a special case where an owner already
-exists, and report "done" without running the tests. Agrippa addresses each of
-those with rules that load in every session and a plan workspace for changes
-that need one.
+### 1. Enable the plugin
 
-- A **small change** gets a design statement before the first edit, the
-  change, the named validation command, and a definition-of-done report.
-- A **large change** gets a plan workspace first: what is being built, the
-  stages and who owns each, the exact packet each subagent receives, status
-  and risk, and the evidence collected along the way. Implementation then runs
-  stage by stage, with review and validation between waves.
+Pick one of two ways.
 
-## Features
-
-- **Core rules in every session.** A short rule set is added at session start
-  and to every subagent: what a request does and does not authorize,
-  engineering standards (state the design first, one owner per shared value,
-  refactor or file it, shared interfaces start with a decision record), a
-  definition of done, and when a change is big enough to plan.
-- **Plan workspaces.** `Make a plan for <change>` creates
-  `plans/YYYY-MM-DD-<name>/` with five files: `SPEC.md`, `PLAN.md`,
-  `PACKETS.md`, `STATUS.md`, and `EVIDENCE.md`. No stage ships as open. Each
-  is either frozen (exact interfaces, edit sites, and consumer census) or a
-  bounded choice with one default. `Implement plan <path>` then runs it.
-- **Routed subagents.** The lead session plans and implements. Subagents get a
-  per-stage model tier and a verbatim packet, and run in waves grouped by
-  ownership area so two writers never touch the same files.
-- **Four read-only agents.** `repo-scout` gathers consumer census and contract
-  facts for planning. `plan-reviewer` checks a diff against the plan's frozen
-  contracts. `design-reviewer` looks for duplication, special cases, misplaced
-  logic, and file growth. `validator` runs the plan's validation matrix
-  verbatim.
-- **Five working skills.** `design-first` (required before any edit),
-  `systematic-debugging`, `verify-before-done`, `receiving-review`, and
-  `/agrippa:handoff`, which writes a short brief when a session ends mid-plan.
-- **A plan linter.** `agrippa-lint -PlanPath plans/<name>` checks a workspace's
-  traceability, dispatch shape, ownership, and command syntax. It checks
-  shape, never truth. A project can add its own command invariants in a small
-  local file that the linter loads.
-- **Install, upgrade, and survey skills.** `/agrippa:install` sets up a
-  repository that has no planning rules. `/agrippa:upgrade` migrates one that
-  already has some, from an earlier copy of Agrippa or from a different
-  process, and never edits a dated plan. `/agrippa:survey` builds an optional
-  index of the repository's folders, with each folder's entry points,
-  covering tests, and governing contract, that planning reads first.
-- **Optional hooks.** An opt-in log of every subagent spawn, so you can see
-  which spawns inherited the lead's model instead of the routed tier, and a
-  documented pattern for an edit-lint hook that feeds lint findings back to
-  the agent.
-- **Low-usage mode.** A project whose token limits the normal methodology
-  would exhaust sets one variable, `AGRIPPA_LOW_USAGE=1`, in its settings.
-  Seven rules are then replaced with cheaper ones (smaller reviews, Sonnet
-  instead of Opus for risk-flagged stages, one writer per wave, shallower
-  planning reads), every floor still holds, and nothing changes for a project
-  that leaves the variable unset.
-
-## How it works
-
-The methodology has three layers, and only one of them is written into your
-repository.
-
-1. **Rules the plugin injects.** The core rules, the planning and routing
-   guides, the agents, the skills, the plan templates, and the linter all live
-   in the plugin. A `SessionStart` hook adds the core rules to every session
-   and a `SubagentStart` hook adds them to every subagent. Nothing here is
-   copied into the project, so a plugin upgrade updates all of it at once.
-2. **Your project's facts.** `/agrippa:install` reads the repository and
-   writes a root `AGENTS.md` (ownership areas, shared interfaces, project
-   rules) and a hidden `.agrippa/` folder holding `project-contracts.md`
-   (architecture owners, risk classes, compatibility gates),
-   `validation-commands.md` (every exact test and build command), the
-   decision records under `decisions/`, and, when you run `/agrippa:survey`,
-   an `area-map.md` index of the repository's folders. The folder is hidden
-   and named after the plugin so that it never collides with your own
-   `docs/`. The agents and skills read project facts only from these
-   documents, which is what keeps the plugin itself project-neutral.
-3. **Plans your sessions produce.** Each plan workspace is a dated folder
-   under `plans/`. Workspaces are records: they are never overwritten, and an
-   upgrade never touches them.
-
-Your repository pins a release tag. Upgrading is moving that tag, plus
-`/agrippa:upgrade` when the project documents need to change too.
-
-## Install
-
-Add the marketplace and enable the plugin in the repository's committed
-`.claude/settings.json`. Merge these two keys into the existing file:
+**For everyone who works in the repository.** Merge these two keys into the
+repository's committed `.claude/settings.json`. The `ref` pins the release.
 
 ```json
 {
@@ -108,24 +25,38 @@ Add the marketplace and enable the plugin in the repository's committed
 }
 ```
 
-Or install it once for yourself instead:
+**For yourself only.** Run these two commands inside Claude Code:
 
 ```text
 /plugin marketplace add pxd5295/Agrippa
 /plugin install agrippa@agrippa
 ```
 
-Then start Claude Code at the repository root, on a strong model, and run:
+### 2. Set up the repository
+
+Start Claude Code at the repository root, on a strong model, and run:
 
 ```text
 /agrippa:install
 ```
 
-The skill inspects the repository read-only, asks only about choices the code
-cannot answer, writes the project documents, shows every settings change
-before making it, and changes no application code. If the repository already
-has planning rules of any kind, run `/agrippa:upgrade` instead. It maps every
-old rule to its new home before editing and confirms each deletion.
+The skill reads the repository without changing it, asks only about the
+choices the code cannot answer, and then writes a short set of project
+documents. It shows every settings change before making it and never touches
+application code.
+
+If the repository already has planning rules of any kind, run
+`/agrippa:upgrade` instead. It maps every old rule to its new home before
+editing and confirms each deletion.
+
+### Requirements
+
+- Claude Code. On Windows you also need Git for Windows, which Claude Code's
+  Bash tool needs anyway; it provides the `sh` and `perl` the plugin runs on.
+  macOS and Linux ship both.
+- Optional: the `engineering` plugin, whose skills write decision records.
+  `/agrippa:install` offers to enable it. Without it, Agrippa gives the shape
+  to write a record by hand.
 
 ## Day to day
 
@@ -135,29 +66,58 @@ Implement plan plans/2026-10-24-<name>
 /agrippa:handoff
 ```
 
-Changes under the size gate skip the workspace and are implemented directly
-after a design statement. A plan ends with the first implementation allocation
-and an exact resume prompt.
+Small changes skip the plan and are implemented directly after a design
+statement. Larger ones get a plan first, which ends with an exact prompt for
+resuming the work. `/agrippa:handoff` writes a short brief when a session
+ends mid-plan.
 
-## Requirements
+If your token budget is tight, set `AGRIPPA_LOW_USAGE=1` in the repository's
+settings. The methodology then uses smaller reviews and cheaper models while
+keeping every rule that protects correctness.
 
-- On Windows, Git for Windows, which Claude Code's Bash tool needs anyway; it
-  brings the `sh` and `perl` the plugin's scripts run on. macOS and Linux
-  ship both.
-- Optional: the `engineering` plugin, whose `architecture` and `system-design`
-  skills write decision records. Without it, the `design-first` skill gives
-  the shape to write one by hand. `/agrippa:install` offers to enable it for
-  the repository, and otherwise `/plugin install
-  engineering@claude-plugins-official` enables it for you alone.
+## What you get
+
+- **Rules in every session.** A short rule set loads at session start and
+  into every subagent: what a request does and does not authorize, design
+  before editing, one owner per shared value, a definition of done, and when
+  a change is big enough to plan.
+- **Plan workspaces.** `Make a plan for <change>` creates a dated folder
+  under `plans/` with the spec, the stages and who owns each, the exact brief
+  each subagent receives, status and risk, and the evidence collected along
+  the way. `Implement plan <path>` then runs it stage by stage.
+- **Routed subagents.** Each stage names a model tier. Subagents run in
+  waves grouped by ownership area, so two writers never touch the same files.
+- **Four read-only reviewers.** One gathers facts for planning, one checks a
+  diff against the plan, one looks for duplication and misplaced logic, and
+  one runs the validation commands exactly as written.
+- **Working skills.** Design-first, systematic debugging, verify-before-done,
+  receiving review, and handoff.
+- **A plan linter.** `agrippa-lint` checks a plan's shape: traceability,
+  ownership, and command syntax. A project can add its own command rules in a
+  small local file.
+- **Optional extras.** `/agrippa:survey` builds an index of the repository's
+  folders that planning reads first, and an opt-in hook logs every subagent
+  spawn.
+
+## What goes in your repository
+
+Almost nothing. The rules, agents, skills, templates, and linter all live in
+the plugin and are never copied in, so moving the pinned `ref` to a new tag
+upgrades all of them at once.
+
+`/agrippa:install` writes only your project's facts: a root `AGENTS.md` and a
+hidden `.agrippa/` folder with the ownership areas, risk gates, exact test
+commands, and decision records. Plans your sessions produce go under `plans/`
+as dated folders that are never overwritten.
 
 ## This repository
 
 | Path | What it is |
 |---|---|
-| `plugins/agrippa/` | The plugin. Its [README](plugins/agrippa/README.md) is the full reference: every file, where it goes, and the placeholder convention. |
-| `dev/` | The self-check, `validate-kit.mjs`, and the smoke-test fixture. Not shipped. |
+| `plugins/agrippa/` | The plugin. Its [README](plugins/agrippa/README.md) is the full reference. |
+| `dev/` | The self-check and smoke-test fixture. Not shipped. |
 | `docs/` | Design notes and the research behind the rules. Not shipped. |
-| `history/plans/` | The plan workspaces that built earlier versions. Read-only history. |
+| `history/plans/` | The plans that built earlier versions. Read-only history. |
 
 To work on the plugin, see [CLAUDE.md](CLAUDE.md). Every change must leave
 `node dev/validate-kit.mjs` printing `PASS`.
@@ -165,11 +125,8 @@ To work on the plugin, see [CLAUDE.md](CLAUDE.md). Every change must leave
 ## License
 
 Mozilla Public License 2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE). You
-may use, modify, and redistribute Agrippa, including commercially and as part
-of a proprietary system. A kit file that you change and then pass on must stay
-under this license with its source available; the files you add and the
-system around the kit may be under any terms. The files that Agrippa installs
-into your repository, and the plans, decision records, and code you produce
-with the methodology, are yours with no license obligation; `NOTICE` grants
-that permission. The license does not grant use of the name Agrippa except to
-say where the work came from.
+may use, modify, and redistribute Agrippa, including commercially. A kit file
+you change and pass on must stay under this license with its source
+available. The files Agrippa installs into your repository, and the plans,
+decision records, and code you produce with it, are yours with no license
+obligation.
