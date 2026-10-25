@@ -29,41 +29,40 @@ The kit files this skill uses are in the plugin:
 | `${CLAUDE_PLUGIN_ROOT}/skills/plan/reference/agent-workflow.md` | Its "Validation matrix values" section, which defines the Sandbox and Determinism values the command catalog records |
 | `${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json` | The plugin version, which names the release tag to pin |
 
-## 1. Check Node, and that this is a new install
+## 1. Check Perl, and that this is a new install
 
-Run `node --version` first. The plugin's hooks, the shared linter, and
-`agrippa-lint` run on Node, and nothing else checks for it, so a missing Node
-fails quietly: the `SessionStart` hook exits before it can inject the core
-rules, Claude Code shows only a non-blocking hook error, and every session,
-including this one, runs without the methodology's rules. Claude Code itself
-does not need Node, so a machine can lack it. The README's "Requirements and
-fallbacks" section records the requirement.
+Run `perl --version` through the Bash tool first. The plugin's hooks are
+POSIX sh scripts and run wherever the Bash tool does, so the core rules and
+the spawn logger need nothing more. The shared linter and `agrippa-lint` run
+on Perl, and nothing else checks for it, so a missing Perl fails only when a
+plan's linter row runs: `agrippa-lint` prints one line saying perl is not on
+PATH and exits 2. Claude Code itself does not need Perl, so a machine can
+lack it. On Windows it comes with Git for Windows, which the Bash tool needs
+anyway; macOS and Linux ship it. The README's "Requirements and fallbacks"
+section records the requirement.
 
 If the command fails, say so in plain words, then ask with `AskUserQuestion`
 which of two options to take, and recommend the first:
 
-1. **Install Node now, then run the install again.** Install the current LTS
-   release with the package manager the machine has: `winget install
-   OpenJS.NodeJS.LTS` on Windows, where the installer shows an elevation
-   prompt the user must accept, `brew install node` on macOS, or the
-   distribution's package manager or a version manager such as `fnm` on
-   Linux. Run the command only after the user's yes, and never download and
-   run an installer yourself; without a package manager, print the command
-   or point at the nodejs.org download page for the user to run. Then stop.
-   Say that a running process keeps the PATH it started with, so this
-   session's hooks and `agrippa-lint` cannot see the new `node`, and that the
-   user must open a new session and run `/agrippa:install` again from the
-   start there.
-2. **Install the documents anyway.** Continue through every step with Node
+1. **Install Perl now, then run the install again.** On Windows, perl is part
+   of a standard Git for Windows install, not of MinGit, so install or
+   repair Git for Windows with `winget install Git.Git`, where the installer
+   shows an elevation prompt the user must accept. On macOS it ships with
+   the system; if it is missing, `brew install perl`. On Linux install the
+   distribution's `perl` package. Run the command only after the user's yes,
+   and never download and run an installer yourself; without a package
+   manager, print the command for the user to run. Then stop. Say that a
+   running process keeps the PATH it started with, so this session's
+   `agrippa-lint` cannot see the new `perl`, and that the user must open a
+   new session and run `/agrippa:install` again from the start there.
+2. **Install the documents anyway.** Continue through every step with Perl
    missing, and write the project documents and settings as usual. Never
-   write a shell-language copy of a hook script or the linter into the
-   project; that recreates the cross-platform problem the Node scripts fixed,
-   and `/agrippa:upgrade` cannot maintain it. In step 7, report every item
-   that runs Node as not run. In step 8, report the "Always-loaded rules"
-   checklist item that a new session shows the core rules, and every
-   "Offline validation" item that runs Node, as not done with the reason
-   "Node.js is not installed". Say that the core rules, the spawn logger, and
-   `agrippa-lint` stay inactive until Node is installed and a new session is
+   write a copy of a hook script or the linter into the project; the plugin's
+   own scripts run from its cached copy, and `/agrippa:upgrade` cannot
+   maintain a copy. In step 7, report every item that runs the linter as not
+   run. In step 8, report every "Offline validation" item that runs the
+   linter as not done with the reason "Perl is not installed". Say that
+   `agrippa-lint` stays inactive until Perl is installed and a new session is
    opened, and that no project file changes when it is.
 
 A no to both is a stop: write nothing.
@@ -174,8 +173,8 @@ Write every layout-table row whose destination is a repository path, except
   4, and only by loading `agrippa:survey` and following it from its discovery
   step; never fill `templates/AREA-MAP.md` by hand. Skip it otherwise; the
   planner and `agrippa:repo-scout` treat a missing map as "no map".
-- Write `tools/validate_plan_workspace.local.mjs`, from
-  `templates/validate-plan-workspace.local.mjs`, only when the repository has
+- Write `tools/validate_plan_workspace.local.pl`, from
+  `templates/validate-plan-workspace.local.pl`, only when the repository has
   command invariants worth enforcing in every plan. Never copy or edit the
   shared linter.
 - If the user chose an edit-lint hook, write its script under `tools/`
@@ -225,9 +224,9 @@ is, and ask nothing.
 ## 7. Validate
 
 Run each check below and paste the exact command and its result. If step 1
-found no Node and the user chose to install the documents anyway, report the
+found no Perl and the user chose to install the documents anyway, report the
 "Local linter checks" item and the two development checks at the end as not
-run, with the reason "Node.js is not installed", instead of running them.
+run, with the reason "Perl is not installed", instead of running them.
 
 - **Install-marker scan.** Run the scan the README describes under
   "Install-marker scan" over every file of the repository. It must find
@@ -248,7 +247,7 @@ run, with the reason "Node.js is not installed", instead of running them.
 - **Validation commands.** Each command in `validation-commands.md` was run
   once before this step, and its result is recorded. Run any command that
   step 5 added to the catalog and step 3 did not run.
-- **Local linter checks.** If `tools/validate_plan_workspace.local.mjs` was
+- **Local linter checks.** If `tools/validate_plan_workspace.local.pl` was
   written, write one small real plan workspace for a trivial change, lint it
   through the Bash tool with `agrippa-lint -PlanPath plans/<name>`, and delete
   the workspace afterwards. `agrippa-lint` is on the Bash tool's PATH only.
@@ -258,11 +257,13 @@ Then ask the user whether to commit the installed files and
 collaborators only once the file is committed and they trust the folder.
 
 Finally, give the user the two development checks, which run from a checkout
-of the Agrippa repository at the pinned tag. If the user names such a checkout,
-or one exists next to this repository with `dev/validate-kit.mjs` in it, run
-them yourself and paste the results, unless the user said they will run them.
-Both are read-only for this repository; the smoke test removes the workspace
-it writes. Otherwise print them for the user, with both paths filled in:
+of the Agrippa repository at the pinned tag and need Node.js, which the plugin
+itself does not. If the user names such a checkout, or one exists next to
+this repository with `dev/validate-kit.mjs` in it, and Node.js is available,
+run them yourself and paste the results, unless the user said they will run
+them. Both are read-only for this repository; the smoke test removes the
+workspace it writes. Otherwise print them for the user, with both paths
+filled in:
 
 ```text
 node <Agrippa>/dev/validate-kit.mjs -InstalledRepo <this repository>

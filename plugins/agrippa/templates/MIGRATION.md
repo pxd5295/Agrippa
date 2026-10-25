@@ -59,7 +59,7 @@ planning methodology. It is a record: never edit its decisions afterwards.
 
 - Ownership/shared interfaces/high-risk classes: [PROJECT: summary]
 - Validation catalog and full-suite inventory: [PROJECT: summary]
-- Local linter checks (`tools/validate_plan_workspace.local.mjs`), or why none:
+- Local linter checks (`tools/validate_plan_workspace.local.pl`), or why none:
   [PROJECT: summary]
 - Install-time placeholders and install notes: [PROJECT: all resolved, or each
   remaining one and why]

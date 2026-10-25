@@ -32,7 +32,11 @@ instead of Windows PowerShell, so every machine that uses the plugin needs
 linter runs on Node.js too and loads `tools/validate_plan_workspace.local.mjs`
 instead of the PowerShell local file; a repository that has
 `tools/validate_plan_workspace.local.ps1` applies "From G4 v0.1.2" below.
-PowerShell is no longer required anywhere. Up to v0.2.0 the project documents
+PowerShell is no longer required anywhere. From v0.4.0 the hooks run on POSIX
+sh and the linter on Perl, both of which Git for Windows, macOS, and Linux
+provide, so Node.js is no longer required either; the linter loads
+`tools/validate_plan_workspace.local.pl`, and a repository that has the
+`.mjs` local file applies "From G4 v0.3.1" below. Up to v0.2.0 the project documents
 and the decision records lived under `docs/`; a repository that has
 `docs/agent_memory/` or `docs/decisions/` applies "From G4 v0.2.0" below. Up
 to v0.3.0 an upgrade wrote its record to `docs/planning/MIGRATION.md`; a
@@ -88,7 +92,7 @@ Then apply every G2 row below, because G1 also lacks all of them.
 | No debugging or done-evidence procedure | Replace | The plugin skills `agrippa:systematic-debugging` and `agrippa:verify-before-done` |
 | No session handoff | Replace | The plugin skill `/agrippa:handoff` |
 | No design-reference planning | Replace | "Plans that start from a design reference" in `agent-workflow.md`; `Design reference` sections in the `SPEC.md` template |
-| Linter with hardcoded source extensions, or with project toolchain checks edited into it | Replace | `agrippa-lint`, the plugin's linter, unedited; the project's own checks move to `tools/validate_plan_workspace.local.mjs` |
+| Linter with hardcoded source extensions, or with project toolchain checks edited into it | Replace | `agrippa-lint`, the plugin's linter, unedited; the project's own checks move to `tools/validate_plan_workspace.local.pl` |
 
 Then apply every G3 row below to each copied-in file the repository has.
 
@@ -119,7 +123,7 @@ user confirms it.
 | `docs/agent-workflow.md` | Delete | `agent-workflow.md` in the `plan` skill. Move any project facts added to it into `project-contracts.md` or `validation-commands.md` |
 | `docs/planning/ROUTING.md` | Delete | `ROUTING.md` in the `plan` skill. Move any project facts added to it into `project-contracts.md` |
 | `docs/planning/templates/*.md` | Delete | The templates in the `plan` skill, which the plugin's linter parses |
-| `tools/validate_plan_workspace.ps1` | Delete | `agrippa-lint`, the plugin's linter. Port `tools/validate_plan_workspace.local.ps1` to `tools/validate_plan_workspace.local.mjs` as "From G4 v0.1.2" says; the plugin's linter loads the `.mjs` |
+| `tools/validate_plan_workspace.ps1` | Delete | `agrippa-lint`, the plugin's linter. Port `tools/validate_plan_workspace.local.ps1` to `tools/validate_plan_workspace.local.pl` with the "From G4 v0.1.2" and "From G4 v0.3.1" tables; the plugin's linter loads the `.pl` |
 | `tools/log_subagent_spawns.ps1` | Delete | The plugin's spawn logger, which runs when the `env` block of `.claude/settings.json` sets `AGRIPPA_SPAWN_LOG=1` |
 | `tools/hook_payload.ps1` | Delete | Nothing; the plugin's spawn logger does not need it. Keep the project's copy only when another project script, such as the edit-lint hook, dot-sources it |
 | `.claude/settings.json` hook entries that run `tools/log_subagent_spawns.ps1` | Delete | The plugin's `hooks/hooks.json`. Add `AGRIPPA_SPAWN_LOG=1` to the `env` block instead, or every spawn is logged twice |
@@ -236,6 +240,36 @@ record and its content does not change.
 |---|---|---|
 | `docs/planning/MIGRATION.md` | Move | `git mv docs/planning/MIGRATION.md .agrippa/MIGRATION.md`. A new upgrade appends its own section to the moved file rather than starting a second record |
 | An empty `docs/planning/` left behind | Delete | Remove the folder only if nothing of the project's own is in it |
+
+### From G4 v0.3.1
+
+Up to v0.3.1 the plugin's hooks and linter were Node scripts, and a project's
+command invariants were an ES module, `tools/validate_plan_workspace.local.mjs`,
+which the linter imported. From v0.4.0 the hooks are POSIX sh scripts, the
+linter is a Perl script, and it loads `tools/validate_plan_workspace.local.pl`
+instead, so a machine needs no Node to use the plugin: `sh` and `perl` come
+with Git for Windows, which the Bash tool needs anyway, and with macOS and
+Linux. A project with no local file changes nothing. A project with the
+`.mjs` ports it; until then `agrippa-lint` fails with a `[Local]` error naming
+the file, so the project's rules never silently stop running. The command, its
+arguments, the `Bash(agrippa-lint:*)` permission, every plan's matrix row, and
+every message keep their text. Two results can change: a message that names a
+repository path prints `/` on Windows where the Node linter printed `\`, and a
+`[Local]` message names the Perl key (`check_validation_row`) rather than the
+JavaScript export.
+
+| v0.3.1 file or construct | Disposition | What happens |
+|---|---|---|
+| `tools/validate_plan_workspace.local.mjs` | Replace | `tools/validate_plan_workspace.local.pl`, written from `templates/validate-plan-workspace.local.pl` with the same rules, and proved by linting one recent plan workspace. Delete the `.mjs` after the user confirms |
+| `export function checkValidationRow({ row, command, sandbox, check }) { ... }` | Replace | A `check_validation_row => sub { my ($args) = @_; ... }` entry in the hash the file returns, reading `$args->{row}`, `$args->{command}`, `$args->{sandbox}`, `$args->{check}`, `$args->{repo_root}`, and `$args->{plan_root}` |
+| `export function checkValidationMatrix({ rows, check }) { ... }` | Replace | A `check_validation_matrix => sub { my ($args) = @_; ... }` entry, with `$args->{rows}` an array reference of the rows in matrix order |
+| `check(condition, 'message')` | Replace | `$args->{check}->($condition, 'message')`. A regex match passed directly is evaluated in list context and is an empty list when it fails, so write `scalar($command =~ /pattern/ia)`; the linter treats a one-argument call as a failed check, so the mistake cannot pass silently |
+| `row['Validation ID']`, `row['Exact command or check']` | Replace | `$args->{row}{'Validation ID'}`, `$args->{row}{'Exact command or check'}`, keyed by the header text as the plan template writes it |
+| `/pattern/i.test(command)`, `!/pattern/i.test(command)` | Replace | `$command =~ /pattern/ia`, `$command !~ /pattern/ia`. Add `/a` so `\d`, `\w`, `\b`, and `\s` stay ASCII as in JavaScript, and write a `.` that must not cross a line as `[^\r\n]`, because Perl's `.` matches a carriage return |
+| `command.toLowerCase().includes('literal'.toLowerCase())` | Replace | `index(lc $command, lc 'literal') >= 0` |
+| `export const commandPathExtensions = ['gd', 'tscn'];` | Replace | A `command_path_extensions => [ 'gd', 'tscn' ]` entry in the returned hash |
+| A module-level `const` both functions share | Retain | A file-level `my` variable above the `return { ... };` |
+| `import` of a Node built-in module | Replace | A core Perl module such as `File::Spec`, `Cwd`, or `POSIX`, and nothing outside Perl's core, because the plugin installs nothing |
 
 ### Always
 

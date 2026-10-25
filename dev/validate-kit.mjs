@@ -22,10 +22,13 @@
 // rules the mode replaces, the reviewers stop escalating in the mode, and the
 // install and upgrade skills offer it. The spawn logger is wired and
 // does nothing without AGRIPPA_SPAWN_LOG=1, and the agrippa-lint wrapper is an
-// executable LF Node script that runs the plugin's linter. No vocabulary from
-// an older toolchain survives outside UPGRADING.md and this script, text files
-// are clean UTF-8 without trailing whitespace, every Node script parses, and
-// the two copies of LICENSE and of NOTICE are identical. It then builds a
+// executable LF sh script that runs the plugin's Perl linter. No vocabulary
+// from an older toolchain, and no name of the plugin's former Node scripts,
+// survives outside UPGRADING.md and this script; text files are clean UTF-8
+// without trailing whitespace; every sh, Perl, and Node script parses, the
+// plugin ships no JavaScript, and its Perl uses only core modules on 5.30 or
+// newer; and the two copies of LICENSE and of NOTICE are identical. It then
+// builds a
 // simulated project in a temporary git repository with no copy of the linter
 // and runs `dev/fixtures/run-smoke-test.mjs` against it, which proves the
 // plugin's linter accepts the valid fixture and rejects the broken one.
@@ -46,8 +49,9 @@
 // agents, the plugin's
 // skills, the shared linter, the spawn logger, its hook_payload.ps1 helper
 // unless a project script still uses it, a settings.json hook or permission
-// that runs them, or a PowerShell tools/validate_plan_workspace.local.ps1 that
-// the 0.2.0 linter no longer loads. It must also keep no full copy of the rules
+// that runs them, or a tools/validate_plan_workspace.local.ps1 or .local.mjs
+// that the 0.4.0 linter no longer loads; a .local.pl must compile. It must
+// also keep no full copy of the rules
 // that now ship in the plan and design-first skills: plans/README.md and
 // .agrippa/decisions/README.md are short pointers, and the old
 // docs/planning/CLAUDE.md is gone. A .agrippa/area-map.md, when
@@ -243,7 +247,7 @@ const required = [
     'bin/agrippa-lint',
     'scripts/core-rules.md',
     'scripts/inject_core_rules.sh',
-    'scripts/validate_plan_workspace.mjs',
+    'scripts/validate_plan_workspace.pl',
     'scripts/log_subagent_spawns.sh',
     'hooks/hooks.json',
     'skills/plan/reference/agent-workflow.md',
@@ -262,7 +266,7 @@ const required = [
     'templates/decisions-README.md',
     'templates/plans-README.md',
     'templates/MIGRATION.md',
-    'templates/validate-plan-workspace.local.mjs',
+    'templates/validate-plan-workspace.local.pl',
     'templates/hooks/README.md',
     ...agentNames.map((name) => `agents/${name}.md`),
     ...shippedSkillNames.map((name) => `skills/${name}/SKILL.md`),
@@ -272,6 +276,7 @@ const required = [
 // Development files are not shipped with the plugin.
 const devRequired = [
     'validate-kit.mjs',
+    'tool-paths.mjs',
     'fixtures/run-smoke-test.mjs',
     ...planningNames.map((name) => `fixtures/smoke-workspace/${name}.md`),
 ];
@@ -360,7 +365,7 @@ const packets = readKitFile('skills/plan/templates/PACKETS.md');
 const spec = readKitFile('skills/plan/templates/SPEC.md');
 const workspaceFiles = readKitFile('skills/plan/reference/workspace-files.md');
 const decisionRecords = readKitFile('skills/design-first/reference/decision-records.md');
-const workspaceLinter = readKitFile('scripts/validate_plan_workspace.mjs');
+const workspaceLinter = readKitFile('scripts/validate_plan_workspace.pl');
 const areaMap = readKitFile('templates/AREA-MAP.md');
 const surveySkill = readKitFile('skills/survey/SKILL.md');
 const repoScout = readKitFile('agents/repo-scout.md');
@@ -427,7 +432,7 @@ testClauses('README', readme, [
     '\\[PROJECT: \\.\\.\\.\\]',
     'run-smoke-test\\.mjs',
     'Install-marker scan',
-    'validate_plan_workspace\\.local\\.mjs',
+    'validate_plan_workspace\\.local\\.pl',
     'UPGRADING\\.md',
     'AskUserQuestion',
 ]);
@@ -487,6 +492,9 @@ const node = process.execPath;
 const sh = findTool('sh');
 addCheck(sh !== null, 'sh is not available. The plugin hooks run on POSIX sh (Git for Windows provides it on Windows); install it to run the hook checks.');
 const shCommand = sh === null ? 'sh' : sh;
+const perl = findTool('perl');
+addCheck(perl !== null, 'perl is not available. The plugin linter runs on Perl (Git for Windows provides it on Windows; macOS and Linux ship it); install it to run the linter checks.');
+const perlCommand = perl === null ? 'perl' : perl;
 // The sh hook escapes backslash, double quote, tab, carriage return, and
 // newline, so the rules file may hold no other control character.
 addCheck(!/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/.test(coreRules), 'scripts/core-rules.md holds a control character other than tab, carriage return, or newline, which the sh hook cannot escape.');
@@ -583,15 +591,15 @@ try {
 }
 
 // The wrapper runs from the Bash tool's PATH, so git must record it as
-// executable and it must keep LF line endings for its shebang to work. It has
-// no extension, so Node loads it as CommonJS; it must not use ES-module syntax.
+// executable and it must keep LF line endings for its shebang to work. It is
+// a POSIX sh script that checks for perl and hands every argument to the
+// Perl linter beside it.
 const wrapperPath = join(kitRoot, 'bin', 'agrippa-lint');
 if (isFile(wrapperPath)) {
     const wrapper = readText(wrapperPath);
-    addCheck(wrapper.startsWith('#!/usr/bin/env node\n'), 'bin/agrippa-lint must start with #!/usr/bin/env node and use LF line endings.');
+    addCheck(wrapper.startsWith('#!/bin/sh\n'), 'bin/agrippa-lint must start with #!/bin/sh and use LF line endings.');
     addCheck(!wrapper.includes('\r'), 'bin/agrippa-lint must use LF line endings.');
-    addCheck(wrapper.includes("'validate_plan_workspace.mjs'") && wrapper.includes('process.argv.slice(2)'), 'bin/agrippa-lint must run ../scripts/validate_plan_workspace.mjs and pass its arguments through.');
-    addCheck(!/^\s*(import|export)\s/im.test(wrapper), 'bin/agrippa-lint is loaded as CommonJS and must not use import or export statements.');
+    addCheck(/command -v perl/.test(wrapper) && /exec perl "\$\(dirname "\$0"\)\/\.\.\/scripts\/validate_plan_workspace\.pl" "\$@"/.test(wrapper), 'bin/agrippa-lint must check for perl, then exec perl on ../scripts/validate_plan_workspace.pl with every argument passed through.');
     const wrapperIndex = run('git', ['-C', repoRoot, 'ls-files', '-s', '--', 'plugins/agrippa/bin/agrippa-lint']).stdout.split(/\r?\n/).filter((line) => line !== '');
     addCheck(wrapperIndex.length === 1 && /^100755 /.test(wrapperIndex[0]), 'bin/agrippa-lint must be committed as executable (git add --chmod=+x).');
 }
@@ -669,6 +677,9 @@ testClauses('UPGRADING', upgrading, [
     '`docs/decisions/` and every record in it \\| Move \\| `git mv docs/decisions \\.agrippa/decisions`',
     '### From G4 v0\\.3\\.0',
     '`docs/planning/MIGRATION\\.md` \\| Move \\| `git mv docs/planning/MIGRATION\\.md \\.agrippa/MIGRATION\\.md`',
+    '### From G4 v0\\.3\\.1',
+    '`tools/validate_plan_workspace\\.local\\.mjs` \\| Replace \\| `tools/validate_plan_workspace\\.local\\.pl`',
+    'scalar\\(\\$command =~',
     'docs/planning/CLAUDE\\.md` \\| Delete',
     'tools/log_subagent_spawns\\.ps1` \\| Delete',
     'tools/hook_payload\\.ps1` \\| Delete',
@@ -696,11 +707,11 @@ const setupClauses = [
     'dev/validate-kit\\.mjs -InstalledRepo',
     'run-smoke-test\\.mjs -RepoRoot',
     '\\$\\{CLAUDE_PLUGIN_ROOT\\}/templates/',
-    // Node is the plugin's one runtime and Claude Code does not need it, so
-    // both skills check for it first and never fake it with a shell copy.
-    'node --version',
-    'Node\\.js is not\\s+installed',
-    'Never\\s+write a\\s+shell-language copy',
+    // The linter runs on Perl, which Claude Code does not need, so both skills
+    // check for it first and never fake the plugin's scripts with a copy.
+    'perl --version',
+    'Perl is not\\s+installed',
+    'Never\\s+write a\\s+copy of a hook script or the linter',
     // Low-usage mode is offered like the spawn logger: one question, and the
     // env entry only on a yes.
     'AGRIPPA_LOW_USAGE',
@@ -752,6 +763,7 @@ testClauses('Skill upgrade', upgradeSkill, [...setupClauses,
     'From G3',
     'From G4 v0\\.2\\.0',
     'From G4 v0\\.3\\.0',
+    'From G4 v0\\.3\\.1',
     'templates/agrippa-CLAUDE\\.md',
     '\\$\\{CLAUDE_PLUGIN_ROOT\\}/UPGRADING\\.md',
     '\\.agrippa/MIGRATION\\.md',
@@ -815,23 +827,23 @@ for (const pointer of ['templates/plans-README.md', 'templates/decisions-README.
 }
 addCheck(matches(adoption, 'run-smoke-test\\.mjs'), 'Adoption checklist must require the smoke test.');
 addCheck(matches(workspaceLinter, 'checks shape, never truth'), 'Workspace linter lacks the shape-not-truth disclaimer.');
-addCheck(matches(workspaceLinter, 'validate_plan_workspace\\.local\\.mjs'), 'Workspace linter does not load the local extension file.');
-const localTemplate = readKitFile('templates/validate-plan-workspace.local.mjs');
-addCheck(matches(localTemplate, 'export function checkValidationRow') && matches(workspaceLinter, 'checkValidationRow'), 'Local-check template and linter disagree on checkValidationRow.');
-addCheck(matches(localTemplate, 'export function checkValidationMatrix') && matches(workspaceLinter, 'checkValidationMatrix'), 'Local-check template and linter disagree on checkValidationMatrix.');
-addCheck(matches(localTemplate, 'commandPathExtensions') && matches(workspaceLinter, 'local\\.commandPathExtensions'), 'Local-check template and linter disagree on commandPathExtensions.');
+addCheck(matches(workspaceLinter, 'validate_plan_workspace\\.local\\.pl'), 'Workspace linter does not load the local extension file.');
+const localTemplate = readKitFile('templates/validate-plan-workspace.local.pl');
+addCheck(matches(localTemplate, '(?m)^\\s*check_validation_row\\s*=>') && matches(workspaceLinter, 'check_validation_row'), 'Local-check template and linter disagree on check_validation_row.');
+addCheck(matches(localTemplate, '(?m)^\\s*check_validation_matrix\\s*=>') && matches(workspaceLinter, 'check_validation_matrix'), 'Local-check template and linter disagree on check_validation_matrix.');
+addCheck(matches(localTemplate, 'command_path_extensions') && matches(workspaceLinter, 'local->\\{command_path_extensions\\}'), 'Local-check template and linter disagree on command_path_extensions.');
 
 // The linter owns the template vocabulary it parses. Read its required packet
 // labels and stage fields from its own source, so a linter change is checked
 // against the templates without a second hand-kept list here.
-const labelBlock = /const requiredPacketLabels = \[(.+?)\];/s.exec(workspaceLinter);
+const labelBlock = /my @required_packet_labels = \((.+?)\);/s.exec(workspaceLinter);
 addCheck(labelBlock !== null, 'Could not find the required packet-label array in the workspace linter.');
 const packetLabels = labelBlock === null ? [] : [...labelBlock[1].matchAll(/'([^']+)'/g)].map((match) => match[1]);
 addCheck(packetLabels.length > 0, 'The workspace linter requires no packet labels.');
 for (const label of packetLabels) {
     addCheck(new RegExp(`^${escapeRegex(label)}\\s*:`, 'im').test(packets), `PACKETS template lacks the packet label '${label}' the linter requires.`);
 }
-const stageFields = [...new Set([...workspaceLinter.matchAll(/getField\(\w+, '([^']+)'\)/g)].map((match) => match[1]))];
+const stageFields = [...new Set([...workspaceLinter.matchAll(/\bfield\(\$\w+, '([^']+)'\)/g)].map((match) => match[1]))];
 addCheck(stageFields.length > 0, 'The workspace linter reads no stage fields.');
 for (const field of stageFields) {
     // 'Bounded choice' is an optional field the linter falls back from.
@@ -965,6 +977,20 @@ const substringTerms = [
 // in .agrippa/ now, so a shipped file that still names the old paths would
 // send a reader to a path an installed repository no longer has.
 const oldLayoutTerms = ['docs/agent_memory', 'docs/decisions', 'docs/planning/MIGRATION'];
+// Up to 0.3.1 the plugin's scripts were Node, and the install and upgrade
+// skills checked for it. A shipped file that still names them would send a
+// reader to a script or a requirement the plugin no longer has. The
+// development tools stay on Node, so these terms are forbidden only under
+// plugins/agrippa/.
+const oldScriptTerms = [
+    'inject_core_rules.mjs',
+    'log_subagent_spawns.mjs',
+    'validate_plan_workspace.mjs',
+    'validate-plan-workspace.local.mjs',
+    'validate_plan_workspace.local.mjs',
+    'node --version',
+    'Node.js is not installed',
+];
 // UPGRADING.md must name the old markers to recognize them, and this script
 // names them to search for them. Paths are relative to the repository root.
 const vocabularyExempt = ['plugins/agrippa/UPGRADING.md', 'dev/validate-kit.mjs'];
@@ -1000,21 +1026,52 @@ for (const file of checkedFiles) {
     for (const term of oldLayoutTerms) {
         addCheck(!new RegExp(escapeRegex(term), 'i').test(text), `Old project-document path '${term}' found in ${relative}; the documents live in .agrippa/ since 0.3.0.`);
     }
+    // The linter names the old local-checks file so it can report a leftover
+    // one, as UPGRADING.md names old markers to recognize them.
+    if (/^plugins\/agrippa\//i.test(relative) && !containsName(['plugins/agrippa/scripts/validate_plan_workspace.pl'], relative)) {
+        for (const term of oldScriptTerms) {
+            addCheck(!new RegExp(escapeRegex(term), 'i').test(text), `Old Node-era term '${term}' found in ${relative}; the plugin's scripts are sh and Perl since 0.4.0.`);
+        }
+    }
 }
 
 addCheck(kitFiles.filter((path) => /\.toml$/i.test(path)).length === 0, 'Kit must contain no .toml agent profiles.');
 addCheck(!existsSync(join(kitRoot, 'templates', 'config.toml')), 'Kit must not install a toolchain config.toml.');
 
-// --- Scripts must parse ----------------------------------------------------
+// --- Scripts must parse, and the plugin's run on sh and Perl only -----------
 
-for (const script of checkedFiles.filter((path) => extname(path).toLowerCase() === '.mjs' || basename(path) === 'agrippa-lint')) {
+// The development tools are Node scripts; nothing under plugins/agrippa/ is.
+for (const script of checkedFiles.filter((path) => extname(path).toLowerCase() === '.mjs')) {
     const syntax = run(node, ['--check', script]);
     addCheck(syntax.exitCode === 0, `${basename(script)} has Node syntax errors:\n${syntax.output}`);
 }
-for (const script of checkedFiles.filter((path) => extname(path).toLowerCase() === '.sh')) {
+for (const script of kitFiles.filter((path) => /\.(?:mjs|cjs|js)$/i.test(path))) {
+    addCheck(false, `${relativeTo(repoRoot, script)} is a JavaScript file; the plugin runs on sh and Perl only, so a machine without Node can use it.`);
+}
+for (const script of checkedFiles.filter((path) => extname(path).toLowerCase() === '.sh' || basename(path) === 'agrippa-lint')) {
     const syntax = run(shCommand, ['-n', script]);
     addCheck(syntax.exitCode === 0, `${basename(script)} has sh syntax errors:\n${syntax.output}`);
     addCheck(readText(script).startsWith('#!/bin/sh\n'), `${basename(script)} must start with #!/bin/sh and use LF line endings.`);
+}
+// Every Perl script must compile on the oldest Perl the plugin supports, 5.30
+// (macOS 11 through Ventura), and import only core modules, so a stock Perl
+// runs it. `perl -c` here runs on the newest Perl, so the version floor and
+// the module list are checked from the source.
+const corePerlModules = ['strict', 'warnings', 'utf8', 'Cwd', 'File::Spec', 'File::Basename', 'POSIX', 'Encode', 'IO::Handle', 'JSON::PP'];
+for (const script of checkedFiles.filter((path) => extname(path).toLowerCase() === '.pl')) {
+    const shown = relativeTo(repoRoot, script);
+    const syntax = run(perlCommand, ['-c', script]);
+    addCheck(syntax.exitCode === 0, `${shown} has Perl syntax errors:\n${syntax.output}`);
+    const source = readText(script);
+    for (const use of source.matchAll(/^\s*use\s+(v?[\w:.]+)/gm)) {
+        const module = use[1];
+        const version = /^v?5\.(\d+)/.exec(module);
+        if (version !== null) {
+            addCheck(Number(version[1]) <= 30, `${shown} requires Perl ${module}; the plugin supports 5.30 and newer.`);
+        } else {
+            addCheck(containsName(corePerlModules, module), `${shown} uses the module ${module}, which is not on the core-module list the plugin allows (${corePerlModules.join(', ')}).`);
+        }
+    }
 }
 
 // --- End-to-end: simulated project plus the smoke test ---------------------
@@ -1164,10 +1221,16 @@ if (installedRepo) {
             const path = `.claude/commands/${name}.md`;
             addProjectCheck(!existsSync(join(projectRoot, path)), `${path} is a local command that the plugin skill /agrippa:${name} replaces. Delete it.`);
         }
-        addProjectCheck(!existsSync(join(projectRoot, 'tools', 'validate_plan_workspace.ps1')), 'tools/validate_plan_workspace.ps1 is a local copy of the shared linter. Delete it; plans run agrippa-lint from the plugin, and project rules stay in tools/validate_plan_workspace.local.mjs.');
-        // The 0.2.0 linter imports the .mjs local file and fails on a .ps1 one,
-        // so a leftover .ps1 means the project's rules are not running.
-        addProjectCheck(!existsSync(join(projectRoot, 'tools', 'validate_plan_workspace.local.ps1')), 'tools/validate_plan_workspace.local.ps1 is the PowerShell local-checks file that linters before 0.2.0 loaded. Port it to tools/validate_plan_workspace.local.mjs with the "From G4 v0.1.2" table in UPGRADING.md and delete it; agrippa-lint fails while only the .ps1 exists.');
+        addProjectCheck(!existsSync(join(projectRoot, 'tools', 'validate_plan_workspace.ps1')), 'tools/validate_plan_workspace.ps1 is a local copy of the shared linter. Delete it; plans run agrippa-lint from the plugin, and project rules stay in tools/validate_plan_workspace.local.pl.');
+        // The 0.4.0 linter loads the .pl local file and fails on a .ps1 or
+        // .mjs one, so a leftover means the project's rules are not running.
+        addProjectCheck(!existsSync(join(projectRoot, 'tools', 'validate_plan_workspace.local.ps1')), 'tools/validate_plan_workspace.local.ps1 is the PowerShell local-checks file that linters before 0.2.0 loaded. Port it to tools/validate_plan_workspace.local.pl with the "From G4 v0.3.1" table in UPGRADING.md and delete it; agrippa-lint fails while only the .ps1 exists.');
+        addProjectCheck(!existsSync(join(projectRoot, 'tools', 'validate_plan_workspace.local.mjs')), 'tools/validate_plan_workspace.local.mjs is the JavaScript local-checks file that linters 0.2.0 to 0.3.1 loaded. Port it to tools/validate_plan_workspace.local.pl with the "From G4 v0.3.1" table in UPGRADING.md and delete it; agrippa-lint fails while only the .mjs exists.');
+        const localChecksFile = join(projectRoot, 'tools', 'validate_plan_workspace.local.pl');
+        if (isFile(localChecksFile)) {
+            const localSyntax = run(perlCommand, ['-c', localChecksFile]);
+            addProjectCheck(localSyntax.exitCode === 0, `tools/validate_plan_workspace.local.pl does not compile, so agrippa-lint fails on every plan:\n${localSyntax.output}`);
+        }
 
         // Up to v0.1.0 an install copied the plan-workspace and decision-record
         // rules into these READMEs. The rules now ship in the plan and

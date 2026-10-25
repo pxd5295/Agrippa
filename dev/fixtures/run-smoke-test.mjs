@@ -4,9 +4,9 @@
 // Copies `smoke-workspace/` into `<RepoRoot>/plans/<today>-kit-smoke-test`
 // (adding -2, -3, ... on a name collision), replaces the `__TODAY__` and
 // `__PLAN__` tokens, and runs the plugin's
-// `plugins/agrippa/scripts/validate_plan_workspace.mjs` from this Agrippa
-// checkout against it with the same `node` that runs this script. The run must
-// PASS. It then marks stage M1 `Open` and deletes the M1 packet's `Return only`
+// `plugins/agrippa/scripts/validate_plan_workspace.pl` from this Agrippa
+// checkout against it with the perl that `dev/tool-paths.mjs` finds, which
+// on Windows is the one Git for Windows bundles. The run must PASS. It then marks stage M1 `Open` and deletes the M1 packet's `Return only`
 // line, and the same linter must FAIL with both errors. The workspace is
 // deleted afterwards either way; a `plans/` folder the script had to create is
 // deleted too while it is still empty.
@@ -18,7 +18,7 @@
 //
 // It runs the linter with -SkipLocalChecks, because the generic fixture cannot
 // satisfy a project's own invariants in
-// `tools/validate_plan_workspace.local.mjs`; prove those by linting one real
+// `tools/validate_plan_workspace.local.pl`; prove those by linting one real
 // plan workspace instead.
 //
 // The fixture references only the project's root `AGENTS.md`, whose first line
@@ -37,6 +37,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { findTool } from '../tool-paths.mjs';
 
 const usage = 'usage: node dev/fixtures/run-smoke-test.mjs -RepoRoot <repository>';
 
@@ -81,7 +82,7 @@ if (parsed.error) {
 // This script lives in dev/fixtures/ of the Agrippa repository.
 const scriptRoot = dirname(fileURLToPath(import.meta.url));
 const fixture = join(scriptRoot, 'smoke-workspace');
-const linter = join(scriptRoot, '..', '..', 'plugins', 'agrippa', 'scripts', 'validate_plan_workspace.mjs');
+const linter = join(scriptRoot, '..', '..', 'plugins', 'agrippa', 'scripts', 'validate_plan_workspace.pl');
 const failures = [];
 
 function isFile(path) {
@@ -107,6 +108,11 @@ if (!isDirectory(parsed.repoRoot)) {
 const root = resolve(parsed.repoRoot);
 if (!isFile(linter)) {
     console.log(`FAIL: the plugin linter is missing at ${linter}.`);
+    process.exit(1);
+}
+const perl = findTool('perl');
+if (perl === null) {
+    console.log('FAIL: perl is not available; the plugin linter runs on Perl, which Git for Windows provides on Windows and macOS and Linux ship.');
     process.exit(1);
 }
 if (!existsSync(join(root, '.git'))) {
@@ -142,7 +148,7 @@ function runLinter() {
     // reports errors through stderr and the summary through stdout; both are
     // collapsed to single-spaced text so a message is matched the same way
     // however the lines are presented.
-    const result = spawnSync(process.execPath, [linter, '-PlanPath', planRelative, '-SkipLocalChecks'], {
+    const result = spawnSync(perl, [linter, '-PlanPath', planRelative, '-SkipLocalChecks'], {
         cwd: root,
         encoding: 'utf8',
     });

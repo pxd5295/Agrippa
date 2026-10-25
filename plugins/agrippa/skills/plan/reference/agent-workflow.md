@@ -306,7 +306,7 @@ through the project's live-app bridge.
 
 The project's durable command invariants (one required binary, an invocation
 shape per target kind, a prerequisite that must come first, a required working
-directory) are checks in `tools/validate_plan_workspace.local.mjs`, which
+directory) are checks in `tools/validate_plan_workspace.local.pl`, which
 `agrippa-lint` loads from the repository. The shared linter is never edited
 for them, and it checks shape and freshness, never semantic truth.
 

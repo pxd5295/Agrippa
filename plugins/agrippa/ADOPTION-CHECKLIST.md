@@ -6,9 +6,10 @@ named as not done, with the reason.
 
 ## Repository discovery
 
-- [ ] `node --version` succeeds, or the user chose to install without Node
-      and every item below that needs the hooks or the linter is reported as
-      not done with the reason "Node.js is not installed".
+- [ ] `perl --version` succeeds through the Bash tool, or the user chose to
+      install without Perl and every item below that needs the linter is
+      reported as not done with the reason "Perl is not installed". The
+      hooks are POSIX sh scripts and need nothing the Bash tool lacks.
 - [ ] Read every existing `AGENTS.md` and `CLAUDE.md`, at any depth.
 - [ ] Inventory `.claude/agents`, skills, commands, `settings.json` hooks and
       permissions, planning guides, templates, shortcuts, validators, project
@@ -147,8 +148,8 @@ named as not done, with the reason.
 - [ ] The shared linter runs from the plugin, and the repository has no copy
       of it at `tools/validate_plan_workspace.ps1`, nor of the spawn logger's
       scripts. This repository's command invariants and
-      any narrower `commandPathExtensions` list live in
-      `tools/validate_plan_workspace.local.mjs`, proved by linting one real
+      any narrower `command_path_extensions` list live in
+      `tools/validate_plan_workspace.local.pl`, proved by linting one real
       workspace, or the file is deliberately not installed.
 - [ ] Optional edit-lint hook: written to the rules in
       `templates/hooks/README.md` and proved with one deliberate lint error,

@@ -1,36 +1,28 @@
-#!/usr/bin/env node
-// agrippa-lint: run the Agrippa plan-workspace linter from the plugin.
-//
-// Claude Code puts this plugin's bin/ folder on the Bash tool's PATH while the
-// plugin is enabled, so a plan's validation matrix can name the linter as
-// `agrippa-lint -PlanPath plans/YYYY-MM-DD-name` with no version-specific
-// path. The folder is not on the PowerShell tool's PATH, so that row runs
-// through the Bash tool. Git Bash, which the Bash tool uses on Windows, runs
-// this file through the shebang line above, and node.exe accepts the path it
-// is given.
-//
-// Every argument passes through to scripts/validate_plan_workspace.mjs, whose
-// exit code is this command's exit code. This file has no extension, so Node
-// loads it as CommonJS; it imports the ES-module linter dynamically.
-'use strict';
+#!/bin/sh
+# agrippa-lint: run the Agrippa plan-workspace linter from the plugin.
+#
+# Claude Code puts this plugin's bin/ folder on the Bash tool's PATH while the
+# plugin is enabled, so a plan's validation matrix can name the linter as
+# `agrippa-lint -PlanPath plans/YYYY-MM-DD-name` with no version-specific
+# path. The folder is not on the PowerShell tool's PATH, so that row runs
+# through the Bash tool. Git Bash, which the Bash tool uses on Windows, runs
+# this file through the shebang line above and sets $0 to the full path it
+# found on PATH, which is how the linter beside it is located.
+#
+# Every argument passes through to scripts/validate_plan_workspace.pl, whose
+# exit code is this command's exit code. The linter needs perl, which Git for
+# Windows bundles and macOS and Linux ship; without it this prints one plain
+# line and exits 2, the linter's usage-error code, so the matrix row fails
+# loudly instead of with a shebang error.
 
-const { join } = require('node:path');
-const { pathToFileURL } = require('node:url');
+# Git for Windows puts perl in /usr/bin, which its bin/sh.exe launcher adds
+# to PATH but its bare usr/bin/sh.exe does not. Harmless elsewhere.
+PATH=/usr/bin:$PATH
+export PATH
 
-const linter = join(__dirname, '..', 'scripts', 'validate_plan_workspace.mjs');
+if ! command -v perl >/dev/null 2>&1; then
+    printf '%s\n' 'agrippa-lint: perl is required to run the plan-workspace linter and is not on PATH. On Windows it comes with Git for Windows; on macOS and Linux it ships with the system.' >&2
+    exit 2
+fi
 
-import(pathToFileURL(linter).href).then(
-    (module) => module.main(process.argv.slice(2)),
-    (error) => {
-        process.stderr.write(`agrippa-lint: the linter at ${linter} could not be loaded: ${error.message}\n`);
-        return 2;
-    },
-).then(
-    (code) => {
-        process.exitCode = code;
-    },
-    (error) => {
-        process.stderr.write(`agrippa-lint: ${error.stack || error}\n`);
-        process.exitCode = 1;
-    },
-);
+exec perl "$(dirname "$0")/../scripts/validate_plan_workspace.pl" "$@"

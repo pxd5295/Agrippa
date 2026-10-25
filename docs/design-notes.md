@@ -29,13 +29,14 @@ they need it to recognize and search for an old install.
 - The kit linter is the linter every project runs. It is never edited per
   project.
 - Since Phase 4 of `docs/plugin-conversion-plan.md` (2026-10-18), the linter
-  runs from the plugin. It is `plugins/agrippa/scripts/validate_plan_workspace.mjs`,
-  a Node script since 0.2.0 (it was a PowerShell script before; see "Linter
-  runs on Node" below). A project no longer gets a copy at
+  runs from the plugin. It is `plugins/agrippa/scripts/validate_plan_workspace.pl`,
+  a Perl script since 0.4.0 (a Node script from 0.2.0, and a PowerShell
+  script before that; see "Linter runs on Node" and "Node leaves the plugin"
+  below). A project no longer gets a copy at
   `tools/validate_plan_workspace.ps1`. Inside Claude Code, the plugin's
   `bin/agrippa-lint` wrapper runs it and passes every argument through.
   Outside Claude Code, for example in a terminal or CI, you run it with
-  `node` from a checkout of Agrippa at the project's pinned tag.
+  `perl` from a checkout of Agrippa at the project's pinned tag.
 - A plan's matrix row is `agrippa-lint -PlanPath plans/YYYY-MM-DD-name`. That
   command names no version-specific path, so check 13 has nothing to fail on.
   The plugin cache path changes with every version, and
@@ -48,17 +49,20 @@ they need it to recognize and search for an old install.
   directory, from `git rev-parse --show-toplevel`. Outside a git repository
   and without `-RepoRoot`, the linter fails with one `[Files]` error rather
   than guess.
-- The wrapper is an extensionless Node script with a `#!/usr/bin/env node`
-  line. Git Bash runs it through that line and hands `node.exe` a path it
-  accepts, so the `cygpath -w` step the earlier `sh` wrapper needed for
-  Windows PowerShell is gone. Git records the wrapper as executable
+- The wrapper is an extensionless POSIX `sh` script with a `#!/bin/sh` line
+  (since 0.4.0; a Node script from 0.2.0). Git Bash runs it through that
+  line, and it `exec`s `perl` on the linter beside it after checking that
+  `perl` exists, so a missing Perl fails with one plain line and exit 2
+  instead of a shebang error. Git records the wrapper as executable
   (`git add --chmod=+x`), and `.gitattributes` keeps it LF, which the shebang
   line needs. `validate-kit.mjs` checks all three.
-- Project checks go in an optional `tools/validate_plan_workspace.local.mjs`,
+- Project checks go in an optional `tools/validate_plan_workspace.local.pl`,
   which the linter loads from `<RepoRoot>/tools/` rather than from its own
-  folder, with a dynamic `import()`. It may export `checkValidationRow` (run
-  once per validation-matrix row), `checkValidationMatrix` (run once per
-  matrix), and `commandPathExtensions`. The template carries nuro-battler's
+  folder, with `do`. The file returns one hash whose optional keys are
+  `check_validation_row` (run once per validation-matrix row),
+  `check_validation_matrix` (run once per matrix), and
+  `command_path_extensions`; see "Node leaves the plugin" below for the
+  contract and its history. The template carries nuro-battler's
   Godot checks as the example.
 - `-SkipLocalChecks` exists for the smoke test, whose generic fixture cannot
   satisfy project rules.
@@ -339,7 +343,8 @@ failed and the core rules never loaded. They are now
 `scripts/inject_core_rules.mjs` and `scripts/log_subagent_spawns.mjs`, and
 `hooks.json` runs them with `node`. This replaces the script names in "Core
 rules injection" and the PowerShell start-up cost in "Plugin skills and the
-spawn logger after Phase 4".
+spawn logger after Phase 4". Superseded on 2026-10-25: since 0.4.0 the hooks
+are POSIX sh scripts; see "Node leaves the plugin" below.
 
 - **Why Node rather than `pwsh`.** One hook command has to work on every OS,
   and `node` is named the same everywhere. With PowerShell, the program is
@@ -374,6 +379,9 @@ spawn logger after Phase 4".
 script. The plugin now needs Node and nothing else. The reason is the one the
 hooks section gives: `node` has one name on every OS, and the `sh` wrapper
 only existed to find `powershell` or `pwsh` and convert a path for it.
+Superseded on 2026-10-25: since 0.4.0 the linter is a Perl script and the
+wrapper is `sh` again; see "Node leaves the plugin" below, which keeps the
+parity method and the transliteration traps recorded here.
 
 - **Same command, same output.** `agrippa-lint -PlanPath plans/<name>` is
   unchanged, so no plan's matrix row and no `Bash(agrippa-lint:*)` permission
@@ -574,7 +582,9 @@ work in them every day.
 
 Both skills now run `node --version` before anything else. Until this change
 nothing in the plugin checked for Node, even though every hook, the shared
-linter, and `bin/agrippa-lint` run on it.
+linter, and `bin/agrippa-lint` run on it. Superseded on 2026-10-25: since
+0.4.0 the check is `perl --version` through the Bash tool, and only the
+linter depends on it; see "Node leaves the plugin" below.
 
 - **Why the failure was silent.** Claude Code's native installer and the
   desktop app do not need Node, so a machine can lack it. The hook commands
@@ -814,3 +824,149 @@ template wording or friendlier linter messages.
   paths in it.
 - Any `V` followed by digits anywhere in a workspace (for example a product
   version name) is read as a validation ID and fails as undefined.
+
+## Node leaves the plugin: hooks on sh, linter on Perl (2026-10-25, release 0.4.0)
+
+Every user of the plugin had to install Node.js, because the two hook scripts,
+the linter, and the `bin/agrippa-lint` wrapper were Node scripts. Claude Code
+itself does not need Node, so a machine could lack it, and then the
+`SessionStart` hook failed with a non-blocking notice and every session ran
+without the core rules. From 0.4.0 the hooks and the wrapper are POSIX `sh`
+scripts and the linter is a Perl script, so the plugin needs nothing a machine
+that runs Claude Code's Bash tool does not already have.
+
+- **What Claude Code provides, from its documentation.** Shell-form hook
+  commands run through `sh -c` on macOS and Linux and through Git Bash on
+  Windows; without Git for Windows they run in PowerShell, where a Bash
+  script fails, but the plugin already cannot work there because
+  `agrippa-lint` is reachable only through the Bash tool, which needs Git
+  Bash too. `SessionStart` accepts plain stdout as context, but
+  `SubagentStart` needs the JSON `hookSpecificOutput.additionalContext` form,
+  so the rules hook keeps emitting JSON for both events. Git for Windows
+  bundles `sh` (bash 5), GNU sed, awk, tr, and Perl 5.38 in `usr/bin`.
+- **Why `sh` for the hooks.** `sh` is present wherever the hooks run, with no
+  second runtime, so the core rules load on a machine with nothing else
+  installed. The scripts are POSIX only (no arrays, `[[`, or `${var,,}`)
+  because macOS `/bin/sh` may be bash 3.2 in POSIX mode or dash. The rules
+  hook escapes `core-rules.md` into a JSON string with a `sed` pipeline
+  (backslash, double quote, tab, carriage return) and an `awk` join that
+  inserts `\n` and restores the file's final newline; the self-check now
+  requires the rules file to hold no other control character, so those cases
+  are complete. The spawn logger reads its fields with `sed` at object-key
+  position (the key preceded by `{` or `,`), which an escaped quote inside
+  another string cannot produce; it unescapes `\\`, `\/`, and `\"` for a
+  Windows `cwd` and treats a `\u` escape as missing. It is observational,
+  so textual matching is enough. Both scripts prepend `/usr/bin` to PATH:
+  Git's `bin/sh.exe` launcher, which Claude Code uses, adds it already, but
+  the bare `usr/bin/sh.exe` started from a Windows process does not, and
+  then `sed` and `tr` are not found.
+- **Why Perl for the linter.** Its 26 checks use lookbehind, lazy
+  quantifiers, and capture groups, which POSIX `sh`, BSD awk (no capture
+  groups), and bash 3.2's extended regular expressions cannot express without
+  redesigning the checks. Perl takes the patterns almost unchanged and is
+  present wherever git is on Windows and with the OS elsewhere. Python is
+  absent on Windows (the `python3` on PATH is a Store stub), PowerShell is
+  absent elsewhere, and compiled binaries would need a build pipeline,
+  per-platform artifacts in git, and a redesigned extension point. Perl's
+  one risk is macOS, where Apple has called its scripting runtimes legacy
+  since 2019 but still ships Perl 5.34; the install and upgrade skills check
+  `perl --version` through the Bash tool for the same reason they checked
+  `node`, and only the linter depends on it now.
+- **The wrapper.** `bin/agrippa-lint` is `#!/bin/sh`, checks `command -v
+  perl`, prints one plain line and exits 2 when it is missing (the linter's
+  usage-error code, so the matrix row fails loudly instead of with a shebang
+  error), and `exec`s `perl` on the linter beside it, located from `$0`,
+  which Git Bash sets to the full path it found on PATH.
+- **Paths under Git Bash.** `git rev-parse --show-toplevel` and the
+  substituted `${CLAUDE_PLUGIN_ROOT}` are `C:/...` paths, while MSYS Perl's
+  `Cwd::abs_path` returns `/c/...`, and `$^O` is `msys`, not `MSWin32`. The
+  linter resolves the repository root and the plan root through `abs_path`
+  so the two spellings compare equal, treats `^[A-Za-z]:[\\/]` as absolute
+  as well as what `File::Spec` accepts (MSYS `File::Spec` does accept
+  `C:/x`), builds every path with `/`, and compares paths without regard to
+  case when `$^O` is `MSWin32`, `msys`, `cygwin`, or `darwin`. The local
+  file is loaded by its resolved path, because `do "C:/..."` would search
+  `@INC`.
+- **Encoding.** Files are read `:raw` and decoded with `Encode::decode`,
+  which substitutes U+FFFD for a bad byte silently as Node's `'utf8'` read
+  did; a `<:encoding(UTF-8)` layer would print a warning per bad byte from
+  checks 21, 24, and 25. `STDOUT` and `STDERR` carry the UTF-8 layer with
+  autoflush on, because the layer buffers `STDERR` and the summary line could
+  otherwise reach a shared pipe before the errors it counts. Every string
+  inside the program is a character string; `fs_*` helpers encode a path
+  back to bytes at each file-system call, so a non-ASCII path works.
+- **Regex port rules.** Every pattern carries `/a`, so `\d`, `\w`, and `\b`
+  stay ASCII as in JavaScript; `\s` under `/a` no longer matches non-ASCII
+  whitespace such as U+00A0, which JavaScript's did, and no plan in the
+  parity set contained any. JavaScript's `.` never matches `\r` and `$`
+  under `/m` matches before `\r\n`; Perl's `.` matches `\r` and `$` only
+  before `\n`, so every `.` outside `/s` became `[^\r\n]` and `(.+)$` became
+  `([^\r\n]+)\r?$`, or a CRLF workspace would gain a trailing `\r` in the
+  `Contract IDs:` and `Owned files:` captures. `(?![\s\S])` is `\z`.
+  `matchAll` is a `while (/.../g)` loop collecting `$&` and `@{^CAPTURE}`.
+  `Map`, `Set`, and `unique()` keep insertion order in JavaScript, and that
+  order fixes the sequence of the check 9, 10, and 11 messages, so the Perl
+  keeps a parallel order array beside each hash. `split(/\r?\n/)` is `split
+  /\r?\n/, $text, -1` followed by dropping one trailing empty element,
+  because Perl otherwise discards trailing empty fields and the line counts
+  in checks 21, 24, and 25 would change. `escapeRegex` is `\Q...\E`.
+- **The list-context trap.** A regex match passed straight as the first
+  argument of `$check->(...)` is evaluated in list context and yields an
+  empty list when it fails, which shifts the message into the condition slot
+  and makes the check pass. The broken smoke fixture caught it: the Perl
+  port reported one error where Node reported three. Every such call now
+  wraps the match in `scalar()`, and `$check` treats a one-argument call as
+  the failure it can only be, so a project's local file cannot make the same
+  mistake silently. `UPGRADING.md` "From G4 v0.3.1" records it.
+- **The local-checks contract, version 0.4.0.**
+  `tools/validate_plan_workspace.local.pl` is loaded with `do` and returns one
+  hash reference with the optional keys `command_path_extensions` (an array
+  reference), `check_validation_row` (a sub taking one hash reference with
+  `row`, `command`, `sandbox`, `check`, `repo_root`, `plan_root`), and
+  `check_validation_matrix` (the same with `rows`). `do` reports failure
+  through `$@`, `$!`, or an `undef` return rather than an exception, so the
+  three are tested separately and then `ref eq 'HASH'`; each failure is a
+  `[Local]` error, never a silent skip. A leftover `.local.mjs` or
+  `.local.ps1` produces a `[Local]` error naming the upgrade skill. The
+  template is the Godot worked example ported from the `.mjs` template, and
+  it returns its hash with `return { ... };` so `perl -c` does not warn about
+  a hash in void context. `UPGRADING.md` "From G4 v0.3.1" holds the
+  construct-by-construct port.
+- **Parity proof.** A scratch harness ran the 0.3.1 Node linter and the Perl
+  linter on the two `history/plans/` workspaces and all 74 dated nuro-battler
+  plan workspaces with `-SkipLocalChecks`, and on four of them with local
+  checks in a shared clone that held both the `.mjs` and the `.pl` form of
+  the Godot template. Every run gave byte-identical ordered output (stdout,
+  then stderr) and the same exit code after `\` was normalised to `/` in the
+  Node output, including the recorded baselines: `2026-10-01-inspector-fidelity`
+  18 errors and 647 checks without local checks and 711 with, and
+  `2026-10-01-inspector-redesign` 877 with. The smoke fixture matched valid,
+  broken, and converted to CRLF, and so did every usage-error path. The one
+  cosmetic difference is the "not inside a git repository" message, which
+  prints the current directory as `/c/...` under MSYS Perl where Node printed
+  `C:\...`.
+- **Deliberate changes.** Messages print repository paths with `/` on
+  Windows where Node printed `\`, so the same text appears on every OS.
+  `[Local]` messages name the Perl keys. The spawn log ends lines with LF on
+  Windows where Node wrote CRLF. MSYS `sed` and `awk` drop a carriage return
+  before a line feed, which the rules hook never meets because
+  `.gitattributes` keeps the rules file LF and the self-check forbids a
+  carriage return in it.
+- **The development tools stay on Node.** `dev/validate-kit.mjs` and the
+  smoke test are for this repository's maintainer, so they do not affect the
+  plugin's requirement. They find `sh` and `perl` through `dev/tool-paths.mjs`,
+  which on Windows prefers Git's `bin/sh.exe` launcher and `usr/bin/perl.exe`
+  derived from `git --exec-path`, because a developer runs them from
+  PowerShell, where Git's `usr/bin` is not on PATH; `sh` is probed with
+  `sh -c 'exit 0'` because dash rejects `--version`. The self-check runs the
+  hooks with `sh`, compiles every `.sh` with `sh -n` and every `.pl` with
+  `perl -c`, checks that each `.pl` uses only a core-module allowlist and no
+  Perl above 5.30, that no JavaScript file ships under `plugins/agrippa/`,
+  and that the old script names and `node --version` appear nowhere in the
+  plugin but `UPGRADING.md`.
+- **What this machine could not verify.** Everything ran on Windows under
+  Git Bash. The scripts target POSIX `sh` and Perl 5.30 with core modules so
+  they should behave the same on macOS (bash 3.2 as `sh`, Perl 5.34) and
+  Linux, but nothing here executed them there. A GitHub Actions workflow that
+  runs `node dev/validate-kit.mjs` on Ubuntu, macOS, and Windows would prove
+  it at each push and is the recommended follow-up.
