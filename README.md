@@ -95,7 +95,7 @@ Add the marketplace and enable the plugin in the repository's committed
 {
   "extraKnownMarketplaces": {
     "agrippa": {
-      "source": { "source": "github", "repo": "pxd5295/Agrippa", "ref": "v0.3.0" }
+      "source": { "source": "github", "repo": "pxd5295/Agrippa", "ref": "v0.3.1" }
     }
   },
   "enabledPlugins": { "agrippa@agrippa": true }

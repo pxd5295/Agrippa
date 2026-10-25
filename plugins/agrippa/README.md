@@ -105,13 +105,13 @@ is intact and self-consistent. Both run with `node`.
 
 A project enables the plugin in its committed `.claude/settings.json`. The
 marketplace's `ref` pins the release the project gets. Set it to a release
-tag, such as the current `v0.3.0`.
+tag, such as the current `v0.3.1`.
 
 ```json
 {
   "extraKnownMarketplaces": {
     "agrippa": {
-      "source": { "source": "github", "repo": "pxd5295/Agrippa", "ref": "v0.3.0" }
+      "source": { "source": "github", "repo": "pxd5295/Agrippa", "ref": "v0.3.1" }
     }
   },
   "enabledPlugins": { "agrippa@agrippa": true }
