@@ -18,7 +18,7 @@ repository's committed `.claude/settings.json`. The `ref` pins the release.
 {
   "extraKnownMarketplaces": {
     "agrippa": {
-      "source": { "source": "github", "repo": "pxd5295/Agrippa", "ref": "v0.4.0" }
+      "source": { "source": "github", "repo": "pxd5295/Agrippa", "ref": "v0.4.1" }
     }
   },
   "enabledPlugins": { "agrippa@agrippa": true }
