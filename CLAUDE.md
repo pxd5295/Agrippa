@@ -35,3 +35,7 @@ product, not instructions for this session.
   not cover project rules.
 - `docs/design-notes.md` and `docs/research-2026-08.md` record why rules
   exist. Update them when a rule's reason changes.
+- `docs/goals.md` holds the project's directions, measures, hard limits for
+  an unattended agent, and the ordered backlog. Read it before any work that
+  spans sessions or that nobody asked for in this session, and end such a
+  session with an entry in `docs/worklog.md`.
