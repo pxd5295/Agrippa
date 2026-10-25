@@ -720,6 +720,11 @@ testClauses('Skill install', installSkill, [...setupClauses,
     'Never copy the plugin',
     '/agrippa:upgrade',
     '`agrippa:survey`',
+    // The engineering plugin is offered like the spawn logger: one question,
+    // recommended no, and the enabledPlugins entry only on a yes, because a
+    // committed entry reaches every collaborator.
+    'engineering@claude-plugins-official',
+    'Recommend\\s+no',
 ]);
 // The survey skill writes the one on-demand knowledge document. It discovers
 // read-only, names the commit it describes, keeps the map out of the contract

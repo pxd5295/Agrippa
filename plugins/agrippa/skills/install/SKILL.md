@@ -136,6 +136,17 @@ focused questions in chat. The usual questions are:
   describes. A collaborator with different limits can override the committed
   value in their own `.claude/settings.local.json`;
 - whether to write an edit-lint hook;
+- whether to enable the `engineering` plugin for this repository, whose
+  `architecture` and `system-design` skills write decision records. Recommend
+  no. Say in one sentence what a yes does: it adds
+  `"engineering@claude-plugins-official": true` to the committed
+  `enabledPlugins`, so every collaborator who trusts the folder gets the whole
+  plugin, its other skills and its MCP servers included, each of which asks
+  for its own authorization. Say that without it the `design-first` skill
+  gives the shape to write a decision record by hand, and that a person who
+  wants the plugin only for themselves runs
+  `/plugin install engineering@claude-plugins-official` instead, which leaves
+  the committed file alone;
 - whether to add the permission allowlist from `templates/hooks/README.md`.
   Never add a permission rule, and never set a permission mode, without a yes
   to this question.
@@ -207,7 +218,11 @@ the existing file. Never replace or reorder its other entries, and never touch
    `env` block. Write nothing for a no; an absent variable is normal mode.
 6. If the user chose an edit-lint hook and it is proved, add its `PostToolUse`
    entry to `hooks`.
-7. If the user said yes to the permission allowlist, add those rules to
+7. If the user chose the `engineering` plugin, add
+   `"engineering@claude-plugins-official": true` under `enabledPlugins`. The
+   official marketplace is known to Claude Code already, so it needs no
+   `extraKnownMarketplaces` entry. Write nothing for a no.
+8. If the user said yes to the permission allowlist, add those rules to
    `permissions.allow`, including `Bash(agrippa-lint:*)` and the exact test and
    build executables from `validation-commands.md`.
 
@@ -238,7 +253,9 @@ run, with the reason "Perl is not installed", instead of running them.
   `extraKnownMarketplaces.agrippa`, and enables `agrippa@agrippa`. A `github`
   or `git` source must carry a `ref`. A local `directory` source the user
   chose to keep has none; report it as unpinned and say it must become the
-  pinned GitHub entry before collaborators use the repository.
+  pinned GitHub entry before collaborators use the repository. If the user
+  chose the `engineering` plugin, `enabledPlugins` also has
+  `"engineering@claude-plugins-official": true`.
 - **No local copies.** `.claude/agents/`, `.claude/skills/`, and
   `.claude/commands/` hold nothing named after a plugin agent or skill, and
   `tools/` has no `validate_plan_workspace.ps1`, `log_subagent_spawns.ps1`, or
@@ -283,6 +300,7 @@ cannot be verified at install time. Report each of them as provided by the
 plugin and not yet verified, pending the live "Make a plan" check.
 
 Say that the plugin loads in a new session once the folder is trusted, and
+the `engineering` plugin with it if the user chose it, and
 name the one live check left for the user: a real "Make a plan" request.
 Shape checks do not prove that the contracts are true. Do not call the install
 complete while any checklist item is unreported.

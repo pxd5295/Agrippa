@@ -59,8 +59,10 @@ named as not done, with the reason.
 - [ ] `.agrippa/area-map.md` was written by `/agrippa:survey` with a
       `Built at` commit and every row checked against the tree, or the user
       declined the survey and the file does not exist.
-- [ ] The `engineering:*` skills are available, or the hand-written fallback
-      is noted.
+- [ ] The `engineering:*` skills are available, because the user chose to
+      enable the `engineering` plugin in the committed `.claude/settings.json`
+      or has it installed for themselves, or the hand-written fallback is
+      noted.
 - [ ] The README's install-marker scan finds nothing outside the kit folder.
 
 ## Agents, skills, commands, hooks

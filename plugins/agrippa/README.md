@@ -228,6 +228,12 @@ census also expects line 1 of the project's `AGENTS.md` to read
 - The `engineering:architecture` and `engineering:system-design` skills (the
   `engineering` plugin) write decision records. Without them, write the record
   by hand in the shape the `design-first` skill's `decision-records.md` gives.
+  `/agrippa:install` asks whether to enable that plugin for the repository
+  and recommends no, because a yes adds
+  `"engineering@claude-plugins-official": true` to the committed
+  `enabledPlugins` and so gives every collaborator the whole plugin, its MCP
+  servers included. A person who wants it only for themselves runs
+  `/plugin install engineering@claude-plugins-official`.
 - The named agents have no `tools:` allowlist. Their `disallowedTools` lines
   remove the editing tools, so a project's MCP tools reach them without being
   listed. A live-app bridge's authoring tools reach them too, which is why

@@ -970,3 +970,29 @@ that runs Claude Code's Bash tool does not already have.
   Linux, but nothing here executed them there. A GitHub Actions workflow that
   runs `node dev/validate-kit.mjs` on Ubuntu, macOS, and Windows would prove
   it at each push and is the recommended follow-up.
+
+## The install skill offers the engineering plugin (2026-10-25)
+
+The decision-record rule names the `engineering:architecture` and
+`engineering:system-design` skills, and the README listed their plugin as an
+optional requirement that the user had to go and install. `/agrippa:install`
+now asks about it in its interview, as one more opt-in beside the spawn
+logger and low-usage mode.
+
+- **Why the committed file, and why no is recommended.** The install skill
+  cannot run `/plugin install`, a terminal command, but it already writes the
+  committed `.claude/settings.json`, and the `engineering` plugin lives in
+  Anthropic's official marketplace, which Claude Code knows without an
+  `extraKnownMarketplaces` entry. So a yes is one line,
+  `"engineering@claude-plugins-official": true` under `enabledPlugins`. That
+  line reaches every collaborator who trusts the folder, and the plugin is
+  much larger than the two skills Agrippa uses: its MCP servers (Slack,
+  Linear, GitHub, Datadog, PagerDuty, and more) each ask for authorization.
+  The question therefore recommends no, says what a yes does to
+  collaborators, and names `/plugin install engineering@claude-plugins-official`
+  for a person who wants the skills for themselves only. The self-check
+  requires the install skill to name the entry and to recommend no.
+- **Not in the upgrade skill.** An upgrade touches a repository whose
+  collaborators already share settings, and adding a plugin to them is a
+  team decision outside a methodology upgrade. The README tells a person how
+  to enable it by hand either way.

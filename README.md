@@ -146,7 +146,9 @@ and an exact resume prompt.
   ship both.
 - Optional: the `engineering` plugin, whose `architecture` and `system-design`
   skills write decision records. Without it, the `design-first` skill gives
-  the shape to write one by hand.
+  the shape to write one by hand. `/agrippa:install` offers to enable it for
+  the repository, and otherwise `/plugin install
+  engineering@claude-plugins-official` enables it for you alone.
 
 ## This repository
 
