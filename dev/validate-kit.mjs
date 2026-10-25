@@ -654,6 +654,11 @@ const setupClauses = [
     'dev/validate-kit\\.mjs -InstalledRepo',
     'run-smoke-test\\.mjs -RepoRoot',
     '\\$\\{CLAUDE_PLUGIN_ROOT\\}/templates/',
+    // Node is the plugin's one runtime and Claude Code does not need it, so
+    // both skills check for it first and never fake it with a shell copy.
+    'node --version',
+    'Node\\.js is not\\s+installed',
+    'Never\\s+write a\\s+shell-language copy',
 ];
 testClauses('Skill install', installSkill, [...setupClauses,
     'Never copy the plugin',

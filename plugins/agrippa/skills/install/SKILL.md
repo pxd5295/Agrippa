@@ -29,10 +29,47 @@ The kit files this skill uses are in the plugin:
 | `${CLAUDE_PLUGIN_ROOT}/skills/plan/reference/agent-workflow.md` | Its "Validation matrix values" section, which defines the Sandbox and Determinism values the command catalog records |
 | `${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json` | The plugin version, which names the release tag to pin |
 
-## 1. Check that this is a new install
+## 1. Check Node, and that this is a new install
 
-Run `git rev-parse --show-toplevel` and work from that folder. If it is not a
-git repository, stop and say so.
+Run `node --version` first. The plugin's hooks, the shared linter, and
+`agrippa-lint` run on Node, and nothing else checks for it, so a missing Node
+fails quietly: the `SessionStart` hook exits before it can inject the core
+rules, Claude Code shows only a non-blocking hook error, and every session,
+including this one, runs without the methodology's rules. Claude Code itself
+does not need Node, so a machine can lack it. The README's "Requirements and
+fallbacks" section records the requirement.
+
+If the command fails, say so in plain words, then ask with `AskUserQuestion`
+which of two options to take, and recommend the first:
+
+1. **Install Node now, then run the install again.** Install the current LTS
+   release with the package manager the machine has: `winget install
+   OpenJS.NodeJS.LTS` on Windows, where the installer shows an elevation
+   prompt the user must accept, `brew install node` on macOS, or the
+   distribution's package manager or a version manager such as `fnm` on
+   Linux. Run the command only after the user's yes, and never download and
+   run an installer yourself; without a package manager, print the command
+   or point at the nodejs.org download page for the user to run. Then stop.
+   Say that a running process keeps the PATH it started with, so this
+   session's hooks and `agrippa-lint` cannot see the new `node`, and that the
+   user must open a new session and run `/agrippa:install` again from the
+   start there.
+2. **Install the documents anyway.** Continue through every step with Node
+   missing, and write the project documents and settings as usual. Never
+   write a shell-language copy of a hook script or the linter into the
+   project; that recreates the cross-platform problem the Node scripts fixed,
+   and `/agrippa:upgrade` cannot maintain it. In step 7, report every item
+   that runs Node as not run. In step 8, report the "Always-loaded rules"
+   checklist item that a new session shows the core rules, and every
+   "Offline validation" item that runs Node, as not done with the reason
+   "Node.js is not installed". Say that the core rules, the spawn logger, and
+   `agrippa-lint` stay inactive until Node is installed and a new session is
+   opened, and that no project file changes when it is.
+
+A no to both is a stop: write nothing.
+
+Then run `git rev-parse --show-toplevel` and work from that folder. If it is
+not a git repository, stop and say so.
 
 Stop and recommend `/agrippa:upgrade` instead if the repository already has
 planning rules: an `AGENTS.md` or `CLAUDE.md` with a planning trigger, dated
@@ -179,7 +216,10 @@ is, and ask nothing.
 
 ## 7. Validate
 
-Run each check below and paste the exact command and its result.
+Run each check below and paste the exact command and its result. If step 1
+found no Node and the user chose to install the documents anyway, report the
+"Local linter checks" item and the two development checks at the end as not
+run, with the reason "Node.js is not installed", instead of running them.
 
 - **Install-marker scan.** Run the scan the README describes under
   "Install-marker scan" over every file of the repository. It must find

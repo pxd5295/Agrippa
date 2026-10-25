@@ -198,9 +198,16 @@ census also expects line 1 of the project's `AGENTS.md` to read
 
 - Node.js, for the hooks and the linter. They are ES modules that use only
   Node's built-in modules, so the plugin needs no `npm install` and no other
-  runtime. Without Node, the core rules do not load and `agrippa-lint` cannot
-  run. `bin/agrippa-lint` runs through Claude Code's Bash tool, which on
-  Windows is Git Bash; that is Claude Code's own requirement, not one the
+  runtime. Claude Code itself does not need Node, so a machine can lack it.
+  Without Node the `SessionStart` hook fails with a non-blocking error that
+  is easy to miss, the core rules do not load, and `agrippa-lint` cannot run.
+  So `/agrippa:install` and `/agrippa:upgrade` run `node --version` before
+  anything else and, when it fails, offer to install Node through the
+  machine's package manager, or to write the project documents anyway and
+  report every Node-dependent checklist item as not done. A new session is
+  needed after Node is installed, because a running session keeps the PATH it
+  started with. `bin/agrippa-lint` runs through Claude Code's Bash tool, which
+  on Windows is Git Bash; that is Claude Code's own requirement, not one the
   plugin adds.
 - Agrippa's development checks, `dev/validate-kit.mjs` and
   `dev/fixtures/run-smoke-test.mjs`, run on the same Node and need nothing

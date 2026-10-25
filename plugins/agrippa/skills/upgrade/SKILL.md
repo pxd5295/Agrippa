@@ -30,9 +30,21 @@ The kit files this skill uses are in the plugin:
 | `${CLAUDE_PLUGIN_ROOT}/templates/hooks/README.md` | The spawn-logger opt-in, the edit-lint hook rules, and the permission allowlist |
 | `${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json` | The plugin version, which names the release tag to pin |
 
-## 1. Read the kit
+## 1. Check Node and read the kit
 
-Run `git rev-parse --show-toplevel` and work from that folder. Read
+Run `node --version` first. The plugin's hooks, the shared linter, and
+`agrippa-lint` run on Node, and without it the core rules never load, in this
+session or any later one. If the command fails, follow the Node check in step
+1 of the install skill, `${CLAUDE_PLUGIN_ROOT}/skills/install/SKILL.md`, with
+the upgrade in place of the install in both options: either install Node
+with the user's yes and stop, telling the user to open a new session and run
+`/agrippa:upgrade` again from the start, or upgrade anyway and report every
+checklist item that runs Node, and the "Always-loaded rules" item that a new
+session shows the core rules, as not done with the reason "Node.js is not
+installed", in the report and in `.agrippa/MIGRATION.md`. Never write a
+shell-language copy of a hook script or the linter into the project.
+
+Then run `git rev-parse --show-toplevel` and work from that folder. Read
 `UPGRADING.md`, the README, the adoption checklist, and every file under
 `templates/` completely before changing anything. The result must match these
 templates. Adapt only the install-time slots that the README's placeholder
@@ -148,7 +160,10 @@ Wait for every answer before step 4.
 ## 5. Validate
 
 Run each check below, paste the exact command and its result, and record all
-of it in `.agrippa/MIGRATION.md`.
+of it in `.agrippa/MIGRATION.md`. If step 1 found no Node and the user chose
+to upgrade anyway, report the "Local linter checks" item and the two
+development checks at the end as not run, with the reason "Node.js is not
+installed", instead of running them.
 
 - **Dated-plan manifest.** Recompute the manifest with the same command into a
   second file, and compare the two files. They must be identical.

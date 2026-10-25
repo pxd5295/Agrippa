@@ -6,6 +6,9 @@ named as not done, with the reason.
 
 ## Repository discovery
 
+- [ ] `node --version` succeeds, or the user chose to install without Node
+      and every item below that needs the hooks or the linter is reported as
+      not done with the reason "Node.js is not installed".
 - [ ] Read every existing `AGENTS.md` and `CLAUDE.md`, at any depth.
 - [ ] Inventory `.claude/agents`, skills, commands, `settings.json` hooks and
       permissions, planning guides, templates, shortcuts, validators, project

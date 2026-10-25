@@ -570,6 +570,52 @@ work in them every day.
   that ships it is 0.3.0, and each installed repository runs
   `/agrippa:upgrade` when it moves its tag.
 
+## The install and upgrade skills check for Node (2026-10-24)
+
+Both skills now run `node --version` before anything else. Until this change
+nothing in the plugin checked for Node, even though every hook, the shared
+linter, and `bin/agrippa-lint` run on it.
+
+- **Why the failure was silent.** Claude Code's native installer and the
+  desktop app do not need Node, so a machine can lack it. The hook commands
+  in `hooks/hooks.json` then exit with "command not found", which Claude
+  Code treats as a non-blocking hook error: it prints a short notice and the
+  session continues with no core rules in context. The install skill's own
+  steps are Markdown, git, and file writes, so an install on such a machine
+  went through to step 7, where `agrippa-lint` finally failed on its
+  `#!/usr/bin/env node` line. The project documents and settings looked
+  right, and every later session ran without the rules, the spawn logger, or
+  the linter.
+- **Why two options and not a conversion.** The idea of translating the
+  scripts to PowerShell or Bash at install time was considered and rejected.
+  The hooks run from the plugin's cached copy, which the skill cannot edit,
+  so the plugin's own `node` commands would keep failing beside any
+  project-side copy. A translation would also recreate the `powershell`
+  versus `pwsh` problem that "Hooks run on Node" records, would have none of
+  the parity proof the 0.2.0 linter port had, would drift from the shared
+  linter with every release, and would be invisible to `/agrippa:upgrade`.
+  The project rule that the linter is never copied into a repository exists
+  for the same reason. So the prompt offers to install Node through the
+  machine's package manager, which is the recommended option, or to install
+  the documents anyway and report every Node-dependent checklist item as not
+  done with the reason "Node.js is not installed". The degraded state is
+  visible in the report and recovers completely the moment Node is
+  installed, with no project file to clean up.
+- **Why the install option stops.** A running process keeps the environment
+  it started with, and the Bash tool, the hooks, and `agrippa-lint` all
+  inherit PATH from the Claude Code process. So a Node installed during the
+  session is invisible to it, and the skill tells the user to open a new
+  session and run the skill again from the start rather than continue with
+  checks that would still fail.
+- **Only package managers.** The skill installs with `winget`, `brew`, or
+  the distribution's package manager or a version manager, after the user's
+  yes, and never downloads and runs an installer itself. Without a package
+  manager it prints the command for the user.
+- **Checked by the self-check.** `validate-kit.mjs` requires both skills to
+  contain the `node --version` check, the reason text, and the sentence that
+  forbids a shell-language copy, and the adoption checklist opens with the
+  Node item so the report cannot skip it.
+
 ## Linter rules that are easy to trip over
 
 These cost three lint rounds (62 errors down to 0) on one nuro-battler plan.
