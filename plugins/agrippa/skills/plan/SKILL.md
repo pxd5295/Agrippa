@@ -18,10 +18,10 @@ step needs; never load them all eagerly.
 | `${CLAUDE_SKILL_DIR}/templates/` | `SPEC.md`, `PLAN.md`, `PACKETS.md`, `STATUS.md`, and `EVIDENCE.md`, the blank workspace files |
 
 The project's own facts are not in this skill. They are in
-`docs/agent_memory/project-contracts.md` (ownership areas, architecture
+`.agrippa/project-contracts.md` (ownership areas, architecture
 owners, shared interfaces, risk classes) and
-`docs/agent_memory/validation-commands.md` (every exact command), and in
-`docs/agent_memory/live-app.md` when the project has a live-app bridge.
+`.agrippa/validation-commands.md` (every exact command), and in
+`.agrippa/live-app.md` when the project has a live-app bridge.
 
 ## Make a plan
 

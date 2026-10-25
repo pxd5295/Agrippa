@@ -6,18 +6,18 @@ a plan workspace.
 
 ## Where records go
 
-One file per decision in `docs/decisions/`, named `YYYY-MM-DD-<slug>.md`.
+One file per decision in `.agrippa/decisions/`, named `YYYY-MM-DD-<slug>.md`.
 Records are tracked in git even when `plans/` is not; a plan workspace links
 to the record rather than holding it.
 
-The repository's `docs/decisions/README.md` is a short pointer to the plugin
+The repository's `.agrippa/decisions/README.md` is a short pointer to the plugin
 for people who browse the repository without it. It holds no rules, and none
 are added there.
 
 ## When a record is required
 
 The Agrippa core rules require one before the first edit of any shared
-interface listed in `docs/agent_memory/project-contracts.md`. Write it with the
+interface listed in `.agrippa/project-contracts.md`. Write it with the
 `engineering:architecture` skill when that skill is installed, or by hand in
 the shape below. A new subsystem (a new base class or class family, native or
 extension module, editor panel, service, or ownership area) also runs

@@ -37,7 +37,7 @@ The methodology has three layers, and the kit installs all of them.
   or plan implementation. The `design-first` skill holds
   `decision-records.md`, the decision-record rules, which load only when a
   record is written. A project may add one on-demand knowledge document,
-  `docs/agent_memory/area-map.md`, which `/agrippa:survey` builds from the
+  `.agrippa/area-map.md`, which `/agrippa:survey` builds from the
   tree at a named commit: each folder's entry points, covering tests,
   governing contract, and recorded traps. The planner and `repo-scout` read it
   before a census and verify its rows in the code; it is never always-loaded
@@ -55,12 +55,12 @@ The methodology has three layers, and the kit installs all of them.
 | `templates/AGENTS.md` | `AGENTS.md`, adapted and merged |
 | `templates/CLAUDE.md` | `CLAUDE.md` (root), adapted and merged |
 | `templates/directory-CLAUDE.md` | `<ownership area>/CLAUDE.md`, one per area that has real rules |
-| `templates/PROJECT-CONTRACTS.md` | `docs/agent_memory/project-contracts.md` |
-| `templates/VALIDATION-COMMANDS.md` | `docs/agent_memory/validation-commands.md` |
-| `templates/LIVE-APP.md` | `docs/agent_memory/live-app.md`, only when the project has an MCP server that observes the running application |
-| `templates/AREA-MAP.md` | `docs/agent_memory/area-map.md`, only when the user runs `/agrippa:survey`; an on-demand index of folders with the commit it was built at |
-| `templates/agent-memory-CLAUDE.md` | `docs/agent_memory/CLAUDE.md` |
-| `templates/decisions-README.md` | `docs/decisions/README.md`, a short pointer that says what the folder holds. It has no rules; they are in the `design-first` skill |
+| `templates/PROJECT-CONTRACTS.md` | `.agrippa/project-contracts.md` |
+| `templates/VALIDATION-COMMANDS.md` | `.agrippa/validation-commands.md` |
+| `templates/LIVE-APP.md` | `.agrippa/live-app.md`, only when the project has an MCP server that observes the running application |
+| `templates/AREA-MAP.md` | `.agrippa/area-map.md`, only when the user runs `/agrippa:survey`; an on-demand index of folders with the commit it was built at |
+| `templates/agrippa-CLAUDE.md` | `.agrippa/CLAUDE.md` |
+| `templates/decisions-README.md` | `.agrippa/decisions/README.md`, a short pointer that says what the folder holds. It has no rules; they are in the `design-first` skill |
 | `templates/plans-README.md` | `plans/README.md`, a short pointer that says what the folder holds. It has no rules; they are in the `plan` skill |
 | `agents/*.md` | Not installed; the plugin's agents `agrippa:repo-scout`, `agrippa:plan-reviewer`, `agrippa:design-reviewer`, and `agrippa:validator`. A project keeps no copy in `.claude/agents/` |
 | `skills/*/SKILL.md` | Not installed; the plugin's skills `agrippa:design-first`, `agrippa:systematic-debugging`, `agrippa:verify-before-done`, and `agrippa:receiving-review`, plus `plan` and `handoff` below. A project keeps no copy in `.claude/skills/` |
@@ -85,8 +85,16 @@ The methodology has three layers, and the kit installs all of them.
 | `skills/handoff/SKILL.md` | Not installed; the `/agrippa:handoff` skill, which writes a short session handoff |
 | `skills/install/SKILL.md` | Not installed; the `/agrippa:install` skill, which installs the methodology in a repository that has none |
 | `skills/upgrade/SKILL.md` | Not installed; the `/agrippa:upgrade` skill, which upgrades an older methodology using `UPGRADING.md` |
-| `skills/survey/SKILL.md` | Not installed; the `/agrippa:survey` skill, which writes or refreshes `docs/agent_memory/area-map.md` from repository evidence |
+| `skills/survey/SKILL.md` | Not installed; the `/agrippa:survey` skill, which writes or refreshes `.agrippa/area-map.md` from repository evidence |
 | `LICENSE`, `NOTICE` | Not installed as methodology files; they stay with the kit folder. The Apache-2.0 license and the attribution notice that redistributed copies must carry |
+
+The project documents and the decision records live in `.agrippa/` at the
+repository root, a hidden folder named after the plugin, so that the kit never
+claims part of a repository's own `docs/`. Claude Code loads
+`.agrippa/CLAUDE.md` when a session reads a file in the folder, as it does for
+any folder. Command-line `rg` skips hidden folders unless given `--hidden`;
+`git grep` and Claude Code's own search tools do not. Plan workspaces stay in
+`plans/`, where people work in them every day.
 
 Two development files live outside this folder, in the `dev/` folder of the
 Agrippa repository, and are never installed. `dev/fixtures/run-smoke-test.mjs`
@@ -143,10 +151,10 @@ The agents and skills, including the `plan` skill's guides and templates,
 contain no `[PROJECT: ...]` slot, and `dev/validate-kit.mjs` fails if one
 appears. They are project-neutral and
 read the project's facts from named sections of
-`docs/agent_memory/project-contracts.md`,
-`docs/agent_memory/validation-commands.md`, when the project has a
-live-app bridge, `docs/agent_memory/live-app.md`, and, when the project ran
-`/agrippa:survey`, `docs/agent_memory/area-map.md`. So a project fact goes in
+`.agrippa/project-contracts.md`,
+`.agrippa/validation-commands.md`, when the project has a
+live-app bridge, `.agrippa/live-app.md`, and, when the project ran
+`/agrippa:survey`, `.agrippa/area-map.md`. So a project fact goes in
 one of those documents, never in an agent or skill.
 
 One more install-time marker is removed during install. A line or comment
@@ -158,7 +166,8 @@ marker an older kit used around agent sections; none may survive an upgrade.
 
 **Install-marker scan.** After install, a case-sensitive search for the
 regular expression `\[PROJECT:|Install note|optional live-app block` in every
-file outside the kit folder must find nothing.
+file outside the kit folder must find nothing. The search must include the
+hidden `.agrippa/` folder: use `git grep`, or give `rg` the `--hidden` flag.
 
 The shared linter, `scripts/validate_plan_workspace.mjs`, runs from the
 plugin and is never copied into or edited in a project. Inside Claude Code a
@@ -205,7 +214,7 @@ census also expects line 1 of the project's `AGENTS.md` to read
 - The named agents have no `tools:` allowlist. Their `disallowedTools` lines
   remove the editing tools, so a project's MCP tools reach them without being
   listed. A live-app bridge's authoring tools reach them too, which is why
-  `docs/agent_memory/live-app.md` lists those tools and every agent is told
+  `.agrippa/live-app.md` lists those tools and every agent is told
   never to call them.
 
 ## Installing in a project with no planning methodology
@@ -242,7 +251,7 @@ release tag to pin.
 /agrippa:survey
 ```
 
-The skill reads the tree read-only and writes `docs/agent_memory/area-map.md`
+The skill reads the tree read-only and writes `.agrippa/area-map.md`
 from `templates/AREA-MAP.md`: one row per folder with its ownership area,
 entry points as `file:symbol`, covering tests, and governing contract, a list
 of folders deliberately not mapped, and the traps recorded in per-directory
@@ -310,8 +319,11 @@ project that has no copy of the linter.
 `node dev/validate-kit.mjs -InstalledRepo <path>` also checks a project that uses
 the plugin. Its committed `.claude/settings.json` must declare the `agrippa`
 marketplace and enable `agrippa@agrippa`.
-`docs/agent_memory/project-contracts.md` and
-`docs/agent_memory/validation-commands.md` must exist. It must keep no copy of
+`.agrippa/project-contracts.md` and
+`.agrippa/validation-commands.md` must exist, and the folders under `docs/`
+where plugins up to 0.2.0 kept the project documents and the decision records
+must be gone, moved as "From G4 v0.2.0" in `UPGRADING.md` says. It must keep
+no copy of
 what the plugin provides: the agents in `.claude/agents/`, the plugin's skills
 in `.claude/skills/`, `.claude/commands/handoff.md`,
 `tools/validate_plan_workspace.ps1`, the old PowerShell spawn logger, its
@@ -320,11 +332,11 @@ in `.claude/skills/`, `.claude/commands/handoff.md`,
 `tools/validate_plan_workspace.local.ps1` not yet ported to
 `tools/validate_plan_workspace.local.mjs`. It must also keep no full
 copy of the rules that now ship in the skills: a `plans/README.md` or
-`docs/decisions/README.md` with the old methodology sections instead of the
+`.agrippa/decisions/README.md` with the old methodology sections instead of the
 short pointer, the old `docs/planning/CLAUDE.md`, or the generic rule
 sentences that templates up to v0.1.1 wrote into `project-contracts.md`,
 `validation-commands.md`, `live-app.md`, and `AGENTS.md`, which it recognizes
-by their template wording. A `docs/agent_memory/area-map.md`, when present,
+by their template wording. A `.agrippa/area-map.md`, when present,
 must carry its `Built at` commit and no install marker. Each failure names the
 file or setting and what to do. Without `-InstalledRepo`, it checks only the
 kit.

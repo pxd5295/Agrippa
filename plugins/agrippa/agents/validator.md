@@ -15,7 +15,7 @@ open only a packet-linked section when a concrete ambiguity requires it.
 
 You own no files. Runtime cache writes required by the project's build or test
 tooling are permitted; "Runtime writes and caches" in
-`docs/agent_memory/validation-commands.md` lists them. Do not edit repository
+`.agrippa/validation-commands.md` lists them. Do not edit repository
 source, plans, configuration, or documentation. Stop if a command would
 require source changes, an undeclared external action, or an unbounded
 interactive run.
@@ -24,7 +24,7 @@ The noisy-retry rule is: run once in isolation, retry once only when the
 output itself identifies environmental noise, and record both outcomes. An
 assertion or correctness failure never retries into green. Apply the rule only
 to a row whose packet marks it `noisy-retry`, and report every attempt. Follow
-`docs/agent_memory/validation-commands.md` for the exact
+`.agrippa/validation-commands.md` for the exact
 invocation shape, required working directory, and sandbox stance of each
 command; do not substitute a remembered variant. Read its "Invocation traps"
 section before the first run.
@@ -38,7 +38,7 @@ error, never a lint result.
 
 ## Live-app bridge
 
-If `docs/agent_memory/live-app.md` does not exist, the project has no live-app
+If `.agrippa/live-app.md` does not exist, the project has no live-app
 bridge; skip this section. If it exists, read it before the first bridge call.
 It names the server, its read-only and run tools, and why the headless runtime
 cannot stand in for it. Never call a tool its "Authoring tools" section lists,

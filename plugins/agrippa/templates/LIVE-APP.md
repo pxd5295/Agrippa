@@ -97,7 +97,7 @@ those facts.]
 
 Check layout numbers and spacing from the UI elements tool against
 [PROJECT: the UI token or style document. Example from a game project:
-`docs/agent_memory/ui-style-tokens.md`].
+`.agrippa/ui-style-tokens.md`].
 
 ## Test runner
 

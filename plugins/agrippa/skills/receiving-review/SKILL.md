@@ -37,7 +37,7 @@ differ:
    it keeps its context; do not spawn a fresh reviewer to re-explain.
 3. **Verify against the tree, not against the review.** Open the cited
    `file:line`, grep for the identifiers the reviewer claims are
-   duplicated, and read the contract it cites in `docs/agent_memory/`.
+   duplicated, and read the contract it cites in `.agrippa/`.
    Reviewers work from the diff and can miss the configuration layer, a hook
    that already exists, or a sibling worktree.
 4. **Decide per finding:**
@@ -47,7 +47,7 @@ differ:
      attributable.
    - **Push back** when the fix would add a mode or variant branch to a base
      class, add abstraction or defensive code for a case the frozen
-     contracts exclude, contradict a decision record under `docs/decisions/`,
+     contracts exclude, contradict a decision record under `.agrippa/decisions/`,
      break a named acceptance ID, or rests on a misreading of the code. State
      the reason with the `file:line` or contract path that shows it. A
      pushback without a citation is a guess.

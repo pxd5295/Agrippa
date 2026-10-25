@@ -2,7 +2,7 @@
 
 > Install note: fill every install-time placeholder with repository evidence,
 > then delete this note. Keep stable architecture and ownership facts here;
-> keep executable validation syntax in `docs/agent_memory/validation-commands.md`.
+> keep executable validation syntax in `.agrippa/validation-commands.md`.
 > Plans freeze contracts against this file, so a wrong fact here poisons every
 > plan that cites it: verify each one against the code (`git grep` the symbol
 > or constant) when you write it. The Agrippa agents and skills read the
@@ -21,14 +21,14 @@ native runtime and a GPU inference path."]
   interface, primary tests].
 - `[PROJECT: path or module]`: [PROJECT: responsibility, authoritative
   interface, primary tests].
-- `docs/agent_memory/`: stable contracts. A change here that alters a frozen
+- `.agrippa/`: stable contracts. A change here that alters a frozen
   interface is a change to the interface itself.
 
 <!-- Install note: an example from a game project, for shape only. Delete
 this comment once the section is filled.
 `scripts/` (simulation and editor code),
 `native/` (the native runtime), `tests/` (tests and benchmarks), and
-`docs/agent_memory/` (stable contracts).
+`.agrippa/` (stable contracts).
 -->
 
 ## Architecture owners
@@ -57,7 +57,7 @@ this comment once the section is filled.
 - Shared base classes: `WorldBase` (`scripts/world/world_base.gd`) and
   `AnimalBase` (`scripts/animal/animal_base.gd`) hold behavior shared by
   training and evolution.
-- Hooks per base class, listed in `docs/agent_memory/class-architecture.md`:
+- Hooks per base class, listed in `.agrippa/class-architecture.md`:
   world hooks `_init_before_start`, `_start`, `_on_process`, `_setup_hud`,
   `_new_animal`, `_configure_animal`, `_handle_animal_death`; animal hooks
   `_on_ready`, `_on_pre_stat_step`, `_on_movement_step`, `_final_fitness`,
@@ -98,12 +98,12 @@ this comment once the section is filled.
 
 ## Contract documents
 
-The contract documents in `docs/agent_memory/` besides this file and
+The contract documents in `.agrippa/` besides this file and
 `validation-commands.md`, one row each.
 
 | Document | What it owns |
 |---|---|
-| `[PROJECT: docs/agent_memory/<name>.md, for example class architecture, a sensor or wire-format contract, data-model notes, or performance notes]` | [PROJECT: the interface or architecture facts it owns] |
+| `[PROJECT: .agrippa/<name>.md, for example class architecture, a sensor or wire-format contract, data-model notes, or performance notes]` | [PROJECT: the interface or architecture facts it owns] |
 
 <!-- Install note: an example from a game project, for shape only. Delete
 this comment once the section is filled.
@@ -130,7 +130,7 @@ this comment once the section is filled.
 Sensor order, network shape, GPU weight layout,
 the persisted archive format, scene/node contracts, and saved configuration.
 The V10 sensor and brain constants come only from
-`docs/agent_memory/sensor-contract.md`.
+`.agrippa/sensor-contract.md`.
 -->
 
 ## High-risk change classes
@@ -192,4 +192,4 @@ setter ran, have both mattered.
 - [PROJECT: the environment every check here assumes (operating system, shell,
   a required display or GPU, services), with the checks that do not run
   without it. The per-command limits are under "Environment limits" in
-  `docs/agent_memory/validation-commands.md`.]
+  `.agrippa/validation-commands.md`.]

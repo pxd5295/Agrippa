@@ -13,7 +13,7 @@ This file is an index for planning: where each folder's entry points are,
 which tests cover it, which contract governs it, and what has gone wrong in
 it before. It is not a contract. Frozen facts come from the code and from the
 documents the "Contract documents" table of
-`docs/agent_memory/project-contracts.md` names; a row here says where to look
+`.agrippa/project-contracts.md` names; a row here says where to look
 first.
 
 ## Folders
@@ -28,7 +28,7 @@ reference files in the folder. Delete this comment once the table is filled.
 
 | Folder | Ownership area | Entry points | Covering tests | Contract |
 |---|---|---|---|---|
-| `[PROJECT: path/]` | [PROJECT: the area from "Ownership areas" in `project-contracts.md`] | `[PROJECT: file:symbol, one per entry point]` | `[PROJECT: test files or inventory targets, or None]` | `[PROJECT: the docs/agent_memory/ document that governs this folder, or None]` |
+| `[PROJECT: path/]` | [PROJECT: the area from "Ownership areas" in `project-contracts.md`] | `[PROJECT: file:symbol, one per entry point]` | `[PROJECT: test files or inventory targets, or None]` | `[PROJECT: the .agrippa/ document that governs this folder, or None]` |
 
 ## Not mapped
 

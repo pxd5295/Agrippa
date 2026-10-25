@@ -9,7 +9,7 @@
 Contract source: `AGENTS.md:1` (read __TODAY__)
 
 - Exact contract: the root instructions name
-  `docs/agent_memory/project-contracts.md` as the owner of the project
+  `.agrippa/project-contracts.md` as the owner of the project
   contracts.
 - Enumerated edit sites: none; this smoke test makes no edit.
 - Consumer census:

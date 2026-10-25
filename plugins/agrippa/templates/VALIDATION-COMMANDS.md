@@ -159,7 +159,7 @@ values" in the `plan` skill's `agent-workflow.md`.]
 [PROJECT: optional. Delete this section if the project has no MCP server that
 observes the running application. Otherwise name the catalog rows that need
 the live app or a GPU and so cannot run headless. The server, its tools, and
-its traps are in `docs/agent_memory/live-app.md`.]
+its traps are in `.agrippa/live-app.md`.]
 
 ## Full-suite inventory
 

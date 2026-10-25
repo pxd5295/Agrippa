@@ -12,7 +12,7 @@ say that this file covers only what applies across the whole tree.]
 
 ## Canonical contracts (read before deep work; do not restate them from memory)
 
-- `docs/agent_memory/[PROJECT: contract file]` — [PROJECT: what it owns and
+- `.agrippa/[PROJECT: contract file]` — [PROJECT: what it owns and
   whether it is authoritative for a frozen shared interface. Say plainly that
   copies of its constants in code are copies.]
 
@@ -33,7 +33,7 @@ the folder is grouped and why, and the entry points a new reader needs.]
 
 ## Validation for this folder
 
-- [PROJECT: the targeted commands from `docs/agent_memory/validation-commands.md`
+- [PROJECT: the targeted commands from `.agrippa/validation-commands.md`
   that cover this folder, named by their catalog purpose, not restated.]
 
 ## If you edit a file here

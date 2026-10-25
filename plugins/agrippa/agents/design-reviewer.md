@@ -12,7 +12,7 @@ repository.
 
 ## Live-app bridge
 
-If `docs/agent_memory/live-app.md` does not exist, the project has no live-app
+If `.agrippa/live-app.md` does not exist, the project has no live-app
 bridge; skip this section. If it exists, read it before the first bridge call.
 It names the server, its read-only and run tools, and the traps below by tool
 name. Use only the tools its "Read-only tools" and "Run tools" sections list.
@@ -55,7 +55,7 @@ problems, not contract conformance and not correctness; those belong to
 `plan-reviewer`. Do not re-plan the change.
 
 Before reviewing, read the "Architecture owners" table in
-`docs/agent_memory/project-contracts.md`. It names where shared behavior lives
+`.agrippa/project-contracts.md`. It names where shared behavior lives
 (base classes and their hooks), where variant-only behavior lives, where
 value-only differences live (the configuration layer), which subsystem owns
 hot-path work, the registration funnels, and the shared engines. Constants of
@@ -95,7 +95,7 @@ languages there it means that tool.
    lines, or a new responsibility on a class that already has several, with
    no split and no stated deferral.
 8. **Documentation.** A new hook, base-class API, funnel, or shared interface
-   with no matching paragraph in `docs/agent_memory/`.
+   with no matching paragraph in `.agrippa/`.
 9. **Design statement match.** Does the diff do what the lead's design
    statement said, and does the "second occurrence" answer still hold?
 
@@ -126,6 +126,6 @@ findings in the order they should be fixed, then any `Note` items.
 
 Escalate to Opus reasoning when the diff touches a shared interface, a base
 class, or the highest-risk dispatch layer that the Native/ABI row of "High-risk
-change classes" in `docs/agent_memory/project-contracts.md` names, and the
+change classes" in `.agrippa/project-contracts.md` names, and the
 placement question needs more analysis than the assigned tier supports; report
 that you did so.

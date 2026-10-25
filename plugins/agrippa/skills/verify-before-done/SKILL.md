@@ -18,7 +18,7 @@ Run this before every positive status statement, including "fixed",
 "passes", "builds", "no regression", and "done":
 
 1. **Name the command that proves the claim.** Take it from
-   `docs/agent_memory/validation-commands.md` (the validation catalog), or
+   `.agrippa/validation-commands.md` (the validation catalog), or
    from the plan's validation matrix when one exists. If no existing target covers the claim, say so;
    that is a finding, not a reason to skip.
 2. **Run it fresh, in this session, on the current tree.** A result from
@@ -57,7 +57,7 @@ to report, not a pass.
 
 ## Live-app bridge
 
-When `docs/agent_memory/live-app.md` exists, the project has a bridge to the
+When `.agrippa/live-app.md` exists, the project has a bridge to the
 running application, and a visual or GPU-dependent claim is checked through
 it. Confirm the active session with the bridge's state tool first, and with
 its session tool when more than one instance may be open, because git
@@ -76,7 +76,7 @@ GPU-dependent check as done when the bridge was down and nothing replaced it.
 | Test passes | The exact command, its verdict line, zero new failures, no runtime error marker in the output |
 | Linter clean | The whole-file answer that "Linter scope" in the validation catalog names. A green linter is never evidence a contract is correct |
 | Native builds | The build exits 0 for every configuration, and the running process was restarted before any test ran against the new build. "Build" in the validation catalog gives the command and configurations |
-| Gated change safe | The subsystem's gate passed on the fresh build. The "Gated subsystems" row of "Architecture owners" in `docs/agent_memory/project-contracts.md` names the subsystems and gate targets |
+| Gated change safe | The subsystem's gate passed on the fresh build. The "Gated subsystems" row of "Architecture owners" in `.agrippa/project-contracts.md` names the subsystems and gate targets |
 | GPU path works | A run in an environment that has the GPU or display, because a headless or CI run may only ever exercise a CPU fallback. "Environment limits" in the validation catalog names that environment |
 | Visual check passes | A capture from the running app through the live-app bridge, or the in-app capture path "UI capture" in the validation catalog names, read against the frozen design or the acceptance text. A headless pass never replaces it, and a bridge that was down means the check did not run |
 | Bug fixed | The check that reproduced the original symptom now passes, and it was seen failing before the fix |

@@ -19,7 +19,7 @@ than two short ones. Every line is either a fact or a path. A handoff that
 needs scrolling has failed.
 
 Link, never restate. If something is in `SPEC.md`, `PLAN.md`, `STATUS.md`,
-`EVIDENCE.md`, a `docs/agent_memory/` contract, a decision record, or a commit,
+`EVIDENCE.md`, a `.agrippa/` contract, a decision record, or a commit,
 cite the path or SHA and write nothing else about it.
 
 Leave out entirely: what happened in what order, errors that were fixed, and

@@ -69,9 +69,9 @@ repository.
    copied into the project, so a plugin upgrade updates all of it at once.
 2. **Your project's facts.** `/agrippa:install` reads the repository and
    writes a root `AGENTS.md` (ownership areas, shared interfaces, project
-   rules), `docs/agent_memory/project-contracts.md` (architecture owners, risk
+   rules), `.agrippa/project-contracts.md` (architecture owners, risk
    classes, compatibility gates), and
-   `docs/agent_memory/validation-commands.md` (every exact test and build
+   `.agrippa/validation-commands.md` (every exact test and build
    command). The agents and skills read project facts only from these
    documents, which is what keeps the plugin itself project-neutral.
 3. **Plans your sessions produce.** Each plan workspace is a dated folder

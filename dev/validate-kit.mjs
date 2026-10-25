@@ -35,15 +35,17 @@
 // -InstalledRepo (or --installed-repo) names the root of a project that uses
 // the plugin. Its committed .claude/settings.json must declare the agrippa
 // marketplace and enable agrippa@agrippa, it must have
-// docs/agent_memory/project-contracts.md and validation-commands.md, and it
-// must keep no local copy of what the plugin provides: the agents, the plugin's
+// .agrippa/project-contracts.md and validation-commands.md, with no
+// docs/agent_memory/ or docs/decisions/ folder left from a plugin before
+// 0.3.0, and it must keep no local copy of what the plugin provides: the
+// agents, the plugin's
 // skills, the shared linter, the spawn logger, its hook_payload.ps1 helper
 // unless a project script still uses it, a settings.json hook or permission
 // that runs them, or a PowerShell tools/validate_plan_workspace.local.ps1 that
 // the 0.2.0 linter no longer loads. It must also keep no full copy of the rules
 // that now ship in the plan and design-first skills: plans/README.md and
-// docs/decisions/README.md are short pointers, and the old
-// docs/planning/CLAUDE.md is gone. A docs/agent_memory/area-map.md, when
+// .agrippa/decisions/README.md are short pointers, and the old
+// docs/planning/CLAUDE.md is gone. A .agrippa/area-map.md, when
 // present, names its Built at commit and carries no install marker. Each
 // failure names the file or setting and says what to do. The check is skipped
 // when this is omitted.
@@ -249,7 +251,7 @@ const required = [
     'templates/VALIDATION-COMMANDS.md',
     'templates/LIVE-APP.md',
     'templates/AREA-MAP.md',
-    'templates/agent-memory-CLAUDE.md',
+    'templates/agrippa-CLAUDE.md',
     'templates/decisions-README.md',
     'templates/plans-README.md',
     'templates/MIGRATION.md',
@@ -455,8 +457,8 @@ for (const name of [...agentNames, ...skillNames]) {
 addCheck(coreRules.length < 10000, `Core rules exceed the 10,000-character hook context cap: ${coreRules.length}.`);
 testClauses('AGENTS template', agents, [
     '## Project contracts',
-    'docs/agent_memory/project-contracts\\.md',
-    'docs/agent_memory/validation-commands\\.md',
+    '\\.agrippa/project-contracts\\.md',
+    '\\.agrippa/validation-commands\\.md',
 ]);
 testClauses('CLAUDE template', claude, [
     '@AGENTS\\.md',
@@ -565,7 +567,7 @@ testClauses('Workflow template', workflow, [
     'checks shape, never truth',
     'Prompt-scenario contract',
     'Planning on Claude Fable 5\\.1',
-    'docs/agent_memory/area-map\\.md',
+    '\\.agrippa/area-map\\.md',
     '`area map`\\s+entry',
 ]);
 testClauses('Routing template', routing, [
@@ -619,6 +621,9 @@ testClauses('UPGRADING', upgrading, [
     '### From G3',
     '### From G4 v0\\.1\\.0',
     '### From G4 v0\\.1\\.1',
+    '### From G4 v0\\.2\\.0',
+    '`docs/agent_memory/` and every file in it \\| Move \\| `git mv docs/agent_memory \\.agrippa`',
+    '`docs/decisions/` and every record in it \\| Move \\| `git mv docs/decisions \\.agrippa/decisions`',
     'docs/planning/CLAUDE\\.md` \\| Delete',
     'tools/log_subagent_spawns\\.ps1` \\| Delete',
     'tools/hook_payload\\.ps1` \\| Delete',
@@ -661,7 +666,7 @@ testClauses('Skill survey', surveySkill, [
     'Never change application code',
     'read-only',
     '\\$\\{CLAUDE_PLUGIN_ROOT\\}/templates/AREA-MAP\\.md',
-    'docs/agent_memory/area-map\\.md',
+    '\\.agrippa/area-map\\.md',
     '`Built at`',
     'git diff --name-only',
     'Never infer a trap',
@@ -681,7 +686,7 @@ testClauses('AREA-MAP template', areaMap, [
 ]);
 // The map is read by the scout, which has no git, so it verifies rows in the
 // code and reports what it used; the planner records that in EVIDENCE.md.
-addCheck(/## Area map/.test(repoScout) && /docs\/agent_memory\/area-map\.md/.test(repoScout) && /`Area map:` line/.test(repoScout), 'agents/repo-scout.md must read docs/agent_memory/area-map.md first and end its fact pack with an `Area map:` line.');
+addCheck(/## Area map/.test(repoScout) && /\.agrippa\/area-map\.md/.test(repoScout) && /`Area map:` line/.test(repoScout), 'agents/repo-scout.md must read .agrippa/area-map.md first and end its fact pack with an `Area map:` line.');
 addCheck(/area map/.test(evidence), 'EVIDENCE template must offer the `area map` entry kind.');
 addCheck(/area map/.test(workspaceFiles), 'Plan skill workspace-files.md must name the `area map` evidence entry.');
 testClauses('Skill upgrade', upgradeSkill, [...setupClauses,
@@ -692,6 +697,8 @@ testClauses('Skill upgrade', upgradeSkill, [...setupClauses,
     'Never\\s+offer a single\\s+"delete all" choice',
     'never edited, moved, renamed, or converted',
     'From G3',
+    'From G4 v0\\.2\\.0',
+    'templates/agrippa-CLAUDE\\.md',
     '\\$\\{CLAUDE_PLUGIN_ROOT\\}/UPGRADING\\.md',
     'docs/planning/MIGRATION\\.md',
 ]);
@@ -704,7 +711,7 @@ testClauses('Plan skill workspace-files.md', workspaceFiles, [
     'checks shape,\\s+never truth',
 ]);
 testClauses('Design-first skill decision-records.md', decisionRecords, [
-    'docs/decisions/',
+    '\\.agrippa/decisions/',
     '## When a record is required',
     '## Shape',
     'engineering:architecture',
@@ -768,7 +775,7 @@ for (const name of agentNames) {
         addCheck(containsName(disallowed, tool), `${name}.md disallowedTools does not remove the editing tool ${tool}.`);
     }
     addCheck(/^model:\s*(haiku|sonnet|opus)\s*$/im.test(text), `${name}.md frontmatter model must be haiku, sonnet, or opus.`);
-    addCheck(/docs\/agent_memory\/live-app\.md/i.test(text) && /"Authoring tools"/i.test(text), `${name}.md must point to the "Authoring tools" section of docs/agent_memory/live-app.md.`);
+    addCheck(/\.agrippa\/live-app\.md/i.test(text) && /"Authoring tools"/i.test(text), `${name}.md must point to the "Authoring tools" section of .agrippa/live-app.md.`);
     addCheck(!/optional live-app block/i.test(text), `${name}.md still has an optional live-app block.`);
     addCheck(new RegExp(`\`${escapeRegex(name)}.md\``, 'i').test(routing), `ROUTING roster table does not list ${name}.md.`);
 }
@@ -867,6 +874,10 @@ const substringTerms = [
     'assigned profile',
     'workspace-write',
 ];
+// Up to 0.2.0 the project documents and decision records were under docs/.
+// They are in .agrippa/ now, so a shipped file that still names the old
+// folders would send a reader to a path an installed repository no longer has.
+const oldLayoutTerms = ['docs/agent_memory', 'docs/decisions'];
 // UPGRADING.md must name the old markers to recognize them, and this script
 // names them to search for them. Paths are relative to the repository root.
 const vocabularyExempt = ['plugins/agrippa/UPGRADING.md', 'dev/validate-kit.mjs'];
@@ -898,6 +909,9 @@ for (const file of checkedFiles) {
     }
     for (const term of substringTerms) {
         addCheck(!new RegExp(escapeRegex(term), 'i').test(text), `Older-toolchain term '${term}' found in ${relative}.`);
+    }
+    for (const term of oldLayoutTerms) {
+        addCheck(!new RegExp(escapeRegex(term), 'i').test(text), `Old project-document path '${term}' found in ${relative}; the documents live in .agrippa/ since 0.3.0.`);
     }
 }
 
@@ -1018,15 +1032,27 @@ if (installedRepo) {
             }
         }
 
-        const projectDocuments = [
-            ['docs/agent_memory/project-contracts.md', 'templates/PROJECT-CONTRACTS.md'],
-            ['docs/agent_memory/validation-commands.md', 'templates/VALIDATION-COMMANDS.md'],
+        // Up to 0.2.0 the project documents and the decision records were
+        // under docs/. From 0.3.0 they are in .agrippa/, so an old folder is a
+        // leftover, and a missing new document usually means the move was not
+        // made yet.
+        const oldLayout = [
+            ['docs/agent_memory', '.agrippa'],
+            ['docs/decisions', '.agrippa/decisions'],
         ];
-        for (const [document, template] of projectDocuments) {
-            addProjectCheck(isFile(join(projectRoot, document)), `${document} is missing. Write it from plugins/agrippa/${template}; the plugin's agents and skills read the project's facts from it.`);
+        for (const [oldFolder, newFolder] of oldLayout) {
+            addProjectCheck(!isDirectory(join(projectRoot, oldFolder)), `${oldFolder}/ is where plugins up to 0.2.0 kept these files; they now live in ${newFolder}/. Move the folder with git mv and update every reference outside dated plan workspaces, as "From G4 v0.2.0" in UPGRADING.md says.`);
         }
 
-        const moveFacts = 'Move any project facts it holds into docs/agent_memory/project-contracts.md, validation-commands.md, or live-app.md, then delete it';
+        const projectDocuments = [
+            ['.agrippa/project-contracts.md', 'templates/PROJECT-CONTRACTS.md'],
+            ['.agrippa/validation-commands.md', 'templates/VALIDATION-COMMANDS.md'],
+        ];
+        for (const [document, template] of projectDocuments) {
+            addProjectCheck(isFile(join(projectRoot, document)), `${document} is missing. Write it from plugins/agrippa/${template}, or move it from the docs/ folder a plugin before 0.3.0 used; the plugin's agents and skills read the project's facts from it.`);
+        }
+
+        const moveFacts = 'Move any project facts it holds into .agrippa/project-contracts.md, validation-commands.md, or live-app.md, then delete it';
         for (const name of agentNames) {
             const path = `.claude/agents/${name}.md`;
             addProjectCheck(!existsSync(join(projectRoot, path)), `${path} is a local copy of the plugin agent agrippa:${name}. ${moveFacts}.`);
@@ -1050,7 +1076,7 @@ if (installedRepo) {
         // section heading that only the full copy had marks a leftover.
         const fullCopies = [
             ['plans/README.md', '(?m)^## (Artifact contract|Selective reads)', 'templates/plans-README.md', 'plan'],
-            ['docs/decisions/README.md', '(?m)^## (When a record is required|Shape)\\s*$', 'templates/decisions-README.md', 'design-first'],
+            ['.agrippa/decisions/README.md', '(?m)^## (When a record is required|Shape)\\s*$', 'templates/decisions-README.md', 'design-first'],
         ];
         for (const [document, pattern, template, skill] of fullCopies) {
             const copyPath = join(projectRoot, document);
@@ -1064,22 +1090,22 @@ if (installedRepo) {
         // A leftover is recognized by the template's wording; an install may
         // have rewrapped the lines, so every space matches any whitespace.
         const genericRules = [
-            ['docs/agent_memory/validation-commands.md', 'Retry rule: performance and benchmark gates are `noisy-retry`', 'the noisy-retry rule, now in the plugin skill agrippa:verify-before-done ("Retries")'],
-            ['docs/agent_memory/validation-commands.md', 'Existing-failure rule: prove a failure is pre-existing', 'the pre-existing-failure rule, now in the plugin skill agrippa:verify-before-done; keep the red-target list as a "Known red targets at `HEAD`" bullet'],
-            ['docs/agent_memory/validation-commands.md', 'Every plan-matrix row records a Sandbox value', 'the Sandbox value definitions, now under "Validation matrix values" in the plan skill\'s agent-workflow.md'],
-            ['docs/agent_memory/validation-commands.md', 'Allowed plan-matrix determinism values are', 'the allowed Determinism values, now under "Validation matrix values" in the plan skill\'s agent-workflow.md'],
-            ['docs/agent_memory/validation-commands.md', 'Do not use a single representative test as the complete suite', 'the "Full-suite inventory" opening paragraph, now under "Validation matrix values" in the plan skill\'s agent-workflow.md'],
-            ['docs/agent_memory/validation-commands.md', 'Commands are copied verbatim into a plan\'s validation matrix', 'the "Plan-matrix contract" section, now under "Validation matrix values" in the plan skill\'s agent-workflow.md'],
-            ['docs/agent_memory/project-contracts.md', 'Treat these as separate writer boundaries unless a plan explicitly combines', 'the "Ownership areas" opening paragraph, which restates the core rules'],
-            ['docs/agent_memory/project-contracts.md', 'List the owners here so placement is a lookup', 'the "Architecture owners" opening paragraph, which the template now carries only as an install note'],
-            ['docs/agent_memory/project-contracts.md', 'Plans and reviewers cite them by path', 'the "Contract documents" rule sentence, which the agents already follow'],
-            ['docs/agent_memory/project-contracts.md', 'records an `rg` consumer census with file:line snippets', 'the "Shared and public interfaces" opening paragraph, now in the core rules, the design-first skill, and the plan skill\'s agent-workflow.md'],
-            ['docs/agent_memory/project-contracts.md', 'a risk flag keeps a stage off Haiku', 'the risk-flag rule, now in the plan skill\'s ROUTING.md'],
-            ['docs/agent_memory/project-contracts.md', 'distinguish existing failures or environment limits from regressions', 'the last two "Environment boundaries" bullets, which the plugin skill agrippa:verify-before-done already states'],
-            ['docs/agent_memory/live-app.md', 'They may call only the tools listed under', 'the opening paragraph about which tools the agents may call, which every plugin agent already states'],
-            ['docs/agent_memory/live-app.md', 'Which agents run the app:', 'the "Which agents run the app" paragraph, which the plugin agents already state'],
-            ['docs/agent_memory/live-app.md', 'Cite a bridge-sourced fact as', 'the citation sentences under "Serialized files", which the plugin agent agrippa:repo-scout already states'],
-            ['docs/agent_memory/live-app.md', '(?m)^## Rules\\s*$', 'the "Rules" section, now in the plugin agents and the plugin skill agrippa:verify-before-done ("Live-app bridge")'],
+            ['.agrippa/validation-commands.md', 'Retry rule: performance and benchmark gates are `noisy-retry`', 'the noisy-retry rule, now in the plugin skill agrippa:verify-before-done ("Retries")'],
+            ['.agrippa/validation-commands.md', 'Existing-failure rule: prove a failure is pre-existing', 'the pre-existing-failure rule, now in the plugin skill agrippa:verify-before-done; keep the red-target list as a "Known red targets at `HEAD`" bullet'],
+            ['.agrippa/validation-commands.md', 'Every plan-matrix row records a Sandbox value', 'the Sandbox value definitions, now under "Validation matrix values" in the plan skill\'s agent-workflow.md'],
+            ['.agrippa/validation-commands.md', 'Allowed plan-matrix determinism values are', 'the allowed Determinism values, now under "Validation matrix values" in the plan skill\'s agent-workflow.md'],
+            ['.agrippa/validation-commands.md', 'Do not use a single representative test as the complete suite', 'the "Full-suite inventory" opening paragraph, now under "Validation matrix values" in the plan skill\'s agent-workflow.md'],
+            ['.agrippa/validation-commands.md', 'Commands are copied verbatim into a plan\'s validation matrix', 'the "Plan-matrix contract" section, now under "Validation matrix values" in the plan skill\'s agent-workflow.md'],
+            ['.agrippa/project-contracts.md', 'Treat these as separate writer boundaries unless a plan explicitly combines', 'the "Ownership areas" opening paragraph, which restates the core rules'],
+            ['.agrippa/project-contracts.md', 'List the owners here so placement is a lookup', 'the "Architecture owners" opening paragraph, which the template now carries only as an install note'],
+            ['.agrippa/project-contracts.md', 'Plans and reviewers cite them by path', 'the "Contract documents" rule sentence, which the agents already follow'],
+            ['.agrippa/project-contracts.md', 'records an `rg` consumer census with file:line snippets', 'the "Shared and public interfaces" opening paragraph, now in the core rules, the design-first skill, and the plan skill\'s agent-workflow.md'],
+            ['.agrippa/project-contracts.md', 'a risk flag keeps a stage off Haiku', 'the risk-flag rule, now in the plan skill\'s ROUTING.md'],
+            ['.agrippa/project-contracts.md', 'distinguish existing failures or environment limits from regressions', 'the last two "Environment boundaries" bullets, which the plugin skill agrippa:verify-before-done already states'],
+            ['.agrippa/live-app.md', 'They may call only the tools listed under', 'the opening paragraph about which tools the agents may call, which every plugin agent already states'],
+            ['.agrippa/live-app.md', 'Which agents run the app:', 'the "Which agents run the app" paragraph, which the plugin agents already state'],
+            ['.agrippa/live-app.md', 'Cite a bridge-sourced fact as', 'the citation sentences under "Serialized files", which the plugin agent agrippa:repo-scout already states'],
+            ['.agrippa/live-app.md', '(?m)^## Rules\\s*$', 'the "Rules" section, now in the plugin agents and the plugin skill agrippa:verify-before-done ("Live-app bridge")'],
             ['AGENTS.md', 'adds its core rules to every session: request boundaries, Engineering', 'the opening paragraph\'s list of core-rule sections, which goes stale; the template now has one sentence'],
             ['AGENTS.md', 'never report a visual or GPU-dependent check as done when the bridge was down', 'the live-app paragraph\'s bridge rules, now in the plugin agents and agrippa:verify-before-done; keep one or two sentences pointing to live-app.md'],
         ];
@@ -1093,11 +1119,11 @@ if (installedRepo) {
         // The area map is optional. When it exists, readers need the commit it
         // describes to see what changed since, and the survey must have
         // finished filling it.
-        const areaMapPath = join(projectRoot, 'docs', 'agent_memory', 'area-map.md');
+        const areaMapPath = join(projectRoot, '.agrippa', 'area-map.md');
         if (isFile(areaMapPath)) {
             const areaMapText = readText(areaMapPath);
-            addProjectCheck(/^Built at:\s*`[0-9a-f]{7,40}`/im.test(areaMapText), 'docs/agent_memory/area-map.md has no `Built at:` line naming the commit it describes. Run /agrippa:survey, which writes it; the planner needs it to see which folders changed since.');
-            addProjectCheck(!/\[PROJECT:|Install note/.test(areaMapText), 'docs/agent_memory/area-map.md still carries an install marker ([PROJECT: or Install note). Finish it with /agrippa:survey or delete it; a half-filled map misleads the planner.');
+            addProjectCheck(/^Built at:\s*`[0-9a-f]{7,40}`/im.test(areaMapText), '.agrippa/area-map.md has no `Built at:` line naming the commit it describes. Run /agrippa:survey, which writes it; the planner needs it to see which folders changed since.');
+            addProjectCheck(!/\[PROJECT:|Install note/.test(areaMapText), '.agrippa/area-map.md still carries an install marker ([PROJECT: or Install note). Finish it with /agrippa:survey or delete it; a half-filled map misleads the planner.');
         }
 
         const planningNote = join(projectRoot, 'docs', 'planning', 'CLAUDE.md');

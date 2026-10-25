@@ -525,6 +525,49 @@ commit the rows describe.
   workflow guide, and evidence template, and, with `-InstalledRepo`, a
   `Built at` commit and no install marker in a project's map.
 
+## Project documents move to `.agrippa/` (2026-10-24)
+
+Up to 0.2.0 an install wrote the project documents to `docs/agent_memory/`
+and the decision records to `docs/decisions/`. They now live in `.agrippa/`
+at the repository root, the documents directly under it and the records in
+`.agrippa/decisions/`, and `templates/agent-memory-CLAUDE.md` became
+`templates/agrippa-CLAUDE.md`. Plan workspaces stay in `plans/`, where people
+work in them every day.
+
+- **Why leave `docs/`.** `docs/` is a generic name that a repository often
+  already uses for its own material, so the kit was claiming two subfolders
+  of someone else's folder. A hidden folder named after the plugin follows
+  the convention that `.claude/` and `.github/` set, and collides with
+  nothing.
+- **Why both folders.** `docs/decisions/` had the same problem, and moving
+  one without the other would have left the kit with two conventions.
+  `docs/planning/MIGRATION.md` is unchanged: it is written on upgrade only,
+  and whether it should also move is still open.
+- **The folder `CLAUDE.md` still loads.** The earlier note that the folder's
+  `CLAUDE.md` stays whole depends on Claude Code attaching a folder's
+  `CLAUDE.md` when a session reads a file in that folder. A probe in the
+  sandbox on 2026-10-24 confirmed that this also happens for a hidden folder:
+  a fresh session that read `.agrippa/note.md` received `.agrippa/CLAUDE.md`,
+  exactly as it did for a visible control folder. A `CLAUDE.md` created
+  during a session is not picked up until the next session, which is why the
+  probe needed a fresh one.
+- **Hidden folders and search.** Command-line `rg` skips hidden folders
+  unless given `--hidden`. `git grep` and Claude Code's Read, Glob, and Grep
+  tools search them, which was checked by finding a string in
+  `.claude-plugin/plugin.json` with the Grep tool. The folder `CLAUDE.md`,
+  the README's install-marker scan, and the upgrade skill's marker search all
+  say so, so a search that finds nothing is not taken as proof that a fact is
+  unrecorded.
+- **Upgrade path.** "From G4 v0.2.0" in `UPGRADING.md` is two `git mv`
+  commands plus a reference sweep. Dated plan workspaces and existing
+  decision records keep the old paths, because they are records.
+  `validate-kit.mjs -InstalledRepo` fails while either old folder exists, and
+  the kit-side vocabulary check rejects the old paths in every shipped file
+  except `UPGRADING.md`, so they cannot drift back in.
+- **Release.** This changes an installed repository's layout, so the release
+  that ships it is 0.3.0, and each installed repository runs
+  `/agrippa:upgrade` when it moves its tag.
+
 ## Linter rules that are easy to trip over
 
 These cost three lint rounds (62 errors down to 0) on one nuro-battler plan.

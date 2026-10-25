@@ -1,8 +1,15 @@
-# docs/agent_memory/ — canonical architecture contracts
+# .agrippa/ — canonical architecture contracts
 
 This is the **stable-contracts** ownership area (root `AGENTS.md`). These
 Markdown files are the repository's own source-of-truth memory. Code and plans
 cite them; they must stay accurate.
+
+The folder is hidden so that it never collides with the repository's own
+`docs/`. Claude Code's Read, Glob, and Grep tools and `git grep` see it, but
+command-line `rg` and most `find`-style tools skip hidden folders unless told
+to look (`rg --hidden`). When a search for a contract name finds nothing,
+check that the tool searched this folder before concluding that the fact is
+unrecorded.
 
 ## The files
 
@@ -29,7 +36,7 @@ cite them; they must stay accurate.
   update the doc; if the doc is authoritative for a frozen interface, changing
   it means the interface itself changed — that is a shared-contract change
   requiring every consumer to move together, with a decision record in
-  `docs/decisions/`.
+  `.agrippa/decisions/`.
 - **Preserve the frozen numbers exactly.** Do not casually round, reword, or
   re-derive a frozen value — copy it from the file that owns it.
 - **Prefer dated, append-style additions** over rewriting history. Do not
@@ -44,6 +51,6 @@ cite them; they must stay accurate.
 ## Note on Claude's separate memory
 
 Do not confuse this directory with Claude's per-user auto-memory under
-`~/.claude/projects/.../memory/` (the `MEMORY.md` index). `docs/agent_memory/`
+`~/.claude/projects/.../memory/` (the `MEMORY.md` index). `.agrippa/`
 is **checked-in repository documentation** shared by everyone working the
 repo; the auto-memory is Claude's private cross-session notes.

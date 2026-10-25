@@ -37,7 +37,7 @@ named as not done, with the reason.
 - [ ] Root `CLAUDE.md` imports `AGENTS.md` (`@AGENTS.md`) and lists any
       project skills.
 - [ ] Each ownership area with real rules has a per-directory `CLAUDE.md`;
-      `docs/agent_memory/CLAUDE.md` exists.
+      `.agrippa/CLAUDE.md` exists.
 - [ ] No project-wide pin of the lead's model or reasoning effort exists.
 
 ## Project facts
@@ -48,11 +48,11 @@ named as not done, with the reason.
       sandbox stance, determinism, verdict and error-line rules, retry rules,
       prerequisites, known red at `HEAD`, targeted checks, and the full-suite
       inventory.
-- [ ] `docs/decisions/README.md` and `plans/README.md` exist as the short
+- [ ] `.agrippa/decisions/README.md` and `plans/README.md` exist as the short
       pointers from `templates/`, with no copy of the rules the `plan` and
       `design-first` skills hold, and `docs/planning/` has no `CLAUDE.md`
       from an older kit.
-- [ ] `docs/agent_memory/area-map.md` was written by `/agrippa:survey` with a
+- [ ] `.agrippa/area-map.md` was written by `/agrippa:survey` with a
       `Built at` commit and every row checked against the tree, or the user
       declined the survey and the file does not exist.
 - [ ] The `engineering:*` skills are available, or the hand-written fallback
@@ -68,13 +68,13 @@ named as not done, with the reason.
       `agrippa:design-reviewer`, `agrippa:validator`) come from the plugin,
       and `.claude/agents/` has no copy of them. If the project has an MCP
       server that observes the running application,
-      `docs/agent_memory/live-app.md` exists and lists every one of its
+      `.agrippa/live-app.md` exists and lists every one of its
       authoring tools; otherwise that file does not exist.
 - [ ] The four skills (`agrippa:design-first`, `agrippa:systematic-debugging`,
       `agrippa:verify-before-done`, `agrippa:receiving-review`) come from the
       plugin, and `.claude/skills/` has no copy of them.
-      Every section of `docs/agent_memory/project-contracts.md` and
-      `docs/agent_memory/validation-commands.md` that they read names this
+      Every section of `.agrippa/project-contracts.md` and
+      `.agrippa/validation-commands.md` that they read names this
       repository's real owners, traps, and commands, or was deleted because
       it provably does not apply.
 - [ ] The plugin's `/agrippa:handoff` skill is available, and its transcript

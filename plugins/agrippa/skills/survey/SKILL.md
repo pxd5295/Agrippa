@@ -1,12 +1,12 @@
 ---
 name: survey
-description: Survey the repository's folders and write or refresh docs/agent_memory/area-map.md, the on-demand index of entry points, covering tests, governing contracts, and recorded traps that planning reads first. Read-only discovery; it changes no application code and writes no other file. Run it only when the user explicitly asks, by typing /agrippa:survey or by asking to survey or map this repository for Agrippa; never load it on your own initiative.
+description: Survey the repository's folders and write or refresh .agrippa/area-map.md, the on-demand index of entry points, covering tests, governing contracts, and recorded traps that planning reads first. Read-only discovery; it changes no application code and writes no other file. Run it only when the user explicitly asks, by typing /agrippa:survey or by asking to survey or map this repository for Agrippa; never load it on your own initiative.
 argument-hint: "[folder to refresh, default the whole repository]"
 ---
 
 # Survey the repository into an area map
 
-This skill writes one project document, `docs/agent_memory/area-map.md`, from
+This skill writes one project document, `.agrippa/area-map.md`, from
 the template `${CLAUDE_PLUGIN_ROOT}/templates/AREA-MAP.md`. The map is read on
 demand, by the planner and by `agrippa:repo-scout` before a census, and never
 at session start. It adds nothing to the always-loaded files: the one
@@ -22,7 +22,7 @@ change, including uncommitted ones.
 ## 1. Check the ground
 
 Run `git rev-parse --show-toplevel` and work from that folder. If it is not a
-git repository, stop and say so. If `docs/agent_memory/project-contracts.md`
+git repository, stop and say so. If `.agrippa/project-contracts.md`
 is missing, stop and recommend `/agrippa:install`: the map's "Ownership area"
 column comes from that file's "Ownership areas" section.
 
@@ -33,13 +33,13 @@ If the worktree is dirty, say so and survey the committed tree, because the
 ## 2. Read what exists, read-only
 
 - The template, completely, and the README's placeholder convention.
-- The existing `docs/agent_memory/area-map.md`, if any, and its `Built at`
+- The existing `.agrippa/area-map.md`, if any, and its `Built at`
   commit. When the skill argument names a folder, or the map exists, this is a
   refresh (step 4); otherwise a full survey (step 3).
 - "Ownership areas" and "Contract documents" in `project-contracts.md`, and
   "Full-suite inventory" in `validation-commands.md`, which names the test
   targets a row may cite.
-- Every per-directory `CLAUDE.md`, every record in `docs/decisions/`, and the
+- Every per-directory `CLAUDE.md`, every record in `.agrippa/decisions/`, and the
   `EVIDENCE.md` of recent plan workspaces, for recorded traps. Dated plan
   workspaces are read, never edited.
 
@@ -58,7 +58,7 @@ parent's row. Then record, with evidence:
 - **Covering tests.** Every test file or inventory target that references a
   file in the folder, found by searching the folder's file stems and module
   names across the test tree. `None` when the search finds nothing.
-- **Contract.** The `docs/agent_memory/` document that governs the folder, or
+- **Contract.** The `.agrippa/` document that governs the folder, or
   `None`.
 - **Traps.** Only what step 2 found recorded, each with the observation that
   revealed it and where it is recorded. Never infer a trap from reading code.
@@ -104,7 +104,7 @@ Run each check and paste the exact command and its result.
 - Every covering test is a file that exists or a target registered in the
   "Full-suite inventory".
 - `Built at` is the short hash of the commit the rows describe.
-- The README's install-marker scan over `docs/agent_memory/area-map.md` finds
+- The README's install-marker scan over `.agrippa/area-map.md` finds
   nothing.
 
 ## 7. Report

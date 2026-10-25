@@ -28,7 +28,7 @@ because Haiku is weakest with large files or output.
 Tier inputs are: long-context need, files touched, ownership areas,
 shared-interface touch, risk flags, design state, and validation determinism.
 A stage's risk flags come from "High-risk change classes" in
-`docs/agent_memory/project-contracts.md`, and any risk flag keeps the stage
+`.agrippa/project-contracts.md`, and any risk flag keeps the stage
 off Haiku. Do not pick from a model menu; apply the first matching cell and
 record the inputs in the stage. Dispatch shape is a separate choice, below.
 
@@ -77,7 +77,7 @@ command-runner roles are named.
 The agents have no `tools:` allowlist. Each one has every tool except those
 its `disallowedTools` line removes, so a project's MCP tools reach them
 without being listed. That includes a live-app bridge's authoring tools, so
-each agent is told never to call them, and `docs/agent_memory/live-app.md`
+each agent is told never to call them, and `.agrippa/live-app.md`
 lists which tools those are. No check can enforce that rule; reviewers watch
 for it.
 
@@ -187,7 +187,7 @@ per stage. A worktree that the plan requires cannot be skipped.
 
 The `validator` agent receives an inline stage packet with `Owned files: None`.
 It may write the runtime caches the project's build or test tooling requires,
-which "Runtime writes and caches" in `docs/agent_memory/validation-commands.md`
+which "Runtime writes and caches" in `.agrippa/validation-commands.md`
 lists, but must not change the repository diff. Any produced diff is an
 integration error. The workspace linter row, `agrippa-lint`, runs through the
 Bash tool, because the plugin's `bin/` folder is on the Bash tool's PATH only.

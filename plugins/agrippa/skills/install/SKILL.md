@@ -89,7 +89,7 @@ focused questions in chat. The usual questions are:
 - ownership boundaries that are ambiguous;
 - which interfaces count as frozen;
 - the risk classes that apply;
-- whether to survey the folders into `docs/agent_memory/area-map.md` once the
+- whether to survey the folders into `.agrippa/area-map.md` once the
   documents are written. The map is optional and read only during planning;
   recommend it for a repository with more than a handful of folders;
 - whether to turn on the plugin's spawn logger;
@@ -119,15 +119,15 @@ Write every layout-table row whose destination is a repository path, except
   once its file is filled.
 - Merge into an existing `AGENTS.md` or `CLAUDE.md`; never drop the
   repository's own rules. Keep the stricter rule when the two disagree.
-- Write `plans/README.md` and `docs/decisions/README.md` from their templates
+- Write `plans/README.md` and `.agrippa/decisions/README.md` from their templates
   unchanged. They only say what each folder holds and where the rules are;
   never add rules to them.
 - Write a per-directory `CLAUDE.md` only for an ownership area with real rules
   to state.
-- Write `docs/agent_memory/live-app.md` only when the project has an MCP
+- Write `.agrippa/live-app.md` only when the project has an MCP
   server that observes the running application, and list every one of its
   authoring tools there.
-- Write `docs/agent_memory/area-map.md` only when the user said yes in step
+- Write `.agrippa/area-map.md` only when the user said yes in step
   4, and only by loading `agrippa:survey` and following it from its discovery
   step; never fill `templates/AREA-MAP.md` by hand. Skip it otherwise; the
   planner and `agrippa:repo-scout` treat a missing map as "no map".
@@ -184,8 +184,8 @@ Run each check below and paste the exact command and its result.
 - **Install-marker scan.** Run the scan the README describes under
   "Install-marker scan" over every file of the repository. It must find
   nothing.
-- **Project documents.** `docs/agent_memory/project-contracts.md` and
-  `docs/agent_memory/validation-commands.md` exist, and each fact in them was
+- **Project documents.** `.agrippa/project-contracts.md` and
+  `.agrippa/validation-commands.md` exist, and each fact in them was
   checked against the code.
 - **Settings.** `.claude/settings.json` parses as JSON, declares
   `extraKnownMarketplaces.agrippa`, and enables `agrippa@agrippa`. A `github`
@@ -195,7 +195,7 @@ Run each check below and paste the exact command and its result.
 - **No local copies.** `.claude/agents/`, `.claude/skills/`, and
   `.claude/commands/` hold nothing named after a plugin agent or skill, and
   `tools/` has no `validate_plan_workspace.ps1`, `log_subagent_spawns.ps1`, or
-  `hook_payload.ps1`. `plans/README.md` and `docs/decisions/README.md` match
+  `hook_payload.ps1`. `plans/README.md` and `.agrippa/decisions/README.md` match
   their pointer templates.
 - **Validation commands.** Each command in `validation-commands.md` was run
   once before this step, and its result is recorded. Run any command that

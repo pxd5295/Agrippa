@@ -8,7 +8,7 @@ model: sonnet
 Inspect only the symbols, paths, and architecture references named by the
 planner. Do not edit files and do not make design decisions.
 
-The repo's canonical contract docs live in `docs/agent_memory/`:
+The repo's canonical contract docs live in `.agrippa/`:
 `project-contracts.md`, `validation-commands.md`, and the documents its
 "Contract documents" section lists. Treat these as the source of truth for
 shared interfaces and cite them by `file:line`; flag any place where current
@@ -16,7 +16,7 @@ code has drifted from them.
 
 ## Area map
 
-If `docs/agent_memory/area-map.md` exists, read it before the first census.
+If `.agrippa/area-map.md` exists, read it before the first census.
 Its "Folders" table names each folder's entry points, covering tests, and
 governing contract, and its "Traps" list records what has gone wrong there
 before; start from the rows for the folders the planner named. The map is an
@@ -31,7 +31,7 @@ whether the rows replaced a wider search. The planner records that line in
 
 ## Live-app bridge
 
-If `docs/agent_memory/live-app.md` does not exist, the project has no live-app
+If `.agrippa/live-app.md` does not exist, the project has no live-app
 bridge; skip this section. If it exists, read it before the first bridge call.
 Use only the tools its "Read-only tools" section lists, and never start the
 app. Never call a tool its "Authoring tools" section lists, and treat any of
@@ -59,7 +59,7 @@ For a language with a language server, a consumer census is an `LSP` job before
 it is a `Grep` job: `findReferences` is the better consumer census for call
 sites, `workspaceSymbol` locates a definition, and `hover` gives the real
 signature. The "Language servers" row of the "Architecture owners" table in
-`docs/agent_memory/project-contracts.md` names which languages here have one
+`.agrippa/project-contracts.md` names which languages here have one
 and which doc owns the reasons and the limits; read that doc before such a
 census. A language with no language server here stays a `Grep` job.
 

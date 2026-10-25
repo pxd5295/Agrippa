@@ -3,8 +3,8 @@
 The `agrippa` plugin adds these rules to every session of a repository that
 enables it. The repository's `AGENTS.md` holds its project contracts and
 rules; where the two disagree, the stricter rule wins.
-`docs/agent_memory/project-contracts.md` names the architecture owners, and
-`docs/agent_memory/validation-commands.md` owns every exact command. Claude
+`.agrippa/project-contracts.md` names the architecture owners, and
+`.agrippa/validation-commands.md` owns every exact command. Claude
 both plans and implements; per-stage tiers apply only to subagents the lead
 spawns.
 
@@ -68,11 +68,11 @@ that table in `project-contracts.md`.
   constant), fix it in the same change if that stays in one ownership area and
   under about 50 lines; otherwise flag it as a separate task.
 - **Document new shared abstractions.** A new hook, base-class API, funnel, or
-  shared interface gets a paragraph in the relevant `docs/agent_memory/`
+  shared interface gets a paragraph in the relevant `.agrippa/`
   contract in the same change.
 - **Shared interfaces start with a decision record.** Before the first edit to
   an interface in the shared-interfaces table, write a record with the
-  `engineering:architecture` skill as `docs/decisions/YYYY-MM-DD-<slug>.md`. A
+  `engineering:architecture` skill as `.agrippa/decisions/YYYY-MM-DD-<slug>.md`. A
   new subsystem (class family, native worker, editor panel, service, or
   ownership area) also runs `engineering:system-design` into that record.
   Without those skills, use the shape in `agrippa:design-first`.
@@ -101,7 +101,7 @@ verified:
    case that an existing owner should hold.
 4. No logic duplicated from elsewhere; if reuse was rejected, say why.
 5. Any changed shared interface or new abstraction is documented in
-   `docs/agent_memory/`.
+   `.agrippa/`.
 6. Any structural problem encountered was fixed or flagged as a separate task.
 
 ## Planning trigger
@@ -169,7 +169,7 @@ Stop as soon as sourced frozen contracts can be written:
 1. These rules and `AGENTS.md`, then the lifecycle sections of
    `agent-workflow.md`.
 2. Dirty-worktree status, exact owned code, and applicable
-   `docs/agent_memory/` contracts.
+   `.agrippa/` contracts.
 3. Targeted `Glob`/`Grep`/`Read`, delegated to `repo-scout` when a census or
    long-file extraction would dominate the turn.
 4. One bounded follow-up read for a concrete contradiction.

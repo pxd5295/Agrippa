@@ -74,7 +74,7 @@ start from a design reference" in the `agrippa:plan` skill's
 
 **Decision record**
 
-- [Link to `docs/decisions/YYYY-MM-DD-slug.md` when a shared interface
+- [Link to `.agrippa/decisions/YYYY-MM-DD-slug.md` when a shared interface
   changes; otherwise "None: no shared interface changes."]
 
 ## Acceptance criteria

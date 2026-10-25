@@ -1,6 +1,6 @@
 ---
 name: design-first
-description: "Design a code change in this repo before editing it. Use before the first edit of any change, fix, or feature request that touches more than one function, adds a class, conditional, constant, or config key, or touches a shared base class, a performance-owned subsystem, the configuration layer (the owners listed in the Architecture owners table of docs/agent_memory/project-contracts.md), or a docs/agent_memory contract. Produces the design statement and placement decision required by the Engineering standards in the Agrippa core rules."
+description: "Design a code change in this repo before editing it. Use before the first edit of any change, fix, or feature request that touches more than one function, adds a class, conditional, constant, or config key, or touches a shared base class, a performance-owned subsystem, the configuration layer (the owners listed in the Architecture owners table of .agrippa/project-contracts.md), or an .agrippa/ contract. Produces the design statement and placement decision required by the Engineering standards in the Agrippa core rules."
 ---
 
 # Design first
@@ -11,13 +11,13 @@ procedure for producing both in this codebase. It applies whether or not the
 change goes through a plan workspace.
 
 The project's own owners are not named here. They are in
-`docs/agent_memory/project-contracts.md`; read its "Ownership areas",
+`.agrippa/project-contracts.md`; read its "Ownership areas",
 "Architecture owners", and "Shared and public interfaces" sections before step
 1. A section named below is in that file unless another file is named.
 
 ## 1. Locate the change in the architecture
 
-Answer these before reading more code than needed. Use `docs/agent_memory/`
+Answer these before reading more code than needed. Use `.agrippa/`
 first, then the `CLAUDE.md` in the subfolder you are about to edit.
 
 1. **Which ownership area**, from "Ownership areas". A change that needs two
@@ -49,7 +49,7 @@ first, then the `CLAUDE.md` in the subfolder you are about to edit.
    new ownership area is a new subsystem and runs `engineering:system-design`
    first. A change to a shared interface listed in "Shared and public
    interfaces" needs a decision record from `engineering:architecture` first.
-   Both are saved under `docs/decisions/` before the first edit, in the shape
+   Both are saved under `.agrippa/decisions/` before the first edit, in the shape
    `${CLAUDE_SKILL_DIR}/reference/decision-records.md` gives.
 
 ## 2. Decide placement with these rules
@@ -83,7 +83,7 @@ first, then the `CLAUDE.md` in the subfolder you are about to edit.
   path" row names the hot path, its multiplier, and the budget.
 - **A gated subsystem's state, geometry, or dispatch** -> must pass its gate
   on a fresh build. The "Gated subsystems" row names the subsystems and their
-  gate targets, and "Build" in `docs/agent_memory/validation-commands.md`
+  gate targets, and "Build" in `.agrippa/validation-commands.md`
   names the build step.
 
 ## 3. Write the design statement
@@ -117,7 +117,7 @@ it as a separate task in the reply. Never extend the problem silently.
 At the end of the change, list the six items from the definition of done in
 the core rules and state which you verified, with the exact validation command
 and outcome. Exact commands and run limits are in
-`docs/agent_memory/validation-commands.md`. Run its "Session setup" step once
+`.agrippa/validation-commands.md`. Run its "Session setup" step once
 per session before the first validation run.
 
 ## What this skill does not do

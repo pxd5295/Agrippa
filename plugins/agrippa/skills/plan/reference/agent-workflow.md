@@ -15,12 +15,12 @@ is warranted at all. This lifecycle starts once it is.
 ### 1. Inspect narrowly
 
 Read relevant code, tests, current configuration, dirty-worktree state, and the
-smallest applicable `docs/agent_memory/` set. Use targeted `rg` to map
+smallest applicable `.agrippa/` set. Use targeted `rg` to map
 interfaces and consumers. Do not spawn planning subagents by default; the
 read-only `repo-scout` is allowed only when a broad census or long-context
 extraction would otherwise dominate, and its fact-pack value is recorded.
 
-If `docs/agent_memory/area-map.md` exists, open it first for the folders the
+If `.agrippa/area-map.md` exists, open it first for the folders the
 change touches. Its rows name the entry points and covering tests to read and
 the contract that governs each folder, and its "Traps" list records what has
 gone wrong there before. Check its `Built at` commit with
@@ -71,7 +71,7 @@ open exploration.
 `SPEC.md` also records the design rationale for the chosen approach: the owner
 it extends, how the next similar need is served without copying, the
 alternatives rejected and why, and a link to the decision record in
-`docs/decisions/` when a shared interface changes.
+`.agrippa/decisions/` when a shared interface changes.
 
 ### Plans that start from a design reference
 
@@ -92,7 +92,7 @@ correctly and still look different, so the plan carries the look itself.
    container or card for each region, all text including secondary notes and
    units, font family, size and weight, colors mapped to the project's style
    tokens (the style-token document in the "Contract documents" table of
-   `docs/agent_memory/project-contracts.md`, or raw values when it lists
+   `.agrippa/project-contracts.md`, or raw values when it lists
    none), bar and row heights, spacing, legend style, and every state it draws (open,
    closed, hover, empty). Each row names the contract that builds it (`C#`) or
    a deviation (`D#`). A row with neither is `Open` design and does not hand
@@ -109,7 +109,7 @@ correctly and still look different, so the plan carries the look itself.
 4. **Accept and check fidelity.** `SPEC.md` carries one acceptance criterion
    that the built UI matches the frozen design except for the listed
    deviations. Its validation row captures the rendered UI in-app, the way
-   "UI capture" in `docs/agent_memory/validation-commands.md` says, compares
+   "UI capture" in `.agrippa/validation-commands.md` says, compares
    it side by side with the frozen render at the same width, and walks every
    inventory row. Run it after the first stage that puts the UI on screen and
    again at Integration. The lead runs this check itself. In-app capture is
@@ -196,7 +196,7 @@ ownership is temporal in a shared checkout; concurrent same-file writers need
 worktrees and a merge owner.
 
 Centralize commands in the Validation matrix from
-`docs/agent_memory/validation-commands.md`, including style, sandbox stance,
+`.agrippa/validation-commands.md`, including style, sandbox stance,
 and determinism. Run the workspace linter before implementation.
 
 Recommended Execution records wave order, cheap-tier share, the expected cost
@@ -214,7 +214,7 @@ of the planning session.
 **Mark quoted contract text as quoted.** Fable 5.1 is more likely than Fable 5
 to reproduce passages of a source without marking them as quotations. A stage
 ships as `Frozen` only on sourced contract IDs, so a `SPEC.md` that blends
-`docs/agent_memory/` wording into the planner's own prose is unsourced in fact
+`.agrippa/` wording into the planner's own prose is unsourced in fact
 while passing every shape check the workspace linter runs. Quote contract text
 explicitly and cite the contract ID beside it; reword everything else.
 
@@ -258,7 +258,7 @@ continuity, escalation, and review. Treat each allocation row as atomic.
 Run the smallest relevant checks during a milestone and the immediate
 shared-contract gate; run the complete applicable suite once after integration.
 Expand earlier only when evidence exposes unexpected coupling. The validation
-catalog, `docs/agent_memory/validation-commands.md`, owns exact syntax,
+catalog, `.agrippa/validation-commands.md`, owns exact syntax,
 prerequisites, the inventory, and each command's matrix values; the retry and
 pre-existing-failure rules are in the `agrippa:verify-before-done` skill. Read
 the catalog's "Invocation traps" section before the first run, because it
@@ -295,7 +295,7 @@ work, blockers, next action, and gates. Append commands, outcomes, routing,
 retries, escalations, unrelated failures, and budget exceptions to `EVIDENCE.md`;
 distinguish environment limits from regressions. Performance records a
 baseline, and a change to a subsystem in the "Gated subsystems" row of the
-Architecture owners table in `docs/agent_memory/project-contracts.md` passes
+Architecture owners table in `.agrippa/project-contracts.md` passes
 the gate that row names.
 
 Completion requires every Acceptance ID and required Validation ID to pass, or
@@ -321,7 +321,7 @@ Durable behaviors this workflow must preserve:
 
 ## Project ownership and worktrees
 
-`docs/agent_memory/project-contracts.md` names the ownership areas, the shared
+`.agrippa/project-contracts.md` names the ownership areas, the shared
 interfaces, and the high-risk change classes with their required gates. Use
 worktrees for substantial overlap, experiments, or branches; the integration
 owner compares contracts before merge.

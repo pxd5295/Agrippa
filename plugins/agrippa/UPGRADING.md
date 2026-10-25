@@ -18,7 +18,7 @@ to recognize their markers to remove them. Nothing here is installed.
 | G1: dual toolchain (Codex lead, Claude scout) | `.codex/config.toml`; `.codex/agents/*.toml` profiles named `sol-*`, `terra-*`, `luna-*` (worker, reviewer, scout, validator); `docs/codex-planning-methodology-kit/`; an `AGENTS.md` section "Planning trigger and Sol-High entry" that stops with "Select Sol with High reasoning beneath the composer"; a Sol-Medium plan-writing handoff; the `Implement plan use workers` shortcut; launch stops for allocation confirmation; `default_mode_request_user_input = true`; `max_threads`; "one thread remains reserved for the lead"; only `.claude/agents/repo-scout.md` on the Claude side. |
 | G2: first Claude-only kit | `AGENTS.md` with "Planning artifacts", "Implementation launch and shortcut", "Dependency-wave execution", and "Validation and review" sections but no "Engineering standards" or "Definition of done"; exactly three agents (`repo-scout` and `validator` on `haiku`, `plan-reviewer` without Blocking/Optional classes); validation matrix column `Environment`; no `Covering tests:` in contracts; three-writer gate citing "material wall-clock benefit"; no "Fork or fresh subagent" section; no single-stage workspace shape or planning size gate; no design-reference planning; a kit `validate-kit.ps1` with a forbidden-terms list. |
 | G3: copied-in kit | The methodology copied into the repository: an `AGENTS.md` that holds the Engineering standards, definition of done, and planning trigger itself; four agents in `.claude/agents/` including `design-reviewer.md`; the `design-first`, `systematic-debugging`, `verify-before-done`, and `receiving-review` skills in `.claude/skills/`; `.claude/commands/handoff.md`; `docs/agent-workflow.md`; `docs/planning/ROUTING.md`; `docs/planning/templates/`; `tools/validate_plan_workspace.ps1`; `tools/log_subagent_spawns.ps1` and `tools/hook_payload.ps1`; a plan validation matrix row that runs `tools/validate_plan_workspace.ps1`. |
-| G4: plugin (current) | The committed `.claude/settings.json` declares the `agrippa` marketplace in `extraKnownMarketplaces`, pinned with `ref`, and enables `agrippa@agrippa`. The repository keeps no copy of the plugin's agents, skills, linter, or spawn logger. `AGENTS.md` holds only project contracts and project rules, and the project's facts are in `docs/agent_memory/project-contracts.md` and `validation-commands.md`. A plan's matrix runs `agrippa-lint`. |
+| G4: plugin (current) | The committed `.claude/settings.json` declares the `agrippa` marketplace in `extraKnownMarketplaces`, pinned with `ref`, and enables `agrippa@agrippa`. The repository keeps no copy of the plugin's agents, skills, linter, or spawn logger. `AGENTS.md` holds only project contracts and project rules, and the project's facts are in `.agrippa/project-contracts.md` and `validation-commands.md` (under `docs/agent_memory/` up to v0.2.0). A plan's matrix runs `agrippa-lint`. |
 
 A G4 repository moves to a newer release by changing the marketplace `ref` to
 the new tag. It can still drift from the templates; compare its project
@@ -32,7 +32,9 @@ instead of Windows PowerShell, so every machine that uses the plugin needs
 linter runs on Node.js too and loads `tools/validate_plan_workspace.local.mjs`
 instead of the PowerShell local file; a repository that has
 `tools/validate_plan_workspace.local.ps1` applies "From G4 v0.1.2" below.
-PowerShell is no longer required anywhere.
+PowerShell is no longer required anywhere. Up to v0.2.0 the project documents
+and the decision records lived under `docs/`; a repository that has
+`docs/agent_memory/` or `docs/decisions/` applies "From G4 v0.2.0" below.
 
 ## Rule mapping
 
@@ -78,7 +80,7 @@ Then apply every G2 row below, because G1 also lacks all of them.
 | No fork rule | Replace | `ROUTING.md` "Fork or fresh subagent" |
 | Validation column `Environment` | Replace | Column `Sandbox` with `sandboxed` / `outside-sandbox`. The linter accepts either name, so old workspaces still lint |
 | Planner reads not bounded | Replace | Core rules "Planner read ladder" |
-| No decision records | Replace | `docs/decisions/` with its pointer README; required before a shared-interface change, in the shape the `agrippa:design-first` skill gives |
+| No decision records | Replace | `.agrippa/decisions/` with its pointer README; required before a shared-interface change, in the shape the `agrippa:design-first` skill gives |
 | No folder-level rules | Replace | Per-directory `CLAUDE.md` files from `templates/directory-CLAUDE.md` |
 | No review procedure | Replace | The plugin skill `agrippa:receiving-review` |
 | No debugging or done-evidence procedure | Replace | The plugin skills `agrippa:systematic-debugging` and `agrippa:verify-before-done` |
@@ -106,7 +108,7 @@ user confirms it.
 | `.claude/agents/plan-reviewer.md` | Delete | The plugin agent `agrippa:plan-reviewer`. First move its project paragraph into "Project summary", "Shared and public interfaces", and the "Gated subsystems" and "Language servers" rows of "Architecture owners" in `project-contracts.md`, and into "Build" in `validation-commands.md`. Move its live-app tools into "Server" and "Read-only tools" in `live-app.md` |
 | `.claude/agents/design-reviewer.md` | Delete | The plugin agent `agrippa:design-reviewer`. First move its variant axis, shared engines, reimplementation case, and language servers into the matching rows of "Architecture owners", its contract sources into "Shared and public interfaces", and its highest-risk dispatch layer into the Native/ABI row of "High-risk change classes", all in `project-contracts.md`. Move its live-app tools and style document into "Read-only tools", "Run tools", "Authoring tools", and "Layout checks" in `live-app.md` |
 | `.claude/agents/validator.md` | Delete | The plugin agent `agrippa:validator`. First move its permitted cache writes and invocation traps into "Runtime writes and caches" and "Invocation traps" in `validation-commands.md`, and its live-app tools and bridge test runner into "Server", "Read-only tools", "Run tools", and "Test runner" in `live-app.md` |
-| MCP tool names added to an agent's `tools:` line | Move | `docs/agent_memory/live-app.md`, which lists the bridge's read-only, run, and authoring tools. The plugin agents have no `tools:` line |
+| MCP tool names added to an agent's `tools:` line | Move | `.agrippa/live-app.md`, which lists the bridge's read-only, run, and authoring tools. The plugin agents have no `tools:` line |
 | `.claude/skills/design-first/` | Delete | The plugin skill `agrippa:design-first`. First move its ownership areas, shared interfaces, and owners (base classes, variants, configuration layer, funnels, engines, hook lists, schema-driven lists, hot path, gated subsystems, new subsystem kinds) into "Ownership areas", "Shared and public interfaces", and the rows of "Architecture owners" in `project-contracts.md`. Move its once-per-session setup and build step into "Session setup" and "Build" in `validation-commands.md` |
 | `.claude/skills/systematic-debugging/` | Delete | The plugin skill `agrippa:systematic-debugging`. First move its layers, probe naming, working counterparts, and known differences into "Debugging map", and its companion files and worktree location into "Worktree and integration contracts", in `project-contracts.md`. Move its failure surfaces, error marker, known messages, run caps, shared log path, rebuild steps, and performance evidence into the matching sections of `validation-commands.md` |
 | `.claude/skills/verify-before-done/` | Delete | The plugin skill `agrippa:verify-before-done`. First move its session setup, verdict line, error marker, run cap, linter scope, build, performance evidence, and environment limits into the matching sections of `validation-commands.md`, and its gate targets into the "Gated subsystems" row of "Architecture owners" in `project-contracts.md` |
@@ -129,8 +131,10 @@ user confirms it.
 | Live-app bridge rules in `AGENTS.md` or `validation-commands.md` (confirm the session, no-persist run, both logs, stale frames, headless matrix rows, bridge down means not done) | Delete | The plugin agents and `agrippa:verify-before-done` ("Live-app bridge"). `AGENTS.md` keeps one or two sentences naming the server and pointing to `live-app.md`, in the shape of `templates/AGENTS.md`; the Godot facts go to `live-app.md` |
 
 Then apply the "From G4 v0.1.0" rows below, because a G3 install has full
-copies of those files too, the "From G4 v0.1.1" rows after them, and "From
-G4 v0.1.2" when the repository has a PowerShell local-checks file.
+copies of those files too, the "From G4 v0.1.1" rows after them, "From G4
+v0.1.2" when the repository has a PowerShell local-checks file, and "From G4
+v0.2.0", because every install before v0.3.0 wrote its documents under
+`docs/`.
 
 ### From G4 v0.1.0
 
@@ -196,6 +200,28 @@ file without a byte-order mark in the system code page, so a check 4 or check
 | `$Command -match [regex]::Escape('literal')` | Replace | `command.toLowerCase().includes('literal'.toLowerCase())` |
 | `$CommandPathExtensions = @('gd', 'tscn')` | Replace | `export const commandPathExtensions = ['gd', 'tscn'];` |
 | A script-scope variable both functions share | Retain | A module-level `const` |
+
+### From G4 v0.2.0
+
+Up to v0.2.0, an install wrote the project documents to `docs/agent_memory/`
+and the decision records to `docs/decisions/`. `docs/` is a generic folder
+that a repository often already uses for its own material, so from v0.3.0
+both live in `.agrippa/`, a hidden folder at the repository root named after
+the plugin: the documents directly under it, and the records in
+`.agrippa/decisions/`. Claude Code loads `.agrippa/CLAUDE.md` when a session
+reads a file in the folder, exactly as it did for the old one. Nothing else
+changes: the file names, their sections, the plugin's agents and skills, and
+`agrippa-lint` stay the same. `dev/validate-kit.mjs -InstalledRepo` fails
+while either old folder exists. Command-line `rg` skips hidden folders unless
+given `--hidden`; `git grep` and Claude Code's own search tools search them.
+
+| v0.2.0 path or reference | Disposition | What happens |
+|---|---|---|
+| `docs/agent_memory/` and every file in it | Move | `git mv docs/agent_memory .agrippa`. The file names stay the same |
+| `docs/decisions/` and every record in it | Move | `git mv docs/decisions .agrippa/decisions`, after the first move so that the folder exists |
+| `docs/agent_memory/CLAUDE.md` | Replace | Now `.agrippa/CLAUDE.md`. Rewrite it from `templates/agrippa-CLAUDE.md`, keeping the project's own bullets under "The files" |
+| References to the old paths in `AGENTS.md`, every `CLAUDE.md`, the project documents themselves, `plans/README.md`, `tools/validate_plan_workspace.local.mjs`, an edit-lint hook script, and `.claude/settings.json` permissions | Replace | The `.agrippa/` path. Find them with `git grep -n -e docs/agent_memory -e docs/decisions` |
+| References inside dated plan workspaces and decision records | Retain | They are records and are never edited; a reader follows the moved path |
 
 ### Always
 

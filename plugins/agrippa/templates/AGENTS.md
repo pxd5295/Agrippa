@@ -7,9 +7,9 @@ rule, this one wins.
 
 ## Project contracts
 
-`docs/agent_memory/project-contracts.md` owns this repository's ownership
+`.agrippa/project-contracts.md` owns this repository's ownership
 areas, architecture owners, shared interfaces, high-risk change classes, and
-compatibility gates. `docs/agent_memory/validation-commands.md` owns every
+compatibility gates. `.agrippa/validation-commands.md` owns every
 exact command. Treat these as separate ownership areas unless a milestone
 combines them:
 
@@ -17,7 +17,7 @@ combines them:
 - simulation and editor code in `scripts/` and root scene files;
 - native runtime code in `native/`;
 - tests and benchmarks in `tests/`;
-- stable contracts in `docs/agent_memory/`.]
+- stable contracts in `.agrippa/`.]
 
 [PROJECT: one sentence naming the shared interfaces, for example "Sensor
 order, network shape, GPU layout, serialization, scene/node contracts, and
@@ -36,7 +36,7 @@ and delete in the same change as the file they name.]
 
 [PROJECT: optional. Delete this paragraph if the project has no MCP server
 that observes the running application. Otherwise one or two sentences: name
-the server, say that `docs/agent_memory/live-app.md` describes its tools and
+the server, say that `.agrippa/live-app.md` describes its tools and
 traps, and, if the bridge can also author (create nodes, edit scenes, save
 resources), say that its edits write real files, that it is the sanctioned
 path for the tool-serialized files named above, and that such edits need the

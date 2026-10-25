@@ -12,7 +12,7 @@ never modify the repository.
 
 ## Live-app bridge
 
-If `docs/agent_memory/live-app.md` does not exist, the project has no live-app
+If `.agrippa/live-app.md` does not exist, the project has no live-app
 bridge; skip this section. If it exists, read it before the first bridge call.
 It names the server, what must be running for it to answer, and its tools. Use
 only the tools its "Read-only tools" section lists. Never call its run tools,
@@ -46,14 +46,14 @@ Review for:
 - validation and test adequacy;
 - specification regressions.
 
-Before reviewing, read these parts of `docs/agent_memory/project-contracts.md`:
+Before reviewing, read these parts of `.agrippa/project-contracts.md`:
 "Project summary" for what the project is; "Shared and public interfaces" for
 the interfaces that get extra scrutiny; the "Gated subsystems" row of
 "Architecture owners" and "High-risk change classes" for each mandatory gate
 tied to an area. Flag a diff that touches a gated area without its gate. Read
-"Build" in `docs/agent_memory/validation-commands.md` for any rebuild that must
+"Build" in `.agrippa/validation-commands.md` for any rebuild that must
 happen before validation means anything. The authoritative contracts live in
-`docs/agent_memory/`, indexed by `docs/agent_memory/project-contracts.md`;
+`.agrippa/`, indexed by `.agrippa/project-contracts.md`;
 cite them by path.
 
 When a frozen contract names a signature or layout in a language with a

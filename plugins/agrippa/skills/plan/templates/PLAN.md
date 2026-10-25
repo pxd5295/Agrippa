@@ -14,7 +14,7 @@ Wave 2: [Integration]
 
 ## Validation matrix
 
-Copy runnable commands from `docs/agent_memory/validation-commands.md`. Each
+Copy runnable commands from `.agrippa/validation-commands.md`. Each
 **Validation ID** is stable and maps to one or more acceptance IDs.
 
 | Validation ID | Acceptance IDs | Exact command or check | Style | Sandbox | Determinism | When |
@@ -24,7 +24,7 @@ Copy runnable commands from `docs/agent_memory/validation-commands.md`. Each
 | V3 | A1-A2 | `[full applicable suite]` | [style] | [stance] | [determinism] | Integration |
 
 Delete V1 when the catalog names no prerequisite. Style and Sandbox values come
-from `docs/agent_memory/validation-commands.md`.
+from `.agrippa/validation-commands.md`.
 
 The workspace linter row is `agrippa-lint -PlanPath plans/YYYY-MM-DD-name`
 (`lint`, `sandboxed`, `deterministic`). It runs through the Bash tool, because

@@ -52,7 +52,7 @@ there.
   launch rather than accumulating history.
 - `EVIDENCE.md` is append-only and holds detailed command output, manual
   checks, routing outcomes, escalations, justified exceptions, and one
-  `area map` entry when the plan consulted `docs/agent_memory/area-map.md`
+  `area map` entry when the plan consulted `.agrippa/area-map.md`
   (the rows used, the rows found stale, and whether they saved a read or
   misled).
 

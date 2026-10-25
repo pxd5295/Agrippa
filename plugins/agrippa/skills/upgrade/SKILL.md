@@ -23,7 +23,7 @@ The kit files this skill uses are in the plugin:
 
 | File | Use |
 |---|---|
-| `${CLAUDE_PLUGIN_ROOT}/UPGRADING.md` | The generation markers and the rule mapping for each generation, including "From G3", "From G4 v0.1.0", "From G4 v0.1.1", and "From G4 v0.1.2" |
+| `${CLAUDE_PLUGIN_ROOT}/UPGRADING.md` | The generation markers and the rule mapping for each generation, including "From G3", "From G4 v0.1.0", "From G4 v0.1.1", "From G4 v0.1.2", and "From G4 v0.2.0" |
 | `${CLAUDE_PLUGIN_ROOT}/README.md` | The layout table, "Enabling the plugin in a project", the placeholder convention, and the install-marker scan |
 | `${CLAUDE_PLUGIN_ROOT}/ADOPTION-CHECKLIST.md` | Every item is done or reported at the end |
 | `${CLAUDE_PLUGIN_ROOT}/templates/` | The project-side documents, including `MIGRATION.md` |
@@ -50,7 +50,9 @@ Change nothing in this step. Record:
   table in `UPGRADING.md`;
 - planning guides, routing documents, templates, shortcuts, and validators,
   and the scripts under `tools/` that hooks run;
-- `docs/agent_memory/` or the equivalent contract documents;
+- `.agrippa/`, the folders under `docs/` that "From G4 v0.2.0" in
+  `UPGRADING.md` names for a plugin before 0.3.0, or the equivalent contract
+  documents;
 - decision records;
 - every dated plan workspace root, usually `plans/YYYY-MM-DD-*`;
 - the validation commands actually in use, each run once;
@@ -108,7 +110,13 @@ Wait for every answer before step 4.
   rediscovering them. A copied-in agent or
   skill that was filled at install time is a data source: move each of its
   project facts into the document section "From G3" names before deleting it.
-- Replace a full copy of `plans/README.md` or `docs/decisions/README.md` with
+- Move the project documents and the decision records into `.agrippa/` with
+  `git mv`, as "From G4 v0.2.0" in `UPGRADING.md` says, write
+  `.agrippa/CLAUDE.md` from `templates/agrippa-CLAUDE.md`, and replace every
+  reference to the old paths outside dated plan workspaces and decision
+  records. `git grep` finds the references; command-line `rg` skips the hidden
+  folder unless given `--hidden`.
+- Replace a full copy of `plans/README.md` or `.agrippa/decisions/README.md` with
   the short pointer from its template, and delete `docs/planning/CLAUDE.md`
   once the user confirms, as "From G4 v0.1.0" in `UPGRADING.md` says. Move
   any project rule added to those files into `AGENTS.md` first.
@@ -145,9 +153,11 @@ of it in `docs/planning/MIGRATION.md`.
 - **Install-marker scan.** Run the scan the README describes under
   "Install-marker scan" over every file of the repository outside dated plan
   workspaces. It must find nothing.
-- **Old-toolchain markers.** A search of `AGENTS.md`, `CLAUDE.md`, `docs/`, and
-  `.claude/` for the markers `UPGRADING.md` lists for the generations found
-  must find nothing outside `MIGRATION.md` and dated plan workspaces.
+- **Old-toolchain markers.** A search of `AGENTS.md`, `CLAUDE.md`, `docs/`,
+  `.agrippa/`, and `.claude/` for the markers `UPGRADING.md` lists for the
+  generations found, and for the old project-document paths, must find
+  nothing outside `MIGRATION.md`, dated plan workspaces, and decision
+  records. Use `git grep`, which searches the hidden folders.
 - **Local linter checks.** If `tools/validate_plan_workspace.local.mjs`
   exists, lint one recent existing workspace through the Bash tool with
   `agrippa-lint -PlanPath plans/<name>`. It must report no `[Local]` error and

@@ -1,6 +1,6 @@
 ---
 name: systematic-debugging
-description: "Find the root cause of a bug, failing test, crash, or performance regression in this repo before changing code. Use when a test fails, a failure shows up on one of the surfaces listed under Failure surfaces in docs/agent_memory/validation-commands.md (for example a runtime error, a native or GPU path misbehaving, or a performance capture showing a hitch), or a previous fix attempt did not hold. Produces a reproduction, a single hypothesis, and a fix at the owning site, and stops after three failed fixes."
+description: "Find the root cause of a bug, failing test, crash, or performance regression in this repo before changing code. Use when a test fails, a failure shows up on one of the surfaces listed under Failure surfaces in .agrippa/validation-commands.md (for example a runtime error, a native or GPU path misbehaving, or a performance capture showing a hitch), or a previous fix attempt did not hold. Produces a reproduction, a single hypothesis, and a fix at the owning site, and stops after three failed fixes."
 ---
 
 # Systematic debugging
@@ -18,8 +18,8 @@ tooling.
 
 The project's own toolchain facts are not named here. They are in two
 documents, and each step below names the section to read:
-`docs/agent_memory/validation-commands.md` (the validation catalog) and
-`docs/agent_memory/project-contracts.md` (the project contracts).
+`.agrippa/validation-commands.md` (the validation catalog) and
+`.agrippa/project-contracts.md` (the project contracts).
 
 ## 1. Establish what actually happened
 
@@ -76,7 +76,7 @@ documents, and each step below names the section to read:
 3. List every difference between the working and failing paths, including
    configuration values, ordering, and lifecycle state. "Debugging map" lists
    the kinds of difference that have mattered here before. Known traps of
-   that kind are recorded in `docs/agent_memory/`; check there before
+   that kind are recorded in `.agrippa/`; check there before
    assuming a difference cannot matter.
 
 ## 3. One hypothesis, one change
