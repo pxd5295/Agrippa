@@ -12,7 +12,7 @@
 // not receive SessionStart context, so they need the second hook.
 //
 // Claude Code caps each context string at 10,000 characters and shows only a
-// preview above that, so dev/validate-kit.ps1 keeps core-rules.md under it. If
+// preview above that, so dev/validate-kit.mjs keeps core-rules.md under it. If
 // the file is missing, the script writes a short notice instead, so the
 // session learns the rules did not load. Uses only Node's built-in modules.
 

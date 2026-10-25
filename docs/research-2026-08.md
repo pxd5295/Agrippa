@@ -16,7 +16,7 @@ history alone does not explain them.
 - The plan-reviewer's Blocking/Optional rule.
 - The validator agent defaults to `sonnet`.
 - Both guides trimmed under 9,000 characters. They have since grown back past
-  that soft target, which `validate-kit.ps1` reports as a warning.
+  that soft target, which `validate-kit.mjs` reports as a warning.
 
 ## Applied on 2026-08-31
 

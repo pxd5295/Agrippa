@@ -82,9 +82,9 @@ The methodology has three layers, and the kit installs all of them.
 | `LICENSE`, `NOTICE` | Not installed as methodology files; they stay with the kit folder. The Apache-2.0 license and the attribution notice that redistributed copies must carry |
 
 Two development files live outside this folder, in the `dev/` folder of the
-Agrippa repository, and are never installed. `dev/fixtures/run-smoke-test.ps1`
-proves the plugin's linter, and `dev/validate-kit.ps1` checks that this kit
-is intact and self-consistent.
+Agrippa repository, and are never installed. `dev/fixtures/run-smoke-test.mjs`
+proves the plugin's linter, and `dev/validate-kit.mjs` checks that this kit
+is intact and self-consistent. Both run with `node`.
 
 ## Enabling the plugin in a project
 
@@ -133,7 +133,7 @@ structure the agents and skills read:
   repository has no such subject and how you know.
 
 The agents and skills, including the `plan` skill's guides and templates,
-contain no `[PROJECT: ...]` slot, and `dev/validate-kit.ps1` fails if one
+contain no `[PROJECT: ...]` slot, and `dev/validate-kit.mjs` fails if one
 appears. They are project-neutral and
 read the project's facts from named sections of
 `docs/agent_memory/project-contracts.md`,
@@ -185,9 +185,10 @@ census also expects line 1 of the project's `AGENTS.md` to read
   run. `bin/agrippa-lint` runs through Claude Code's Bash tool, which on
   Windows is Git Bash; that is Claude Code's own requirement, not one the
   plugin adds.
-- PowerShell only for Agrippa's development checks, `dev/validate-kit.ps1`
-  and `dev/fixtures/run-smoke-test.ps1`: Windows PowerShell 5.1 or PowerShell
-  7 (`pwsh`). A project that uses the plugin does not need it.
+- Agrippa's development checks, `dev/validate-kit.mjs` and
+  `dev/fixtures/run-smoke-test.mjs`, run on the same Node and need nothing
+  else. PowerShell is not required anywhere, for the plugin or for the
+  repository that develops it.
 - `AskUserQuestion` for the planning interview. Without it, ask the same
   focused questions in chat and record the answers the same way.
 - The `engineering:architecture` and `engineering:system-design` skills (the
@@ -223,8 +224,8 @@ documents from `templates/`, and shows every `.claude/settings.json` change
 before it writes it. It changes no application code and copies no plugin file
 into the repository. It ends with the install-marker scan, its own checks,
 and two development checks that run from an Agrippa checkout:
-`dev/validate-kit.ps1 -InstalledRepo` and
-`dev/fixtures/run-smoke-test.ps1 -RepoRoot`. An optional argument names the
+`node dev/validate-kit.mjs -InstalledRepo` and
+`node dev/fixtures/run-smoke-test.mjs -RepoRoot`. An optional argument names the
 release tag to pin.
 
 ## Upgrading an older planning methodology
@@ -263,12 +264,12 @@ needed. `/agrippa:handoff` writes a short brief when a session ends mid-plan.
 
 The kit is maintained in its own repository, Agrippa, and that copy is the
 source of truth. Change the methodology there first, run
-`dev/validate-kit.ps1`, and then upgrade each installed repository: change its
+`node dev/validate-kit.mjs`, and then upgrade each installed repository: change its
 marketplace `ref` to the new tag, or run `/agrippa:upgrade` when the project
 documents must change too. A rule first tried out in an installed repository
 reaches other repositories only after it is ported back to the kit.
 
-`dev/validate-kit.ps1` checks the plugin layout, that `plugin.json` and the
+`node dev/validate-kit.mjs` checks the plugin layout, that `plugin.json` and the
 marketplace entry carry the same version, agent and skill frontmatter and
 their `agrippa:` names, that no `[PROJECT: ...]` slot appears outside
 `templates/`, that the core rules stay under 10,000 characters and the hooks
@@ -277,7 +278,7 @@ toolchains, encoding, script parsing, that the two copies of `LICENSE` and of
 `NOTICE` are identical, and an end-to-end smoke test against a simulated
 project that has no copy of the linter.
 
-`dev/validate-kit.ps1 -InstalledRepo <path>` also checks a project that uses
+`node dev/validate-kit.mjs -InstalledRepo <path>` also checks a project that uses
 the plugin. Its committed `.claude/settings.json` must declare the `agrippa`
 marketplace and enable `agrippa@agrippa`.
 `docs/agent_memory/project-contracts.md` and

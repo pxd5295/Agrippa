@@ -54,7 +54,7 @@ const defaultCommandPathExtensions = [
     'swift', 'lua', 'sql', 'gd', 'tscn', 'toml', 'yaml', 'yml', 'md',
 ];
 
-// Every dispatch packet carries these labels. dev/validate-kit.ps1 reads this
+// Every dispatch packet carries these labels. dev/validate-kit.mjs reads this
 // list from the source and requires each label in the PACKETS.md template.
 const requiredPacketLabels = [
     'Plan', 'Stage', 'Goal', 'Dependencies', 'Owner / assigned tier',

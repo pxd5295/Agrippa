@@ -82,8 +82,8 @@ planning methodology. It is a record: never edit its decisions afterwards.
 
 | Check | Result | Notes |
 |---|---|---|
-| Installed-repository check (`dev/validate-kit.ps1 -InstalledRepo .` from an Agrippa checkout) | [PROJECT: Pass/Fail] | [PROJECT: details] |
-| Smoke test (`dev/fixtures/run-smoke-test.ps1 -RepoRoot .` from an Agrippa checkout) | [PROJECT: Pass/Fail] | [PROJECT: details] |
+| Installed-repository check (`node dev/validate-kit.mjs -InstalledRepo .` from an Agrippa checkout) | [PROJECT: Pass/Fail] | [PROJECT: details] |
+| Smoke test (`node dev/fixtures/run-smoke-test.mjs -RepoRoot .` from an Agrippa checkout) | [PROJECT: Pass/Fail] | [PROJECT: details] |
 | Install-marker scan (kit README) | [PROJECT: 0 hits / list] | [PROJECT: details] |
 | Local linter checks against one real workspace | [PROJECT: Pass/Fail/None installed] | [PROJECT: details] |
 | Validation catalog commands run once | [PROJECT: Pass/Fail] | [PROJECT: details] |

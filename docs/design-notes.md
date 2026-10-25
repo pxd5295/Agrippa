@@ -21,7 +21,7 @@ explain. They were first recorded in nuro-battler between 2026-09-13 and
   standards.
 - **G3**: the current kit.
 
-Only `UPGRADING.md` and `validate-kit.ps1` may name the old vocabulary, because
+Only `UPGRADING.md` and `validate-kit.mjs` may name the old vocabulary, because
 they need it to recognize and search for an old install.
 
 ## The linter
@@ -53,7 +53,7 @@ they need it to recognize and search for an old install.
   accepts, so the `cygpath -w` step the earlier `sh` wrapper needed for
   Windows PowerShell is gone. Git records the wrapper as executable
   (`git add --chmod=+x`), and `.gitattributes` keeps it LF, which the shebang
-  line needs. `validate-kit.ps1` checks all three.
+  line needs. `validate-kit.mjs` checks all three.
 - Project checks go in an optional `tools/validate_plan_workspace.local.mjs`,
   which the linter loads from `<RepoRoot>/tools/` rather than from its own
   folder, with a dynamic `import()`. It may export `checkValidationRow` (run
@@ -71,7 +71,7 @@ they need it to recognize and search for an old install.
   `sensor`.
 - A fresh worktree checkout resets file modification times, so check 24
   (freshness) counts differ between a worktree and the main checkout.
-- `validate-kit.ps1 -InstalledRepo` used to compare a project's copy of the
+- `validate-kit.mjs -InstalledRepo` used to compare a project's copy of the
   linter with the kit's. Since Phase 5 of the plugin plan it fails on any
   copy instead, because the project runs `agrippa-lint` from the plugin and a
   copy could only drift. It also fails on a copy of a plugin agent or skill,
@@ -94,8 +94,8 @@ they need it to recognize and search for an old install.
 
 ## Proof
 
-`fixtures/run-smoke-test.ps1` is the one end-to-end proof: the valid fixture
-must pass and a mutated copy must fail. `validate-kit.ps1` runs it against a
+`fixtures/run-smoke-test.mjs` is the one end-to-end proof: the valid fixture
+must pass and a mutated copy must fail. `validate-kit.mjs` runs it against a
 simulated project: a temporary git repository that holds only the
 `AGENTS.md` template and has no `tools/` folder. So the smoke test proves the
 plugin's linter needs no copy in the project and finds the root through git.
@@ -158,7 +158,7 @@ on Windows 11.
   said no command by that name exists. So in this app the flag removes the
   skill entirely, not only its model invocation. These skills have no flag.
   Each description says instead that it runs only when the user explicitly
-  asks, and `dev/validate-kit.ps1` fails on the flag in any plugin skill.
+  asks, and `dev/validate-kit.mjs` fails on the flag in any plugin skill.
 
 ## Agent tools after Phase 3 (2026-10-18)
 
@@ -200,7 +200,7 @@ prints that file as `additionalContext`.
 - **The 10,000-character cap.** Claude Code caps each context string at
   10,000 characters and shows only a preview above that. The cap applies to
   the `additionalContext` string, not to the JSON around it, so
-  `validate-kit.ps1` fails when `core-rules.md` reaches 10,000 characters. The
+  `validate-kit.mjs` fails when `core-rules.md` reaches 10,000 characters. The
   first version is 9,645 characters, so new rules need an equal cut or the
   overflow skill the plan's risks section describes.
 - **Project names became table references.** The Engineering standards used
@@ -265,7 +265,7 @@ plugin.
   GitHub, or a collaborator without the plugin, otherwise finds a folder of
   dated files with no explanation. `docs/decisions/` also has to exist before
   the first record is written. The pointers stay free of rules so they cannot
-  drift; `validate-kit.ps1` fails if a pointer template grows a section.
+  drift; `validate-kit.mjs` fails if a pointer template grows a section.
 - **`docs/planning/CLAUDE.md` is gone.** It only said that the guides and
   templates are in the plugin and that a local copy must not be kept. A
   freshly installed project has nothing else in `docs/planning/`, and an
@@ -278,7 +278,7 @@ plugin.
   holding only its one slot while the rules lost the moment they are needed.
 - **Upgrades.** `UPGRADING.md` "From G4 v0.1.0" replaces a full copy with
   the pointer and deletes `docs/planning/CLAUDE.md`.
-  `validate-kit.ps1 -InstalledRepo` recognizes a full copy by a section heading
+  `validate-kit.mjs -InstalledRepo` recognizes a full copy by a section heading
   that every earlier version had and the pointer never has.
 
 ## Generic rules moved out of the project documents (2026-10-24)
@@ -319,7 +319,7 @@ continues the 2026-10-19 move of the pointer READMEs.
   characters).
 - **Detection.** The project headings could not mark a leftover this time,
   because "Sandbox stance" keeps a project slot and nuro-battler uses the
-  "Plan-matrix contract" heading for its own facts. So `validate-kit.ps1
+  "Plan-matrix contract" heading for its own facts. So `validate-kit.mjs
   -InstalledRepo` matches the template sentences themselves, with every space
   allowed to be any whitespace because an install may rewrap lines. It catches
   the template's wording only; nuro-battler's G3 copies are reworded, and the
@@ -355,15 +355,17 @@ spawn logger after Phase 4".
   scripts could share the payload reader. Only the spawn logger reads a
   payload, so the reader is now a function inside it. A project's own copy of
   `tools/hook_payload.ps1` still serves the project's edit-lint hook, and
-  `validate-kit.ps1 -InstalledRepo` still checks it the same way.
+  `validate-kit.mjs -InstalledRepo` still checks it the same way.
 - **The event is a positional argument.** `inject_core_rules.mjs SessionStart`
   replaces `-HookEvent SessionStart`, because Node has no built-in parameter
   binding and one value does not need a flag.
 - **The linter followed the same day.** Porting it changed the
   `tools/validate_plan_workspace.local.ps1` contract that installed projects
   rely on, so it shipped as its own breaking release, 0.2.0; see "Linter runs
-  on Node" below. The smoke test and `validate-kit.ps1` stay PowerShell: they
-  are Agrippa's development tools, not part of the plugin.
+  on Node" below. The smoke test and the kit self-check stayed PowerShell in
+  that release, because they are Agrippa's development tools and not part of
+  the plugin; they followed the same day, see "Development tools run on
+  Node" below.
 
 ## Linter runs on Node (2026-10-24, release 0.2.0)
 
@@ -417,7 +419,7 @@ only existed to find `powershell` or `pwsh` and convert a path for it.
   honours its `#!/usr/bin/env node` line when the plugin's `bin/` folder is on
   PATH in POSIX form, which is how Claude Code adds it; a `C:/...` entry on
   bash's PATH is not searched, which is a bash fact, not a wrapper fault.
-- **The self-check reads the linter's source.** `validate-kit.ps1` still
+- **The self-check reads the linter's source.** `validate-kit.mjs` still
   pulls the required packet labels and the stage field names out of the
   linter rather than keeping a second list, now from the
   `requiredPacketLabels` constant and the `getField(stage, '...')` calls.
@@ -426,6 +428,56 @@ only existed to find `powershell` or `pwsh` and convert a path for it.
   -RepoRoot <repository>`. The script detects whether it is the entry point
   and only then runs `main`, so the wrapper can import it without side
   effects.
+
+## Development tools run on Node (2026-10-24)
+
+`dev/validate-kit.ps1` became `dev/validate-kit.mjs` and
+`dev/fixtures/run-smoke-test.ps1` became `dev/fixtures/run-smoke-test.mjs`.
+They were the last PowerShell in the repository, so Agrippa now needs
+PowerShell nowhere: not to use the plugin, and not to develop it. The install
+and upgrade skills print the two commands as `node <Agrippa>/dev/...`, and
+`CLAUDE.md` lost its PowerShell 5.1 rule.
+
+- **Why.** The plugin's own reason applies to the tools that test it: `node`
+  has one name on every OS, while the development commands needed `powershell`
+  on Windows and `pwsh` elsewhere. A contributor on macOS or Linux could run
+  the plugin but not its self-check. The self-check also runs the hooks, the
+  linter, and the smoke test with the same Node that runs it, so the chain
+  has one runtime from end to end.
+- **Same parameters, checks, and lines.** `-InstalledRepo <path>` and
+  `-RepoRoot <path>` keep their spellings, with `--installed-repo` and
+  `--repo-root` as alternatives. Every check keeps its message, and the
+  PASS and FAIL summary lines keep their format, so a note that quotes a
+  self-check result still reads the same.
+- **Parity proof.** Both self-checks ran on one tree that held both the
+  `.ps1` and the `.mjs` files, intact and then broken in nine places (a
+  README layout row removed, trailing whitespace in `NOTICE`, a `[PROJECT:`
+  slot and a project copy path in an agent, a marketplace version mismatch,
+  a plain placeholder in a template, a packet label removed, stray files at
+  the plugin root and in `agents/`, a changed hook matcher, and a
+  `disable-model-invocation` flag). The error sets were identical apart from
+  the planned differences: the clauses that now name the `.mjs` commands, the
+  swapped exempt file, and the script's own name inside one message. The
+  check counts differed by exactly two, the PowerShell parse checks on the
+  two `.ps1` files, which no longer exist. The `-InstalledRepo` audit of
+  nuro-battler gave the same 22 findings from 67 checks with both.
+- **The PowerShell parser check is gone.** It parsed every `.ps1` under the
+  checked folders, and none remain. `node --check` still covers every `.mjs`
+  and the wrapper, including the two development scripts themselves.
+- **Where a transliteration goes wrong.** The same traps as the linter port:
+  PowerShell's `-match`, `-eq`, `-like`, `-contains`, and `-in` ignore case,
+  so every former `-match` clause has the `i` flag and every former
+  `-contains` compares lower-cased names, while the former `[regex]::Match`
+  calls and `.Contains()` stay case-sensitive. `[regex]::Escape` also escapes
+  spaces, which is what the generic-rules table relied on to turn each space
+  into `\s+`; the port does that replacement directly. Settings keys
+  (`enabledPlugins`, `agrippa@agrippa`) are now read case-sensitively, which
+  is how Claude Code reads them.
+- **The two scripts stay out of the plugin.** They live in `dev/` and are
+  listed nowhere in the README layout table, as before. The self-check
+  requires both by name, exempts itself from the old-vocabulary scan by its
+  new name, and runs the smoke test with `process.execPath` rather than
+  looking `node` up on PATH.
 
 ## Linter rules that are easy to trip over
 

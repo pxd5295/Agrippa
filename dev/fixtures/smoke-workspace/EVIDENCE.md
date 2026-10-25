@@ -9,6 +9,6 @@
 - **Kind:** command
 - **Acceptance IDs:** None
 - **Validation IDs:** None
-- **Command/check:** `run-smoke-test.ps1`
+- **Command/check:** `run-smoke-test.mjs`
 - **Outcome:** Workspace created for the linter run.
 - **Follow-up:** None.

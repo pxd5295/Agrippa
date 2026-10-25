@@ -133,8 +133,9 @@ and an exact resume prompt.
 - Node.js, on every OS. The hooks that add the core rules to every session
   and subagent run on it, and so does the plan linter, `agrippa-lint`.
   Without it the rules do not load and plans cannot be linted. Nothing else
-  is needed: the plugin has no dependencies to install, and since 0.2.0 it
-  has no PowerShell scripts.
+  is needed: the plugin has no dependencies to install, and since 0.2.0
+  neither the plugin nor this repository's own checks contain any PowerShell.
+  Developing the plugin needs the same Node and nothing more.
 - Optional: the `engineering` plugin, whose `architecture` and `system-design`
   skills write decision records. Without it, the `design-first` skill gives
   the shape to write one by hand.
@@ -144,12 +145,12 @@ and an exact resume prompt.
 | Path | What it is |
 |---|---|
 | `plugins/agrippa/` | The plugin. Its [README](plugins/agrippa/README.md) is the full reference: every file, where it goes, and the placeholder convention. |
-| `dev/` | The self-check, `validate-kit.ps1`, and the smoke-test fixture. Not shipped. |
+| `dev/` | The self-check, `validate-kit.mjs`, and the smoke-test fixture. Not shipped. |
 | `docs/` | Design notes and the research behind the rules. Not shipped. |
 | `history/plans/` | The plan workspaces that built earlier versions. Read-only history. |
 
 To work on the plugin, see [CLAUDE.md](CLAUDE.md). Every change must leave
-`dev/validate-kit.ps1` printing `PASS`.
+`node dev/validate-kit.mjs` printing `PASS`.
 
 ## License
 

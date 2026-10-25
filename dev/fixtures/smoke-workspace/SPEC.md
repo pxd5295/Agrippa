@@ -1,6 +1,6 @@
 # Change Specification
 
-> Kit smoke-test fixture. `run-smoke-test.ps1` copies this workspace into
+> Kit smoke-test fixture. `run-smoke-test.mjs` copies this workspace into
 > `plans/`, replaces its date and path tokens, lints it, and deletes it. It
 > references only the root `AGENTS.md`, the one file every project keeps.
 

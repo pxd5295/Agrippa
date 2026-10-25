@@ -138,7 +138,7 @@ Up to v0.1.0, an install copied three generic files into the project in full.
 Their rules now ship in the plugin: the plan-workspace rules in the `plan`
 skill's `workspace-files.md`, and the decision-record rules in the
 `design-first` skill's `decision-records.md`. A full copy left in the project
-drifts from the plugin, so it is replaced or deleted. `dev/validate-kit.ps1
+drifts from the plugin, so it is replaced or deleted. `dev/validate-kit.mjs
 -InstalledRepo` reports each one.
 
 | v0.1.0 file | Disposition | What happens |
@@ -156,7 +156,7 @@ ship in the plugin: the matrix values and catalog rules in the `plan` skill's
 `agent-workflow.md`, the retry and bridge rules in `agrippa:verify-before-done`
 and the agents, and the risk-flag rule in `ROUTING.md`. A copy left in a
 project drifts from the plugin, so each is deleted; the section headings and
-the project's facts stay. `dev/validate-kit.ps1 -InstalledRepo` reports each
+the project's facts stay. `dev/validate-kit.mjs -InstalledRepo` reports each
 copy it recognizes by its template wording.
 
 | v0.1.1 text | Disposition | What happens |

@@ -204,14 +204,14 @@ collaborators only once the file is committed and they trust the folder.
 
 Finally, give the user the two development checks, which run from a checkout
 of the Agrippa repository at the pinned tag. If the user names such a checkout,
-or one exists next to this repository with `dev/validate-kit.ps1` in it, run
+or one exists next to this repository with `dev/validate-kit.mjs` in it, run
 them yourself and paste the results, unless the user said they will run them.
 Both are read-only for this repository; the smoke test removes the workspace
 it writes. Otherwise print them for the user, with both paths filled in:
 
 ```text
-powershell -NoProfile -ExecutionPolicy Bypass -File <Agrippa>/dev/validate-kit.ps1 -InstalledRepo <this repository>
-powershell -NoProfile -ExecutionPolicy Bypass -File <Agrippa>/dev/fixtures/run-smoke-test.ps1 -RepoRoot <this repository>
+node <Agrippa>/dev/validate-kit.mjs -InstalledRepo <this repository>
+node <Agrippa>/dev/fixtures/run-smoke-test.mjs -RepoRoot <this repository>
 ```
 
 Both must print `PASS`. `-InstalledRepo` also fails until

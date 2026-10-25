@@ -128,11 +128,11 @@ named as not done, with the reason.
 
 ## Offline validation
 
-- [ ] Agrippa's `dev/validate-kit.ps1 -InstalledRepo <this repository>` prints
-      PASS.
-- [ ] Agrippa's `dev/fixtures/run-smoke-test.ps1 -RepoRoot <this repository>`
-      prints PASS with the plugin's linter (valid fixture passes, broken
-      fixture fails with the expected errors).
+- [ ] Agrippa's `node dev/validate-kit.mjs -InstalledRepo <this repository>`
+      prints PASS.
+- [ ] Agrippa's `node dev/fixtures/run-smoke-test.mjs -RepoRoot <this
+      repository>` prints PASS with the plugin's linter (valid fixture passes,
+      broken fixture fails with the expected errors).
 - [ ] The shared linter runs from the plugin, and the repository has no copy
       of it at `tools/validate_plan_workspace.ps1`, nor of the spawn logger's
       scripts. This repository's command invariants and
