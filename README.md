@@ -143,8 +143,7 @@ and an exact resume prompt.
 
 - On Windows, Git for Windows, which Claude Code's Bash tool needs anyway; it
   brings the `sh` and `perl` the plugin's scripts run on. macOS and Linux
-  ship both. Node.js is not needed to use the plugin, only to run this
-  repository's own development checks.
+  ship both.
 - Optional: the `engineering` plugin, whose `architecture` and `system-design`
   skills write decision records. Without it, the `design-first` skill gives
   the shape to write one by hand.
