@@ -4,16 +4,16 @@
 
 ## Frozen contracts
 
-### C1: Project contracts pointer in root instructions
+### C1: Project contracts pointer in the project rules
 
-Contract source: `AGENTS.md:1` (read __TODAY__)
+Contract source: `.agrippa/project-rules.md:1` (read __TODAY__)
 
-- Exact contract: the root instructions name
+- Exact contract: the project rules name
   `.agrippa/project-contracts.md` as the owner of the project
   contracts.
 - Enumerated edit sites: none; this smoke test makes no edit.
 - Consumer census:
-  - `AGENTS.md:1`: `# Agent Workflow`
+  - `.agrippa/project-rules.md:1`: `# Project rules`
 - Pre-authorized ownership expansion: None.
 - Covering tests: None.
 
@@ -24,17 +24,17 @@ Contract source: `AGENTS.md:1` (read __TODAY__)
 ```text
 Plan: __PLAN__
 Stage: M1 - Confirm the project contracts pointer
-Goal: confirm the root instructions name the project contracts document
+Goal: confirm the project rules name the project contracts document
 Dependencies: None
 Owner / assigned tier: sonnet
 Design state: Frozen
 Contract IDs: C1
 
 Owned files:
-- AGENTS.md
+- .agrippa/project-rules.md
 
 Line-anchored edit sites:
-- AGENTS.md:1
+- .agrippa/project-rules.md:1
 
 Allowed interfaces:
 - None
@@ -46,10 +46,10 @@ Pre-authorized ownership expansion:
 - None
 
 Acceptance:
-- A1: The root AGENTS.md names the project contracts document.
+- A1: The project rules file names the project contracts document.
 
 Validation:
-- V1: git grep -n "project-contracts.md" -- AGENTS.md; lint; sandboxed; deterministic
+- V1: git grep -n "project-contracts.md" -- .agrippa/project-rules.md; lint; sandboxed; deterministic
 Covering tests: None
 Validation output: Bounded
 
@@ -90,7 +90,7 @@ Pre-authorized ownership expansion:
 - None
 
 Acceptance:
-- A1: The root AGENTS.md names the project contracts document.
+- A1: The project rules file names the project contracts document.
 - A2: The plan-workspace linter reports PASS for this workspace.
 
 Validation:

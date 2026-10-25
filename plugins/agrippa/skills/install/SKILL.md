@@ -248,7 +248,7 @@ named.
 
 | Template section | Usually resolved by |
 |---|---|
-| `AGENTS.md` ownership bullets; `project-contracts.md` "Ownership areas", "Contract documents", "Shared and public interfaces", "Architecture owners" | inspection, confirmed in round 1 where the evidence is ambiguous |
+| `project-rules.md` ownership bullets; `project-contracts.md` "Ownership areas", "Contract documents", "Shared and public interfaces", "Architecture owners" | inspection, confirmed in round 1 where the evidence is ambiguous |
 | `project-contracts.md` "High-risk change classes" | inspection for the rows the code shows (a native build, a schema version, a deployment script); round 1 for the trigger and gate wording |
 | `project-contracts.md` "Debugging map" | user, round 2 |
 | `project-contracts.md` "Worktree and integration contracts", "Environment boundaries" | inspection for tool versions and generated files; round 4 for worktrees and setup gaps |
@@ -278,8 +278,15 @@ Write every layout-table row whose destination is a repository path, except
   rule into them.
 - Delete every `Install note` line or comment, including the example comments,
   once its file is filled.
-- Merge into an existing `AGENTS.md` or `CLAUDE.md`; never drop the
-  repository's own rules. Keep the stricter rule when the two disagree.
+- Write `.agrippa/project-rules.md` from `templates/PROJECT-RULES.md`. It is
+  the one always-loaded project file, so the root `CLAUDE.md` must import it
+  with `@.agrippa/project-rules.md`, as `templates/CLAUDE.md` does. Merge
+  that import and the project-skills section into an existing root
+  `CLAUDE.md`; never drop the repository's own rules. Never edit an existing
+  `AGENTS.md`: it belongs to the repository and to the other tools that read
+  it, and the kit writes nothing there. When an existing `AGENTS.md` or
+  `CLAUDE.md` already states a rule the template asks for, keep the stricter
+  one and do not repeat it.
 - Write `plans/README.md` and `.agrippa/decisions/README.md` from their templates
   unchanged. They only say what each folder holds and where the rules are;
   never add rules to them.

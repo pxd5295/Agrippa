@@ -1,9 +1,10 @@
 # Claude Code entry
 
-@AGENTS.md
+@.agrippa/project-rules.md
 
-`AGENTS.md` above holds this repository's project contracts and project rules.
-The methodology's core rules come from the `agrippa` plugin at session start.
+`.agrippa/project-rules.md` above holds this repository's project contracts
+and project rules. The methodology's core rules come from the `agrippa` plugin
+at session start.
 
 ## Project skills
 

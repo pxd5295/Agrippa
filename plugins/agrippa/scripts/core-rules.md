@@ -1,8 +1,8 @@
 # Agrippa core rules
 
 The `agrippa` plugin adds these rules to every session of a repository that
-enables it. The repository's `AGENTS.md` holds its project contracts and
-rules; where the two disagree, the stricter rule wins.
+enables it. The repository's `.agrippa/project-rules.md` holds its project
+contracts and rules; where the two disagree, the stricter rule wins.
 `.agrippa/project-contracts.md` names the architecture owners, and
 `.agrippa/validation-commands.md` owns every exact command. Claude
 both plans and implements; per-stage tiers apply only to subagents the lead
@@ -165,8 +165,8 @@ you followed:
 
 Stop as soon as sourced frozen contracts can be written:
 
-1. These rules and `AGENTS.md`, then the lifecycle sections of
-   `agent-workflow.md`.
+1. These rules and `.agrippa/project-rules.md`, then the lifecycle sections
+   of `agent-workflow.md`.
 2. Dirty-worktree status, exact owned code, and applicable
    `.agrippa/` contracts.
 3. Targeted `Glob`/`Grep`/`Read`, delegated to `repo-scout` when a census or

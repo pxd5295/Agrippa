@@ -6,9 +6,10 @@ loads it automatically when it reads or edits a file in this folder, so it is
 the place for rules that only matter here. Keep it to rules and pointers;
 delete every section that has nothing real to say. Delete this comment. -->
 
-This is the **[PROJECT: ownership-area name]** ownership area (root
-`AGENTS.md`). [PROJECT: if subfolders have their own `CLAUDE.md`, say so and
-say that this file covers only what applies across the whole tree.]
+This is the **[PROJECT: ownership-area name]** ownership area, named in
+`.agrippa/project-rules.md`. [PROJECT: if subfolders have their own
+`CLAUDE.md`, say so and say that this file covers only what applies across the
+whole tree.]
 
 ## Canonical contracts (read before deep work; do not restate them from memory)
 

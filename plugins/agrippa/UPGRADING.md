@@ -3,8 +3,8 @@
 The `/agrippa:upgrade` skill starts here. First decide which generation of
 this methodology the repository has, then apply the rule mapping for that
 generation. A repository can mix generations (for example a current
-`AGENTS.md` with old agent profiles); treat every marker found as something to
-map.
+`.agrippa/project-rules.md` with old agent profiles); treat every marker found
+as something to map.
 
 This is the only kit file that names older toolchains, because a session has
 to recognize their markers to remove them. Nothing here is installed.
@@ -18,7 +18,7 @@ to recognize their markers to remove them. Nothing here is installed.
 | G1: dual toolchain (Codex lead, Claude scout) | `.codex/config.toml`; `.codex/agents/*.toml` profiles named `sol-*`, `terra-*`, `luna-*` (worker, reviewer, scout, validator); `docs/codex-planning-methodology-kit/`; an `AGENTS.md` section "Planning trigger and Sol-High entry" that stops with "Select Sol with High reasoning beneath the composer"; a Sol-Medium plan-writing handoff; the `Implement plan use workers` shortcut; launch stops for allocation confirmation; `default_mode_request_user_input = true`; `max_threads`; "one thread remains reserved for the lead"; only `.claude/agents/repo-scout.md` on the Claude side. |
 | G2: first Claude-only kit | `AGENTS.md` with "Planning artifacts", "Implementation launch and shortcut", "Dependency-wave execution", and "Validation and review" sections but no "Engineering standards" or "Definition of done"; exactly three agents (`repo-scout` and `validator` on `haiku`, `plan-reviewer` without Blocking/Optional classes); validation matrix column `Environment`; no `Covering tests:` in contracts; three-writer gate citing "material wall-clock benefit"; no "Fork or fresh subagent" section; no single-stage workspace shape or planning size gate; no design-reference planning; a kit `validate-kit.ps1` with a forbidden-terms list. |
 | G3: copied-in kit | The methodology copied into the repository: an `AGENTS.md` that holds the Engineering standards, definition of done, and planning trigger itself; four agents in `.claude/agents/` including `design-reviewer.md`; the `design-first`, `systematic-debugging`, `verify-before-done`, and `receiving-review` skills in `.claude/skills/`; `.claude/commands/handoff.md`; `docs/agent-workflow.md`; `docs/planning/ROUTING.md`; `docs/planning/templates/`; `tools/validate_plan_workspace.ps1`; `tools/log_subagent_spawns.ps1` and `tools/hook_payload.ps1`; a plan validation matrix row that runs `tools/validate_plan_workspace.ps1`. |
-| G4: plugin (current) | The committed `.claude/settings.json` declares the `agrippa` marketplace in `extraKnownMarketplaces`, pinned with `ref`, and enables `agrippa@agrippa`. The repository keeps no copy of the plugin's agents, skills, linter, or spawn logger. `AGENTS.md` holds only project contracts and project rules, and the project's facts are in `.agrippa/project-contracts.md` and `validation-commands.md` (under `docs/agent_memory/` up to v0.2.0). A plan's matrix runs `agrippa-lint`. |
+| G4: plugin (current) | The committed `.claude/settings.json` declares the `agrippa` marketplace in `extraKnownMarketplaces`, pinned with `ref`, and enables `agrippa@agrippa`. The repository keeps no copy of the plugin's agents, skills, linter, or spawn logger. `.agrippa/project-rules.md` (the root `AGENTS.md` up to v0.4.1) holds only project contracts and project rules, and the project's facts are in `.agrippa/project-contracts.md` and `validation-commands.md` (under `docs/agent_memory/` up to v0.2.0). A plan's matrix runs `agrippa-lint`. |
 
 A G4 repository moves to a newer release by changing the marketplace `ref` to
 the new tag. It can still drift from the templates; compare its project
@@ -40,7 +40,12 @@ provide, so Node.js is no longer required either; the linter loads
 and the decision records lived under `docs/`; a repository that has
 `docs/agent_memory/` or `docs/decisions/` applies "From G4 v0.2.0" below. Up
 to v0.3.0 an upgrade wrote its record to `docs/planning/MIGRATION.md`; a
-repository that has that file applies "From G4 v0.3.0" below.
+repository that has that file applies "From G4 v0.3.0" below. Up to v0.4.1
+the project contracts and project rules were the root `AGENTS.md`, which the
+root `CLAUDE.md` imported; from v0.5.0 they are `.agrippa/project-rules.md`,
+and the kit writes nothing to `AGENTS.md`. A repository whose `AGENTS.md`
+opens with the kit's sentence about the `agrippa` plugin adding the core rules
+applies "From G4 v0.4.1" below.
 
 ## Rule mapping
 
@@ -107,9 +112,9 @@ user confirms it.
 
 | G3 file or setting | Disposition | What happens |
 |---|---|---|
-| `AGENTS.md` sections "Request boundaries", "Engineering standards", "Definition of done", "Planning trigger", "Implementation launch", and "Validation reach" | Replace | The core rules hold them. Keep only "Project contracts" and any project rules, in the shape of `templates/AGENTS.md`. A project rule that is stricter than a core rule stays, under "Project rules" |
+| `AGENTS.md` sections "Request boundaries", "Engineering standards", "Definition of done", "Planning trigger", "Implementation launch", and "Validation reach" | Replace | The core rules hold them. Move "Project contracts" and any project rules into `.agrippa/project-rules.md`, in the shape of `templates/PROJECT-RULES.md`, as "From G4 v0.4.1" says. A project rule that is stricter than a core rule stays, under "Project rules". What is left of `AGENTS.md` is the project's own; when nothing is left, delete the file after the user confirms |
 | Class names inlined in the Engineering standards (base classes, funnels, the performance-owned subsystem) | Move | "Architecture owners" in `project-contracts.md` |
-| Root `CLAUDE.md` roster, skills list, and planner read ladder | Replace | The core rules hold them. Keep the `@AGENTS.md` import and the project skills, in the shape of `templates/CLAUDE.md` |
+| Root `CLAUDE.md` roster, skills list, and planner read ladder | Replace | The core rules hold them. Replace the `@AGENTS.md` import with `@.agrippa/project-rules.md` and keep the project skills, in the shape of `templates/CLAUDE.md` |
 | `.claude/agents/repo-scout.md` | Delete | The plugin agent `agrippa:repo-scout`. First move its other contract documents into "Contract documents" and its language servers into the "Language servers" row of "Architecture owners" in `project-contracts.md`, and its live-app lookups and serialized file types into "Read-only tools" and "Serialized files" in `live-app.md` |
 | `.claude/agents/plan-reviewer.md` | Delete | The plugin agent `agrippa:plan-reviewer`. First move its project paragraph into "Project summary", "Shared and public interfaces", and the "Gated subsystems" and "Language servers" rows of "Architecture owners" in `project-contracts.md`, and into "Build" in `validation-commands.md`. Move its live-app tools into "Server" and "Read-only tools" in `live-app.md` |
 | `.claude/agents/design-reviewer.md` | Delete | The plugin agent `agrippa:design-reviewer`. First move its variant axis, shared engines, reimplementation case, and language servers into the matching rows of "Architecture owners", its contract sources into "Shared and public interfaces", and its highest-risk dispatch layer into the Native/ABI row of "High-risk change classes", all in `project-contracts.md`. Move its live-app tools and style document into "Read-only tools", "Run tools", "Authoring tools", and "Layout checks" in `live-app.md` |
@@ -134,13 +139,14 @@ user confirms it.
 | Matrix rows that run `tools/validate_plan_workspace.ps1` in dated plan workspaces | Retain | Dated plans are records and are never edited. New plans run `agrippa-lint` |
 | Generic rules written into `docs/agent_memory/validation-commands.md`: the noisy-retry rule, the pre-existing-failure rule, the Sandbox value definitions, the allowed Determinism values, the "copy commands verbatim" and "run the matrix once before implementing" rules, and the local-linter rule | Delete | The `plan` skill's `agent-workflow.md` ("Validation matrix values") and the plugin skill `agrippa:verify-before-done` ("Retries"). G3 reworded these and mixed them with project facts, so read each bullet and keep only the project fact in it |
 | Project facts under a `## Plan-matrix contract` heading in `validation-commands.md` | Move | Into a section that stays, such as "Full-suite inventory", "Performance evidence", or "Invocation traps"; then delete the heading, which the current template does not have |
-| Live-app bridge rules in `AGENTS.md` or `validation-commands.md` (confirm the session, no-persist run, both logs, stale frames, headless matrix rows, bridge down means not done) | Delete | The plugin agents and `agrippa:verify-before-done` ("Live-app bridge"). `AGENTS.md` keeps one or two sentences naming the server and pointing to `live-app.md`, in the shape of `templates/AGENTS.md`; the Godot facts go to `live-app.md` |
+| Live-app bridge rules in `AGENTS.md` or `validation-commands.md` (confirm the session, no-persist run, both logs, stale frames, headless matrix rows, bridge down means not done) | Delete | The plugin agents and `agrippa:verify-before-done` ("Live-app bridge"). `.agrippa/project-rules.md` keeps one or two sentences naming the server and pointing to `live-app.md`, in the shape of `templates/PROJECT-RULES.md`; the Godot facts go to `live-app.md` |
 
 Then apply the "From G4 v0.1.0" rows below, because a G3 install has full
 copies of those files too, the "From G4 v0.1.1" rows after them, "From G4
-v0.1.2" when the repository has a PowerShell local-checks file, and "From G4
+v0.1.2" when the repository has a PowerShell local-checks file, "From G4
 v0.2.0", because every install before v0.3.0 wrote its documents under
-`docs/`.
+`docs/`, and "From G4 v0.4.1", because every install before v0.5.0 wrote the
+project rules to the root `AGENTS.md`.
 
 ### From G4 v0.1.0
 
@@ -153,8 +159,8 @@ drifts from the plugin, so it is replaced or deleted. `dev/validate-kit.mjs
 
 | v0.1.0 file | Disposition | What happens |
 |---|---|---|
-| `plans/README.md` with the sections "Artifact contract" and "Selective reads and soft budgets" | Replace | Overwrite it with `templates/plans-README.md`, a short pointer with no rules. Move any project rule added to it into "Project rules" in `AGENTS.md` first |
-| `docs/decisions/README.md` with the sections "When a record is required" and "Shape" | Replace | Overwrite it with `templates/decisions-README.md`, a short pointer with no rules. Move any project rule added to it into "Project rules" in `AGENTS.md` first |
+| `plans/README.md` with the sections "Artifact contract" and "Selective reads and soft budgets" | Replace | Overwrite it with `templates/plans-README.md`, a short pointer with no rules. Move any project rule added to it into "Project rules" in `.agrippa/project-rules.md` first |
+| `docs/decisions/README.md` with the sections "When a record is required" and "Shape" | Replace | Overwrite it with `templates/decisions-README.md`, a short pointer with no rules. Move any project rule added to it into "Project rules" in `.agrippa/project-rules.md` first |
 | `docs/planning/CLAUDE.md` | Delete | The guides and templates it pointed to are in the `plan` skill, which also says a project keeps no copy of them. Nothing of the kit's stays in `docs/planning/`; the upgrade record is `.agrippa/MIGRATION.md`, which says itself that it is a record |
 
 ### From G4 v0.1.1
@@ -178,7 +184,7 @@ copy it recognizes by its template wording.
 | `validation-commands.md`: the whole "Plan-matrix contract" section | Delete | If the project added facts under it, move them to a section that stays first |
 | `project-contracts.md`: the opening paragraphs of "Ownership areas", "Architecture owners", and "Shared and public interfaces", the "cite them by path" sentence under "Contract documents", the paragraph after the "High-risk change classes" table, and the last two bullets of "Environment boundaries" | Delete | Keep every heading, table, and project bullet. Any project fact inside one of those paragraphs moves into the table or a bullet under the same heading |
 | `live-app.md`: the opening paragraph about which tools the agents may call, the "Which agents run the app" paragraph, the second and third sentences of the "Authoring tools" introduction, the citation sentences under "Serialized files", and the whole "Rules" section | Delete | Keep the headings, the tables, and the project's facts |
-| `AGENTS.md`: the opening paragraph's list of core-rule sections, and the live-app paragraph's bridge rules | Replace | The shape of `templates/AGENTS.md`: one sentence saying the plugin adds the core rules, and one or two sentences naming the server and pointing to `live-app.md`. The generated-files paragraph stays |
+| `AGENTS.md`: the opening paragraph's list of core-rule sections, and the live-app paragraph's bridge rules | Replace | The shape of `templates/PROJECT-RULES.md`: one sentence saying the plugin adds the core rules, and one or two sentences naming the server and pointing to `live-app.md`. The generated-files paragraph stays. The file itself then moves to `.agrippa/project-rules.md` under "From G4 v0.4.1" |
 
 ### From G4 v0.1.2
 
@@ -270,6 +276,29 @@ JavaScript export.
 | `export const commandPathExtensions = ['gd', 'tscn'];` | Replace | A `command_path_extensions => [ 'gd', 'tscn' ]` entry in the returned hash |
 | A module-level `const` both functions share | Retain | A file-level `my` variable above the `return { ... };` |
 | `import` of a Node built-in module | Replace | A core Perl module such as `File::Spec`, `Cwd`, or `POSIX`, and nothing outside Perl's core, because the plugin installs nothing |
+
+### From G4 v0.4.1
+
+Up to v0.4.1 an install wrote the project contracts and project rules to the
+root `AGENTS.md` and had the root `CLAUDE.md` import it with `@AGENTS.md`.
+`AGENTS.md` is a file that other coding agents read from a repository root
+and that a repository often already has, so the kit was editing a file it did
+not own. From v0.5.0 the same content is `.agrippa/project-rules.md`, beside
+the other project documents, and the root `CLAUDE.md` imports that file
+instead. The sections, their slots, the core rules, the agents, the skills,
+and `agrippa-lint` do not change. The kit never writes to `AGENTS.md` again;
+a repository that wants its ownership areas visible to other tools copies
+them there itself. `dev/validate-kit.mjs -InstalledRepo` fails while
+`.agrippa/project-rules.md` is missing, while the root `CLAUDE.md` does not
+import it, or while the root `AGENTS.md` still opens with the kit's sentence.
+
+| v0.4.1 file or construct | Disposition | What happens |
+|---|---|---|
+| The kit's `AGENTS.md`: its opening paragraph, "Project contracts", and "Project rules" | Move | `.agrippa/project-rules.md`, written from `templates/PROJECT-RULES.md` with the project's filled-in bullets, sentences, and rules carried over unchanged. The opening paragraph is the template's |
+| `@AGENTS.md` in the root `CLAUDE.md`, and the sentence under it | Replace | `@.agrippa/project-rules.md`, and the sentence from `templates/CLAUDE.md` |
+| What the project itself wrote in `AGENTS.md` | Retain | It stays, and the file is the project's own from now on. When the kit's sections were all the file held, delete it after the user confirms |
+| "root `AGENTS.md`" in `.agrippa/CLAUDE.md` and in per-directory `CLAUDE.md` files | Replace | `.agrippa/project-rules.md`, as `templates/agrippa-CLAUDE.md` and `templates/directory-CLAUDE.md` now say. Find them with `git grep -n AGENTS.md` |
+| `AGENTS.md:N` citations inside dated plan workspaces | Retain | They are records and are never edited; a reader follows the moved file |
 
 ### Always
 

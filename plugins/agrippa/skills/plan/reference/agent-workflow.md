@@ -2,8 +2,8 @@
 
 Load this guide only for plan creation or plan implementation. It is a
 reference file of the `agrippa:plan` skill. The Agrippa core rules own
-triggers and hard safety rules, and the root `AGENTS.md` owns the project
-contracts and project rules. This file owns planning, evidence, acceptance,
+triggers and hard safety rules, and the project's `.agrippa/project-rules.md`
+owns the project contracts and project rules. This file owns planning, evidence, acceptance,
 and project contracts. `ROUTING.md`, the skill's other reference file, owns
 topology, tier selection, packets, waves, launch, and review.
 

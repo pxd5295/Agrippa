@@ -105,10 +105,12 @@ Almost nothing. The rules, agents, skills, templates, and linter all live in
 the plugin and are never copied in, so moving the pinned `ref` to a new tag
 upgrades all of them at once.
 
-`/agrippa:install` writes only your project's facts: a root `AGENTS.md` and a
-hidden `.agrippa/` folder with the ownership areas, risk gates, exact test
-commands, and decision records. Plans your sessions produce go under `plans/`
-as dated folders that are never overwritten.
+`/agrippa:install` writes only your project's facts: a hidden `.agrippa/`
+folder with the project rules, ownership areas, risk gates, exact test
+commands, and decision records, plus an import line in the root `CLAUDE.md`
+that loads the project rules. It never touches an `AGENTS.md` your repository
+already has. Plans your sessions produce go under `plans/` as dated folders
+that are never overwritten.
 
 ## This repository
 

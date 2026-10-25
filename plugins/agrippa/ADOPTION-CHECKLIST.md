@@ -40,13 +40,14 @@ named as not done, with the reason.
       (request boundaries, Engineering standards, definition of done,
       planning size gate, launch, roster, skills, planner read ladder, and
       validation reach) without reading any file.
-- [ ] Root `AGENTS.md` holds only the project contracts and project rules.
+- [ ] `.agrippa/project-rules.md` holds only the project contracts and project
+      rules, and a root `AGENTS.md` the repository already had was not edited.
 - [ ] The "Architecture owners" table in `project-contracts.md` names this
       repository's real base classes, funnels, configuration layer, and
       performance-owned subsystem, which the Engineering standards and the
       design-reviewer size floor refer to.
-- [ ] Root `CLAUDE.md` imports `AGENTS.md` (`@AGENTS.md`) and lists any
-      project skills.
+- [ ] Root `CLAUDE.md` imports the project rules
+      (`@.agrippa/project-rules.md`) and lists any project skills.
 - [ ] Each ownership area with real rules has a per-directory `CLAUDE.md`;
       `.agrippa/CLAUDE.md` exists.
 - [ ] No project-wide pin of the lead's model or reasoning effort exists.
