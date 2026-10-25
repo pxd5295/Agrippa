@@ -525,7 +525,7 @@ commit the rows describe.
   workflow guide, and evidence template, and, with `-InstalledRepo`, a
   `Built at` commit and no install marker in a project's map.
 
-## Project documents move to `.agrippa/` (2026-10-24)
+## Project documents move to `.agrippa/` (2026-10-24, release 0.3.0)
 
 Up to 0.2.0 an install wrote the project documents to `docs/agent_memory/`
 and the decision records to `docs/decisions/`. They now live in `.agrippa/`

@@ -48,10 +48,12 @@ that need one.
   traceability, dispatch shape, ownership, and command syntax. It checks
   shape, never truth. A project can add its own command invariants in a small
   local file that the linter loads.
-- **Install and upgrade skills.** `/agrippa:install` sets up a repository that
-  has no planning rules. `/agrippa:upgrade` migrates one that already has
-  some, from an earlier copy of Agrippa or from a different process, and
-  never edits a dated plan.
+- **Install, upgrade, and survey skills.** `/agrippa:install` sets up a
+  repository that has no planning rules. `/agrippa:upgrade` migrates one that
+  already has some, from an earlier copy of Agrippa or from a different
+  process, and never edits a dated plan. `/agrippa:survey` builds an optional
+  index of the repository's folders, with each folder's entry points,
+  covering tests, and governing contract, that planning reads first.
 - **Optional hooks.** An opt-in log of every subagent spawn, so you can see
   which spawns inherited the lead's model instead of the routed tier, and a
   documented pattern for an edit-lint hook that feeds lint findings back to
@@ -69,10 +71,13 @@ repository.
    copied into the project, so a plugin upgrade updates all of it at once.
 2. **Your project's facts.** `/agrippa:install` reads the repository and
    writes a root `AGENTS.md` (ownership areas, shared interfaces, project
-   rules), `.agrippa/project-contracts.md` (architecture owners, risk
-   classes, compatibility gates), and
-   `.agrippa/validation-commands.md` (every exact test and build
-   command). The agents and skills read project facts only from these
+   rules) and a hidden `.agrippa/` folder holding `project-contracts.md`
+   (architecture owners, risk classes, compatibility gates),
+   `validation-commands.md` (every exact test and build command), the
+   decision records under `decisions/`, and, when you run `/agrippa:survey`,
+   an `area-map.md` index of the repository's folders. The folder is hidden
+   and named after the plugin so that it never collides with your own
+   `docs/`. The agents and skills read project facts only from these
    documents, which is what keeps the plugin itself project-neutral.
 3. **Plans your sessions produce.** Each plan workspace is a dated folder
    under `plans/`. Workspaces are records: they are never overwritten, and an
@@ -90,7 +95,7 @@ Add the marketplace and enable the plugin in the repository's committed
 {
   "extraKnownMarketplaces": {
     "agrippa": {
-      "source": { "source": "github", "repo": "pxd5295/Agrippa", "ref": "v0.1.2" }
+      "source": { "source": "github", "repo": "pxd5295/Agrippa", "ref": "v0.3.0" }
     }
   },
   "enabledPlugins": { "agrippa@agrippa": true }
