@@ -14,9 +14,15 @@
 
 ## Planning interview decisions
 
-| Topic | Decision | Rationale |
-|---|---|---|
-| [Material question] | [Chosen answer] | [Why] |
+Every uncertainty whose answer would change the plan is a row, including the
+ones inspection settled without asking. `Resolved by` is `inspection`, `user`,
+or `default` (the recommendation, carried as a `Bounded-choice`). The
+interview ends when no entry is left for the user; see step 2 of the
+lifecycle in the `agrippa:plan` skill's `agent-workflow.md`.
+
+| Topic | Decision | Resolved by | Rationale |
+|---|---|---|---|
+| [Material question] | [Chosen answer] | [inspection, user, or default] | [Why, or what was read] |
 
 ## Scope and constraints
 
@@ -91,7 +97,7 @@ design in `design/` except for the listed deviations.
 
 ## Handoff gate
 
-- Open questions: None.
+- Open questions: None. No `Planning interview decisions` row is unresolved.
 - Every implementation stage is `Frozen` or `Bounded-choice`; `Open` design
   does not hand off.
 - Acceptance text copied into `PACKETS.md` is verbatim apart from whitespace

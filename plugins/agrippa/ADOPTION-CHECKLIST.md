@@ -95,8 +95,10 @@ named as not done, with the reason.
 - [ ] Non-planning requests never trigger a model-switch request.
 - [ ] The size gate skips the workspace for a one-sentence diff, and the
       single-stage shape exists for bounded one-writer work.
-- [ ] The interview uses `AskUserQuestion` (or a recorded fallback) and records
-      decisions and rationale in `SPEC.md`.
+- [ ] The interview lists the open decisions first, asks the user only the
+      ones reading code cannot settle with `AskUserQuestion` (or a recorded
+      fallback), continues until none is left or the user says to proceed, and
+      records every entry with `Resolved by` and rationale in `SPEC.md`.
 - [ ] Every changed or deleted symbol gets a plan-time consumer census, and
       every contract lists `Covering tests:`.
 - [ ] Every stage is `Frozen` or `Bounded-choice`; `Open` cannot hand off.

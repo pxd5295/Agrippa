@@ -616,6 +616,56 @@ linter, and `bin/agrippa-lint` run on it.
   forbids a shell-language copy, and the adoption checklist opens with the
   Node item so the report cannot skip it.
 
+## The interview ends on a list, not a count or a score (2026-10-25)
+
+Step 2 of the planning lifecycle used to say "one to three questions per
+round, normally one round, more only when an answer exposes a material
+decision". The number of questions and rounds was the planner's judgment with
+no stated exit condition. The proposal that prompted this change was a
+confidence threshold: the planner rates how well it understands the scope as
+a percentage and keeps asking until the rating passes a fixed value. The
+intent, keep asking until the planner is confident, is kept. The percentage
+is not, for three reasons.
+
+- **A self-reported percentage is not a measurement.** A model's verbalized
+  confidence is poorly calibrated: it runs high, clusters on round values,
+  and moves with the prompt's wording more than with the evidence. Two runs
+  on the same code report different numbers, so a threshold against it is
+  not a real gate.
+- **An exit condition the planner writes itself becomes the answer.** If
+  reporting the threshold value ends the interview, the planner reports it
+  after a round or two whether or not anything changed, and nothing can
+  check it. A question tied to a named decision can be checked by reading
+  the plan; a percentage cannot.
+- **Confidence about full scope is confidence about what was not thought
+  of.** The scope problems that sink plans are the consumer never found, the
+  covering test never noticed, the interface not known to be shared. Those
+  come out of code inspection, and the user usually cannot answer them. A
+  planner that missed one reports high confidence, because nothing it can
+  see is missing. A confidence loop over the interview would push it to ask
+  more when the fix was to read more.
+
+So the exit condition is a list. After the narrow inspection the planner
+writes down every uncertainty whose answer would change the plan, marks each
+as resolvable by reading or only by the user, resolves the first group by
+reading, and asks the user only the second group. Rounds continue while
+user-only entries remain. The interview ends when that group is empty or
+when the user says to proceed on the recommendations; anything still open
+then becomes a `Bounded-choice` with the recommendation as its default, so
+the user's escape never drops a decision. Every entry, including the ones
+reading settled, is a row of `SPEC.md`'s `Planning interview decisions`
+table with a `Resolved by` value, which is what makes the condition
+checkable after the fact. The design states were already this gate per
+stage, with `Open` meaning "not confident enough to hand off"; this change
+adds the step that forces the list to be written before the planner decides
+whether to ask.
+
+The option of recording a percentage alongside the list, allowed only to
+force another round and never to permit handoff, was considered and not
+adopted. The self-check requires the workflow guide to carry the sentence
+that rules the score out and the user's escape phrase, and the SPEC template
+to carry the `Resolved by` column. The linter does not read the table.
+
 ## Linter rules that are easy to trip over
 
 These cost three lint rounds (62 errors down to 0) on one nuro-battler plan.

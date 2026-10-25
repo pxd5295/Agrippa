@@ -43,15 +43,35 @@ copied into the packet's validation block. Do not substitute general test-first
 instructions for the list; with a targeted test map regressions fell 70%, and
 procedure text without one made them worse (TDAD, arXiv 2603.17973).
 
-### 2. Conduct the interview
+### 2. List the open decisions, then interview
 
-Ask one to three material questions per round with `AskUserQuestion`,
-recommending the first option and its tradeoff. Normally use one round; use more
-only when answers expose a material decision. Cover only behavior, scope,
-compatibility, architecture, migration, persistence, performance, failure
-handling, acceptance, execution choices, or appearance (each deviation from a
-design reference, below) that change the plan. Record answers and rationale in
-`SPEC.md`.
+The interview ends when no known decision is left for the user to make. It
+does not end after a set number of rounds, and it never ends on a
+self-reported confidence score; `docs/design-notes.md` in the methodology
+repository records why.
+
+1. After the narrow inspection, write down every uncertainty whose answer
+   would change the plan. Each entry names what it affects (behavior, scope,
+   compatibility, architecture, migration, persistence, performance, failure
+   handling, acceptance, execution choices, or appearance, including each
+   deviation from a design reference, below) and whether reading code can
+   resolve it or only the user can. An uncertainty that changes nothing in
+   the plan is not an entry; decide it and move on.
+2. Resolve every code-resolvable entry by reading further. Never put one to
+   the user. An entry that reading cannot settle moves to the user-only group.
+3. Put the user-only entries to the user with `AskUserQuestion`, one to three
+   per round, recommending the first option and stating its tradeoff. Rounds
+   continue while user-only entries remain, including entries that an answer
+   exposes.
+4. The interview ends when the user-only group is empty, or when the user
+   says to proceed on the recommendations. An entry still unresolved at that
+   point becomes a `Bounded-choice` (step 3, below) with the recommendation as
+   its default. It is never dropped.
+
+Record every entry, including the ones inspection settled, as a row of the
+`Planning interview decisions` table in `SPEC.md`, with `Resolved by` set to
+`inspection`, `user`, or `default`. A row resolved by inspection says what
+was read.
 
 ### 3. Resolve design before handoff
 
@@ -313,6 +333,7 @@ Durable behaviors this workflow must preserve:
 | New planning request | Start immediately; recommend a stronger model only if complex, then proceed |
 | Planning request for a one-sentence diff | Skip the workspace; implement directly and say why |
 | Stage depends on the lead's live context | Complete the packet, or fork and record the forfeited tier |
+| User says to proceed on the recommendations mid-interview | End the interview; each unresolved entry becomes a `Bounded-choice` with the recommendation as its default |
 | Low-risk plan after interview | Reduce scope; route more stages to cheaper tiers |
 | High-risk plan after interview | Keep detail and a conservative implementation tier |
 | Plan from a mockup or design canvas | Freeze the artboard, inventory it, ask about each deviation, check fidelity side by side |

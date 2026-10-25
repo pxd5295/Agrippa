@@ -17,9 +17,9 @@ it.
 
 ## Planning interview decisions
 
-| Topic | Decision | Rationale |
-|---|---|---|
-| Interview | None needed | The smoke test has no material choice. |
+| Topic | Decision | Resolved by | Rationale |
+|---|---|---|---|
+| Interview | None needed | inspection | The smoke test has no material choice. |
 
 ## Scope and constraints
 

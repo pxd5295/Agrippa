@@ -570,6 +570,10 @@ testClauses('Workflow template', workflow, [
     'Planning on Claude Fable 5\\.1',
     '\\.agrippa/area-map\\.md',
     '`area map`\\s+entry',
+    // The interview ends on an empty list of user-only decisions, never on a
+    // round count or a confidence score, and the user can end it early.
+    'never ends on a\\s+self-reported confidence score',
+    'proceed on the recommendations',
 ]);
 testClauses('Routing template', routing, [
     '## Model-tier routing table',
@@ -609,6 +613,7 @@ testClauses('PACKETS template', packets, [
     'Owner / assigned tier',
 ]);
 testClauses('SPEC template', spec, [
+    '\\| Topic \\| Decision \\| Resolved by \\| Rationale \\|',
     '## Design reference',
     '## Design rationale',
     'Decision record',
