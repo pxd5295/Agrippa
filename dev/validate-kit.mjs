@@ -16,7 +16,7 @@
 // rules are in the plan and design-first skills' reference files.
 // The core rules and templates still carry the methodology's required clauses,
 // the core rules stay under the 10,000-character hook context cap, and the
-// injection hook prints them when run with node, unchanged without
+// injection hook prints them when run with sh, unchanged without
 // AGRIPPA_LOW_USAGE and with the low-usage line after them, still under the
 // cap, when AGRIPPA_LOW_USAGE=1. The plan skill's low-usage.md names the seven
 // rules the mode replaces, the reviewers stop escalating in the mode, and the
@@ -68,6 +68,7 @@ import {
 import { tmpdir } from 'node:os';
 import { basename, dirname, extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { findTool } from './tool-paths.mjs';
 
 // --- Arguments --------------------------------------------------------------
 
@@ -241,9 +242,9 @@ const required = [
     'NOTICE',
     'bin/agrippa-lint',
     'scripts/core-rules.md',
-    'scripts/inject_core_rules.mjs',
+    'scripts/inject_core_rules.sh',
     'scripts/validate_plan_workspace.mjs',
-    'scripts/log_subagent_spawns.mjs',
+    'scripts/log_subagent_spawns.sh',
     'hooks/hooks.json',
     'skills/plan/reference/agent-workflow.md',
     'skills/plan/reference/ROUTING.md',
@@ -367,7 +368,7 @@ const evidence = readKitFile('skills/plan/templates/EVIDENCE.md');
 const lowUsage = readKitFile('skills/plan/reference/low-usage.md');
 const statusTemplate = readKitFile('skills/plan/templates/STATUS.md');
 const hooksReadme = readKitFile('templates/hooks/README.md');
-const injectScript = readKitFile('scripts/inject_core_rules.mjs');
+const injectScript = readKitFile('scripts/inject_core_rules.sh');
 
 // --- Every template, script, hook, agent, skill, and bin file is listed in the README layout table
 
@@ -478,11 +479,18 @@ for (const section of ['## Engineering standards', '### Definition of done', '##
     addCheck(!claude.includes(section), `CLAUDE template repeats the core rules section '${section}'.`);
 }
 
-// The hooks are Node scripts, so the same hook command works on every OS. This
-// script already runs on Node, so the same executable runs the hooks, the
-// linter, and the smoke test.
+// The hooks are POSIX sh scripts, run by the sh that Git Bash provides on
+// Windows and /bin/sh elsewhere, so the same hook command works on every OS.
+// This script runs on Node, which the plugin no longer needs; it finds sh
+// through dev/tool-paths.mjs so the check works from PowerShell too.
 const node = process.execPath;
-addCheck(isFile(node), 'node is not on PATH. The plugin hooks run on Node.js; install it to run the hook checks.');
+const sh = findTool('sh');
+addCheck(sh !== null, 'sh is not available. The plugin hooks run on POSIX sh (Git for Windows provides it on Windows); install it to run the hook checks.');
+const shCommand = sh === null ? 'sh' : sh;
+// The sh hook escapes backslash, double quote, tab, carriage return, and
+// newline, so the rules file may hold no other control character.
+addCheck(!/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/.test(coreRules), 'scripts/core-rules.md holds a control character other than tab, carriage return, or newline, which the sh hook cannot escape.');
+addCheck(!/[\t\r]/.test(coreRules), 'scripts/core-rules.md must use LF line endings and spaces, not tabs or carriage returns.');
 
 // The hook must run the injection script on session and subagent start, and
 // the script must print the core rules unchanged as hook context.
@@ -505,11 +513,11 @@ function hookCommands(groups) {
         .map((hook) => (hook && hook.command !== undefined && hook.command !== null ? String(hook.command) : ''));
 }
 // Low-usage mode is the one opt-in that changes the injected context. The
-// script exports the line it appends, so this check and the script cannot
-// disagree about it; the line must carry the two every-session rules and point
-// at the plan skill's guide for the rest.
-const lowUsageSource = /export const lowUsageLine = '([^']+)';/.exec(injectScript);
-addCheck(lowUsageSource !== null, 'scripts/inject_core_rules.mjs must export lowUsageLine, the one line it appends when AGRIPPA_LOW_USAGE=1.');
+// script keeps the line it appends in one shell variable, so this check and
+// the script cannot disagree about it; the line must carry the two
+// every-session rules and point at the plan skill's guide for the rest.
+const lowUsageSource = /^low_usage_line='([^']+)'$/m.exec(injectScript);
+addCheck(lowUsageSource !== null, "scripts/inject_core_rules.sh must set low_usage_line='...', the one line it appends when AGRIPPA_LOW_USAGE=1.");
 const lowUsageLine = lowUsageSource === null ? '' : lowUsageSource[1];
 addCheck(/^Low-usage mode is on:/.test(lowUsageLine) && /80 lines/.test(lowUsageLine) && /never self-escalate/.test(lowUsageLine) && /low-usage\.md in agrippa:plan/.test(lowUsageLine), 'The low-usage line must start "Low-usage mode is on:", give the 80-line design-reviewer floor, say reviewers never self-escalate, and point at low-usage.md in agrippa:plan.');
 const normalizeContext = (text) => text.replace(/\r\n/g, '\n');
@@ -522,11 +530,11 @@ delete hookEnvironment.AGRIPPA_LOW_USAGE;
 for (const hookEvent of ['SessionStart', 'SubagentStart']) {
     const commands = hookCommands(hookGroups(hookEvent));
     const eventSuffix = new RegExp(` ${hookEvent}$`, 'i');
-    const wired = commands.filter((command) => /^node "\$\{CLAUDE_PLUGIN_ROOT\}\/scripts\/inject_core_rules\.mjs"/i.test(command) && eventSuffix.test(command));
-    addCheck(wired.length === 1, `hooks/hooks.json must run node scripts/inject_core_rules.mjs ${hookEvent} once on ${hookEvent}.`);
+    const wired = commands.filter((command) => /^sh "\$\{CLAUDE_PLUGIN_ROOT\}\/scripts\/inject_core_rules\.sh"/i.test(command) && eventSuffix.test(command));
+    addCheck(wired.length === 1, `hooks/hooks.json must run sh scripts/inject_core_rules.sh ${hookEvent} once on ${hookEvent}.`);
     for (const mode of ['off', 'on']) {
         const env = mode === 'on' ? { ...hookEnvironment, AGRIPPA_LOW_USAGE: '1' } : hookEnvironment;
-        const hookRun = run(node, [join(kitRoot, 'scripts', 'inject_core_rules.mjs'), hookEvent], { env });
+        const hookRun = run(shCommand, [join(kitRoot, 'scripts', 'inject_core_rules.sh'), hookEvent], { env });
         let hookPayload = null;
         try {
             hookPayload = JSON.parse(hookRun.stdout);
@@ -539,8 +547,8 @@ for (const hookEvent of ['SessionStart', 'SubagentStart']) {
             printed = String(hookPayload.hookSpecificOutput.additionalContext ?? '');
         }
         const described = mode === 'on' ? 'core-rules.md followed by the low-usage line, with AGRIPPA_LOW_USAGE=1,' : 'core-rules.md unchanged, without AGRIPPA_LOW_USAGE,';
-        addCheck(hookRun.exitCode === 0 && normalizeContext(printed) === expectedContext[mode], `inject_core_rules.mjs ${hookEvent} did not print ${described} as ${hookEvent} additionalContext:\n${hookRun.output}`);
-        addCheck(printed.length < 10000, `inject_core_rules.mjs ${hookEvent} with low-usage mode ${mode} prints ${printed.length} characters, over the 10,000-character hook context cap.`);
+        addCheck(hookRun.exitCode === 0 && normalizeContext(printed) === expectedContext[mode], `inject_core_rules.sh ${hookEvent} did not print ${described} as ${hookEvent} additionalContext:\n${hookRun.output}`);
+        addCheck(printed.length < 10000, `inject_core_rules.sh ${hookEvent} with low-usage mode ${mode} prints ${printed.length} characters, over the 10,000-character hook context cap.`);
     }
 }
 
@@ -548,26 +556,26 @@ for (const hookEvent of ['SessionStart', 'SubagentStart']) {
 // SubagentStart, and stays silent unless the project sets AGRIPPA_SPAWN_LOG=1.
 for (const [hookEvent, matcher] of [['PreToolUse', 'Agent|Task'], ['SubagentStart', '.*']]) {
     const groups = hookGroups(hookEvent).filter((group) => group && group.matcher !== undefined && group.matcher !== null && String(group.matcher).toLowerCase() === matcher.toLowerCase());
-    const logCommands = hookCommands(groups).filter((command) => /^node "\$\{CLAUDE_PLUGIN_ROOT\}\/scripts\/log_subagent_spawns\.mjs"$/i.test(command));
-    addCheck(logCommands.length === 1, `hooks/hooks.json must run node scripts/log_subagent_spawns.mjs once on ${hookEvent} with matcher '${matcher}'.`);
+    const logCommands = hookCommands(groups).filter((command) => /^sh "\$\{CLAUDE_PLUGIN_ROOT\}\/scripts\/log_subagent_spawns\.sh"$/i.test(command));
+    addCheck(logCommands.length === 1, `hooks/hooks.json must run sh scripts/log_subagent_spawns.sh once on ${hookEvent} with matcher '${matcher}'.`);
 }
 const logProject = join(tmpdir(), `kit-log-${randomBytes(4).toString('hex')}`);
 try {
     mkdirSync(logProject);
     const logFile = join(logProject, 'subagent-spawns.log');
     const logPayload = '{"hook_event_name":"PreToolUse","session_id":"kitcheck","tool_input":{"subagent_type":"agrippa:validator","model":"sonnet"}}\n';
-    const logScript = join(kitRoot, 'scripts', 'log_subagent_spawns.mjs');
+    const logScript = join(kitRoot, 'scripts', 'log_subagent_spawns.sh');
     const logEnvironment = { ...process.env, CLAUDE_PROJECT_DIR: logProject };
     delete logEnvironment.AGRIPPA_SPAWN_LOG;
-    const offRun = run(node, [logScript], { input: logPayload, env: logEnvironment });
+    const offRun = run(shCommand, [logScript], { input: logPayload, env: logEnvironment });
     const offWrote = existsSync(logFile);
-    const onRun = run(node, [logScript], { input: logPayload, env: { ...logEnvironment, AGRIPPA_SPAWN_LOG: '1' } });
-    addCheck(offRun.exitCode === 0 && !offWrote && offRun.output === '', `log_subagent_spawns.mjs must exit 0 silently and write no log without AGRIPPA_SPAWN_LOG=1:\n${offRun.output}`);
+    const onRun = run(shCommand, [logScript], { input: logPayload, env: { ...logEnvironment, AGRIPPA_SPAWN_LOG: '1' } });
+    addCheck(offRun.exitCode === 0 && !offWrote && offRun.output === '', `log_subagent_spawns.sh must exit 0 silently and write no log without AGRIPPA_SPAWN_LOG=1:\n${offRun.output}`);
     let logged = '';
     if (existsSync(logFile)) {
         logged = readFileSync(logFile, 'utf8');
     }
-    addCheck(onRun.exitCode === 0 && onRun.output === '' && /PreToolUse\s+agent=agrippa:validator model=sonnet/i.test(logged), `log_subagent_spawns.mjs with AGRIPPA_SPAWN_LOG=1 did not log the spawn to CLAUDE_PROJECT_DIR/subagent-spawns.log:\n${onRun.output}${logged}`);
+    addCheck(onRun.exitCode === 0 && onRun.output === '' && /PreToolUse\s+agent=agrippa:validator model=sonnet/i.test(logged), `log_subagent_spawns.sh with AGRIPPA_SPAWN_LOG=1 did not log the spawn to CLAUDE_PROJECT_DIR/subagent-spawns.log:\n${onRun.output}${logged}`);
 } finally {
     if (existsSync(logProject)) {
         rmSync(logProject, { recursive: true, force: true });
@@ -997,11 +1005,16 @@ for (const file of checkedFiles) {
 addCheck(kitFiles.filter((path) => /\.toml$/i.test(path)).length === 0, 'Kit must contain no .toml agent profiles.');
 addCheck(!existsSync(join(kitRoot, 'templates', 'config.toml')), 'Kit must not install a toolchain config.toml.');
 
-// --- Node scripts must parse -----------------------------------------------
+// --- Scripts must parse ----------------------------------------------------
 
 for (const script of checkedFiles.filter((path) => extname(path).toLowerCase() === '.mjs' || basename(path) === 'agrippa-lint')) {
     const syntax = run(node, ['--check', script]);
     addCheck(syntax.exitCode === 0, `${basename(script)} has Node syntax errors:\n${syntax.output}`);
+}
+for (const script of checkedFiles.filter((path) => extname(path).toLowerCase() === '.sh')) {
+    const syntax = run(shCommand, ['-n', script]);
+    addCheck(syntax.exitCode === 0, `${basename(script)} has sh syntax errors:\n${syntax.output}`);
+    addCheck(readText(script).startsWith('#!/bin/sh\n'), `${basename(script)} must start with #!/bin/sh and use LF line endings.`);
 }
 
 // --- End-to-end: simulated project plus the smoke test ---------------------

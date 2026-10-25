@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/inject_core_rules.mjs\" SessionStart"
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/inject_core_rules.sh\" SessionStart"
           }
         ]
       }
@@ -16,7 +16,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/inject_core_rules.mjs\" SubagentStart"
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/inject_core_rules.sh\" SubagentStart"
           }
         ]
       },
@@ -25,7 +25,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/log_subagent_spawns.mjs\"",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/log_subagent_spawns.sh\"",
             "timeout": 10
           }
         ]
@@ -37,7 +37,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/log_subagent_spawns.mjs\"",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/log_subagent_spawns.sh\"",
             "timeout": 10
           }
         ]

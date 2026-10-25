@@ -11,7 +11,7 @@ it is switched on the same way, so it is described here too.
 
 ## Subagent spawn log (in the plugin, opt-in)
 
-The plugin's `hooks/hooks.json` runs `scripts/log_subagent_spawns.mjs` on two
+The plugin's `hooks/hooks.json` runs `scripts/log_subagent_spawns.sh` on two
 events. It does nothing unless the project opts in, because a plugin hook
 runs in every project that enables the plugin. To opt in, add the variable to
 the `env` block of the project's `.claude/settings.json` and add

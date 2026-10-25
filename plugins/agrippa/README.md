@@ -73,11 +73,11 @@ The methodology has three layers, and the kit installs all of them.
 | `ADOPTION-CHECKLIST.md` | Not installed; every item is completed or reported |
 | `.claude-plugin/plugin.json` | Not installed; the plugin manifest |
 | `scripts/core-rules.md` | Not installed; the core rules the plugin adds to every session, kept under 10,000 characters |
-| `scripts/inject_core_rules.mjs` | Not installed; a Node script that prints `scripts/core-rules.md` as hook context, with the low-usage line after it only when the project sets `AGRIPPA_LOW_USAGE=1` |
+| `scripts/inject_core_rules.sh` | Not installed; a POSIX sh script that prints `scripts/core-rules.md` as hook context, with the low-usage line after it only when the project sets `AGRIPPA_LOW_USAGE=1` |
 | `scripts/validate_plan_workspace.mjs` | Not installed; the shared plan-workspace linter, a Node script run from the plugin |
 | `bin/agrippa-lint` | Not installed; the plugin puts it on the Bash tool's PATH. It is a Node script that runs `scripts/validate_plan_workspace.mjs` and passes every argument through |
-| `scripts/log_subagent_spawns.mjs` | Not installed; the spawn logger, a Node script that does nothing unless the project sets `AGRIPPA_SPAWN_LOG=1` |
-| `hooks/hooks.json` | Not installed; runs `scripts/inject_core_rules.mjs` on `SessionStart` and `SubagentStart`, and `scripts/log_subagent_spawns.mjs` on `PreToolUse` for the Agent tool and on `SubagentStart`, all with `node` |
+| `scripts/log_subagent_spawns.sh` | Not installed; the spawn logger, a POSIX sh script that does nothing unless the project sets `AGRIPPA_SPAWN_LOG=1` |
+| `hooks/hooks.json` | Not installed; runs `scripts/inject_core_rules.sh` on `SessionStart` and `SubagentStart`, and `scripts/log_subagent_spawns.sh` on `PreToolUse` for the Agent tool and on `SubagentStart`, all with `sh` |
 | `skills/plan/SKILL.md` | Not installed; the `/agrippa:plan` skill, the planning entry point |
 | `skills/plan/reference/agent-workflow.md` | Not installed; the lifecycle guide, a `plan` skill reference file |
 | `skills/plan/reference/ROUTING.md` | Not installed; the routing guide, a `plan` skill reference file |
