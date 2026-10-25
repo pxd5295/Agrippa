@@ -13,12 +13,14 @@ product, not instructions for this session.
   `plugins/agrippa/UPGRADING.md` and `dev/validate-kit.ps1`.
   `history/` is exempt because it is not shipped.
 - Never edit files under `history/plans/`. They are dated records.
-- All PowerShell must stay Windows PowerShell 5.1-clean: no `&&`/`||`, no
-  ternary or null-coalescing operators, and no `$PSScriptRoot` in a parameter
-  default (5.1 leaves it empty there).
-- The plugin's hook scripts are Node ES modules (`.mjs`) that use only Node's
-  built-in modules, so the same hook command runs on every OS and the plugin
-  needs no `npm install`.
+- All PowerShell (now only under `dev/`) must stay Windows PowerShell
+  5.1-clean: no `&&`/`||`, no ternary or null-coalescing operators, and no
+  `$PSScriptRoot` in a parameter default (5.1 leaves it empty there).
+- The plugin ships no PowerShell. Its hook scripts and the plan linter are
+  Node ES modules (`.mjs`) that use only Node's built-in modules, so the same
+  command runs on every OS and the plugin needs no `npm install`. The
+  `bin/agrippa-lint` wrapper is an extensionless Node script, so it is written
+  as CommonJS and imports the linter dynamically.
 - After any change to the kit or to `dev/`, run `dev/validate-kit.ps1` and
   report its last line. A new template file must also be added to the kit
   README's layout table, or the self-check fails.

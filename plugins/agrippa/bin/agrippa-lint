@@ -1,34 +1,36 @@
-#!/bin/sh
-# agrippa-lint: run the Agrippa plan-workspace linter from the plugin.
-#
-# Claude Code puts this plugin's bin/ folder on the Bash tool's PATH while the
-# plugin is enabled, so a plan's validation matrix can name the linter as
-# `agrippa-lint -PlanPath plans/YYYY-MM-DD-name` with no version-specific
-# path. The folder is not on the PowerShell tool's PATH, so that row runs
-# through the Bash tool.
-#
-# Every argument passes through to scripts/validate_plan_workspace.ps1. It
-# finds the repository root from the current directory unless -RepoRoot is
-# given, and its exit code is this command's exit code.
+#!/usr/bin/env node
+// agrippa-lint: run the Agrippa plan-workspace linter from the plugin.
+//
+// Claude Code puts this plugin's bin/ folder on the Bash tool's PATH while the
+// plugin is enabled, so a plan's validation matrix can name the linter as
+// `agrippa-lint -PlanPath plans/YYYY-MM-DD-name` with no version-specific
+// path. The folder is not on the PowerShell tool's PATH, so that row runs
+// through the Bash tool. Git Bash, which the Bash tool uses on Windows, runs
+// this file through the shebang line above, and node.exe accepts the path it
+// is given.
+//
+// Every argument passes through to scripts/validate_plan_workspace.mjs, whose
+// exit code is this command's exit code. This file has no extension, so Node
+// loads it as CommonJS; it imports the ES-module linter dynamically.
+'use strict';
 
-linter="$(dirname -- "$0")/../scripts/validate_plan_workspace.ps1"
-if [ ! -f "$linter" ]; then
-  echo "agrippa-lint: the linter is missing at $linter" >&2
-  exit 2
-fi
+const { join } = require('node:path');
+const { pathToFileURL } = require('node:url');
 
-# Windows PowerShell needs a Windows path. Git Bash and Cygwin provide cygpath.
-if command -v cygpath >/dev/null 2>&1; then
-  linter=$(cygpath -w "$linter")
-fi
+const linter = join(__dirname, '..', 'scripts', 'validate_plan_workspace.mjs');
 
-if command -v powershell >/dev/null 2>&1; then
-  shell=powershell
-elif command -v pwsh >/dev/null 2>&1; then
-  shell=pwsh
-else
-  echo "agrippa-lint: needs Windows PowerShell (powershell) or PowerShell 7 (pwsh) on PATH" >&2
-  exit 127
-fi
-
-exec "$shell" -NoProfile -ExecutionPolicy Bypass -File "$linter" "$@"
+import(pathToFileURL(linter).href).then(
+    (module) => module.main(process.argv.slice(2)),
+    (error) => {
+        process.stderr.write(`agrippa-lint: the linter at ${linter} could not be loaded: ${error.message}\n`);
+        return 2;
+    },
+).then(
+    (code) => {
+        process.exitCode = code;
+    },
+    (error) => {
+        process.stderr.write(`agrippa-lint: ${error.stack || error}\n`);
+        process.exitCode = 1;
+    },
+);

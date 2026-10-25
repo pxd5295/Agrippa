@@ -76,10 +76,15 @@ Before handoff, run this through the Bash tool, because the plugin puts
 agrippa-lint -PlanPath plans/YYYY-MM-DD-name
 ```
 
-Outside Claude Code, run `plugins/agrippa/scripts/validate_plan_workspace.ps1`
-from a checkout of Agrippa at the repository's pinned tag, with `-RepoRoot`
-set to the repository. Dated plans whose matrix names
-`tools/validate_plan_workspace.ps1` keep that row; they are records.
+Outside Claude Code, run the linter with Node from a checkout of Agrippa at
+the repository's pinned tag, with `-RepoRoot` set to the repository:
+
+```bash
+node <Agrippa>/plugins/agrippa/scripts/validate_plan_workspace.mjs -PlanPath plans/YYYY-MM-DD-name -RepoRoot <repository>
+```
+
+Dated plans whose matrix names `tools/validate_plan_workspace.ps1` keep that
+row; they are records.
 
 The linter checks traceability, dispatch shape, routing, ownership, runnable
 command syntax, covering-test paths, and contract freshness. It checks shape,

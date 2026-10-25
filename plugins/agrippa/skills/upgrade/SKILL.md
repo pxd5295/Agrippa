@@ -23,7 +23,7 @@ The kit files this skill uses are in the plugin:
 
 | File | Use |
 |---|---|
-| `${CLAUDE_PLUGIN_ROOT}/UPGRADING.md` | The generation markers and the rule mapping for each generation, including "From G3" and "From G4 v0.1.0" |
+| `${CLAUDE_PLUGIN_ROOT}/UPGRADING.md` | The generation markers and the rule mapping for each generation, including "From G3", "From G4 v0.1.0", "From G4 v0.1.1", and "From G4 v0.1.2" |
 | `${CLAUDE_PLUGIN_ROOT}/README.md` | The layout table, "Enabling the plugin in a project", the placeholder convention, and the install-marker scan |
 | `${CLAUDE_PLUGIN_ROOT}/ADOPTION-CHECKLIST.md` | Every item is done or reported at the end |
 | `${CLAUDE_PLUGIN_ROOT}/templates/` | The project-side documents, including `MIGRATION.md` |
@@ -113,8 +113,12 @@ Wait for every answer before step 4.
   once the user confirms, as "From G4 v0.1.0" in `UPGRADING.md` says. Move
   any project rule added to those files into `AGENTS.md` first.
 - Move project-specific checks that an old linter enforced into
-  `tools/validate_plan_workspace.local.ps1`. The shared linter runs from the
-  plugin; never hand-merge it.
+  `tools/validate_plan_workspace.local.mjs`, written from
+  `templates/validate-plan-workspace.local.mjs`. A
+  `tools/validate_plan_workspace.local.ps1` from a plugin before 0.2.0 is
+  ported with the "From G4 v0.1.2" table in `UPGRADING.md`: write the `.mjs`
+  with the same rules and messages, then delete the `.ps1` once the user
+  confirms. The shared linter runs from the plugin; never hand-merge it.
 - Change `.claude/settings.json` exactly as step 6 of the install skill,
   `${CLAUDE_PLUGIN_ROOT}/skills/install/SKILL.md`, describes: merge into the
   existing file, add `extraKnownMarketplaces.agrippa` with its `ref` pinned to
@@ -144,10 +148,11 @@ of it in `docs/planning/MIGRATION.md`.
 - **Old-toolchain markers.** A search of `AGENTS.md`, `CLAUDE.md`, `docs/`, and
   `.claude/` for the markers `UPGRADING.md` lists for the generations found
   must find nothing outside `MIGRATION.md` and dated plan workspaces.
-- **Local linter checks.** If `tools/validate_plan_workspace.local.ps1`
+- **Local linter checks.** If `tools/validate_plan_workspace.local.mjs`
   exists, lint one recent existing workspace through the Bash tool with
-  `agrippa-lint -PlanPath plans/<name>`. It must report no error from the
-  local checks. Freshness errors on plans that have landed are expected.
+  `agrippa-lint -PlanPath plans/<name>`. It must report no `[Local]` error and
+  no error from the local checks themselves. Freshness errors on plans that
+  have landed are expected.
 - **Validation commands.** Each command in `validation-commands.md` was run
   once, and its result is recorded.
 

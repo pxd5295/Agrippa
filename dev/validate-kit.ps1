@@ -20,7 +20,7 @@ The core rules and templates still carry the methodology's required clauses,
 the core rules stay under the 10,000-character hook context cap, and the
 injection hook prints them when run with node. The spawn logger is wired and
 does nothing without AGRIPPA_SPAWN_LOG=1, and the agrippa-lint wrapper is an
-executable LF shell script that runs the plugin's linter. No vocabulary from
+executable LF Node script that runs the plugin's linter. No vocabulary from
 an older toolchain survives outside UPGRADING.md and this script, text files
 are clean UTF-8 without trailing whitespace, every PowerShell and Node script
 parses, and the two copies of LICENSE and of NOTICE are identical. It then builds a simulated
@@ -37,8 +37,9 @@ must declare the agrippa marketplace and enable agrippa@agrippa, it must have
 docs/agent_memory/project-contracts.md and validation-commands.md, and it must
 keep no local copy of what the plugin provides: the agents, the plugin's
 skills, the shared linter, the spawn logger, its hook_payload.ps1 helper
-unless a project script still uses it, or a settings.json hook or permission
-that runs them. It must also keep no full copy of the rules that now ship in
+unless a project script still uses it, a settings.json hook or permission
+that runs them, or a PowerShell tools/validate_plan_workspace.local.ps1 that
+the 0.2.0 linter no longer loads. It must also keep no full copy of the rules that now ship in
 the plan and design-first skills: plans/README.md and docs/decisions/README.md
 are short pointers, and the old docs/planning/CLAUDE.md is gone. Each failure
 names the file or setting and says what to do. The check is skipped when this
@@ -106,7 +107,7 @@ $required = @(
     'bin/agrippa-lint',
     'scripts/core-rules.md',
     'scripts/inject_core_rules.mjs',
-    'scripts/validate_plan_workspace.ps1',
+    'scripts/validate_plan_workspace.mjs',
     'scripts/log_subagent_spawns.mjs',
     'hooks/hooks.json',
     'skills/plan/reference/agent-workflow.md',
@@ -123,7 +124,7 @@ $required = @(
     'templates/decisions-README.md',
     'templates/plans-README.md',
     'templates/MIGRATION.md',
-    'templates/validate-plan-workspace.local.ps1',
+    'templates/validate-plan-workspace.local.mjs',
     'templates/hooks/README.md'
 )
 $required += @($agentNames | ForEach-Object { "agents/$_.md" })
@@ -223,7 +224,7 @@ $packets = Read-KitFile 'skills/plan/templates/PACKETS.md'
 $spec = Read-KitFile 'skills/plan/templates/SPEC.md'
 $workspaceFiles = Read-KitFile 'skills/plan/reference/workspace-files.md'
 $decisionRecords = Read-KitFile 'skills/design-first/reference/decision-records.md'
-$workspaceLinter = Read-KitFile 'scripts/validate_plan_workspace.ps1'
+$workspaceLinter = Read-KitFile 'scripts/validate_plan_workspace.mjs'
 
 # --- Every template, script, hook, agent, skill, and bin file is listed in the README layout table
 
@@ -255,7 +256,7 @@ Test-Clauses 'README' $readme @(
     '\[PROJECT: \.\.\.\]',
     'run-smoke-test\.ps1',
     'Install-marker scan',
-    'validate_plan_workspace\.local\.ps1',
+    'validate_plan_workspace\.local\.mjs',
     'UPGRADING\.md',
     'AskUserQuestion'
 )
@@ -394,13 +395,15 @@ try {
 }
 
 # The wrapper runs from the Bash tool's PATH, so git must record it as
-# executable and it must keep LF line endings for its shebang to work.
+# executable and it must keep LF line endings for its shebang to work. It has
+# no extension, so Node loads it as CommonJS; it must not use ES-module syntax.
 $wrapperPath = Join-Path $kitRoot 'bin/agrippa-lint'
 if (Test-Path -LiteralPath $wrapperPath -PathType Leaf) {
     $wrapper = [IO.File]::ReadAllText($wrapperPath, [Text.Encoding]::UTF8)
-    Add-Check ($wrapper.StartsWith("#!/bin/sh`n")) 'bin/agrippa-lint must start with #!/bin/sh and use LF line endings.'
+    Add-Check ($wrapper.StartsWith("#!/usr/bin/env node`n")) 'bin/agrippa-lint must start with #!/usr/bin/env node and use LF line endings.'
     Add-Check (-not $wrapper.Contains("`r")) 'bin/agrippa-lint must use LF line endings.'
-    Add-Check ($wrapper.Contains('/../scripts/validate_plan_workspace.ps1') -and $wrapper -match '"\$@"') 'bin/agrippa-lint must run ../scripts/validate_plan_workspace.ps1 and pass its arguments through.'
+    Add-Check ($wrapper.Contains("'validate_plan_workspace.mjs'") -and $wrapper.Contains('process.argv.slice(2)')) 'bin/agrippa-lint must run ../scripts/validate_plan_workspace.mjs and pass its arguments through.'
+    Add-Check ($wrapper -notmatch '(?m)^\s*(import|export)\s') 'bin/agrippa-lint is loaded as CommonJS and must not use import or export statements.'
     $ErrorActionPreference = 'Continue'
     $wrapperIndex = @(git -C $repoRoot ls-files -s -- 'plugins/agrippa/bin/agrippa-lint' 2>$null)
     $ErrorActionPreference = 'Stop'
@@ -538,22 +541,23 @@ foreach ($pointer in @('templates/plans-README.md', 'templates/decisions-README.
 }
 Add-Check ($adoption -match 'run-smoke-test\.ps1') 'Adoption checklist must require the smoke test.'
 Add-Check ($workspaceLinter -match 'checks shape, never truth') 'Workspace linter lacks the shape-not-truth disclaimer.'
-Add-Check ($workspaceLinter -match 'validate_plan_workspace\.local\.ps1') 'Workspace linter does not load the local extension file.'
-$localTemplate = Read-KitFile 'templates/validate-plan-workspace.local.ps1'
-Add-Check ($localTemplate -match 'function Test-LocalValidationRow' -and $workspaceLinter -match 'Test-LocalValidationRow') 'Local-check template and linter disagree on Test-LocalValidationRow.'
-Add-Check ($localTemplate -match 'function Test-LocalValidationMatrix' -and $workspaceLinter -match 'Test-LocalValidationMatrix') 'Local-check template and linter disagree on Test-LocalValidationMatrix.'
+Add-Check ($workspaceLinter -match 'validate_plan_workspace\.local\.mjs') 'Workspace linter does not load the local extension file.'
+$localTemplate = Read-KitFile 'templates/validate-plan-workspace.local.mjs'
+Add-Check ($localTemplate -match 'export function checkValidationRow' -and $workspaceLinter -match 'checkValidationRow') 'Local-check template and linter disagree on checkValidationRow.'
+Add-Check ($localTemplate -match 'export function checkValidationMatrix' -and $workspaceLinter -match 'checkValidationMatrix') 'Local-check template and linter disagree on checkValidationMatrix.'
+Add-Check ($localTemplate -match 'commandPathExtensions' -and $workspaceLinter -match 'local\.commandPathExtensions') 'Local-check template and linter disagree on commandPathExtensions.'
 
 # The linter owns the template vocabulary it parses. Read its required packet
 # labels and stage fields from its own source, so a linter change is checked
 # against the templates without a second hand-kept list here.
-$labelBlock = [regex]::Match($workspaceLinter, '(?s)foreach \(\$requiredLabel in @\((.+?)\)\) \{')
+$labelBlock = [regex]::Match($workspaceLinter, '(?s)const requiredPacketLabels = \[(.+?)\];')
 Add-Check $labelBlock.Success 'Could not find the required packet-label array in the workspace linter.'
 $packetLabels = @([regex]::Matches($labelBlock.Groups[1].Value, "'([^']+)'") | ForEach-Object { $_.Groups[1].Value })
 Add-Check ($packetLabels.Count -gt 0) 'The workspace linter requires no packet labels.'
 foreach ($label in $packetLabels) {
     Add-Check ($packets -match "(?m)^$([regex]::Escape($label))\s*:") "PACKETS template lacks the packet label '$label' the linter requires."
 }
-$stageFields = @([regex]::Matches($workspaceLinter, "Get-Field \`$\w+ '([^']+)'") | ForEach-Object { $_.Groups[1].Value } | Select-Object -Unique)
+$stageFields = @([regex]::Matches($workspaceLinter, "getField\(\w+, '([^']+)'\)") | ForEach-Object { $_.Groups[1].Value } | Select-Object -Unique)
 Add-Check ($stageFields.Count -gt 0) 'The workspace linter reads no stage fields.'
 foreach ($field in $stageFields) {
     # 'Bounded choice' is an optional field the linter falls back from.
@@ -729,7 +733,7 @@ foreach ($script in ($checkedFiles | Where-Object { $_.Extension -eq '.ps1' })) 
 
 # --- Node scripts must parse -----------------------------------------------
 
-foreach ($script in ($checkedFiles | Where-Object { $_.Extension -eq '.mjs' })) {
+foreach ($script in ($checkedFiles | Where-Object { $_.Extension -eq '.mjs' -or $_.Name -eq 'agrippa-lint' })) {
     $ErrorActionPreference = 'Continue'
     $syntaxOutput = & $node --check $script.FullName 2>&1 | ForEach-Object { [string]$_ }
     $syntaxExit = $LASTEXITCODE
@@ -861,7 +865,10 @@ if ($InstalledRepo) {
             $path = ".claude/commands/$name.md"
             Add-ProjectCheck (-not (Test-Path -LiteralPath (Join-Path $projectRoot $path))) "$path is a local command that the plugin skill /agrippa:$name replaces. Delete it."
         }
-        Add-ProjectCheck (-not (Test-Path -LiteralPath (Join-Path $projectRoot 'tools/validate_plan_workspace.ps1'))) 'tools/validate_plan_workspace.ps1 is a local copy of the shared linter. Delete it; plans run agrippa-lint from the plugin, and project rules stay in tools/validate_plan_workspace.local.ps1.'
+        Add-ProjectCheck (-not (Test-Path -LiteralPath (Join-Path $projectRoot 'tools/validate_plan_workspace.ps1'))) 'tools/validate_plan_workspace.ps1 is a local copy of the shared linter. Delete it; plans run agrippa-lint from the plugin, and project rules stay in tools/validate_plan_workspace.local.mjs.'
+        # The 0.2.0 linter imports the .mjs local file and fails on a .ps1 one,
+        # so a leftover .ps1 means the project's rules are not running.
+        Add-ProjectCheck (-not (Test-Path -LiteralPath (Join-Path $projectRoot 'tools/validate_plan_workspace.local.ps1'))) 'tools/validate_plan_workspace.local.ps1 is the PowerShell local-checks file that linters before 0.2.0 loaded. Port it to tools/validate_plan_workspace.local.mjs with the "From G4 v0.1.2" table in UPGRADING.md and delete it; agrippa-lint fails while only the .ps1 exists.'
 
         # Up to v0.1.0 an install copied the plan-workspace and decision-record
         # rules into these READMEs. The rules now ship in the plan and

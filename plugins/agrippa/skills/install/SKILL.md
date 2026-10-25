@@ -124,7 +124,8 @@ Write every layout-table row whose destination is a repository path, except
 - Write `docs/agent_memory/live-app.md` only when the project has an MCP
   server that observes the running application, and list every one of its
   authoring tools there.
-- Write `tools/validate_plan_workspace.local.ps1` only when the repository has
+- Write `tools/validate_plan_workspace.local.mjs`, from
+  `templates/validate-plan-workspace.local.mjs`, only when the repository has
   command invariants worth enforcing in every plan. Never copy or edit the
   shared linter.
 - If the user chose an edit-lint hook, write its script under `tools/`
@@ -192,7 +193,7 @@ Run each check below and paste the exact command and its result.
 - **Validation commands.** Each command in `validation-commands.md` was run
   once before this step, and its result is recorded. Run any command that
   step 5 added to the catalog and step 3 did not run.
-- **Local linter checks.** If `tools/validate_plan_workspace.local.ps1` was
+- **Local linter checks.** If `tools/validate_plan_workspace.local.mjs` was
   written, write one small real plan workspace for a trivial change, lint it
   through the Bash tool with `agrippa-lint -PlanPath plans/<name>`, and delete
   the workspace afterwards. `agrippa-lint` is on the Bash tool's PATH only.

@@ -131,11 +131,10 @@ and an exact resume prompt.
 ## Requirements
 
 - Node.js, on every OS. The hooks that add the core rules to every session
-  and subagent run on it, so without it the rules do not load.
-- PowerShell, for the plan linter: Windows PowerShell 5.1 on Windows, or
-  PowerShell 7 (`pwsh`) on macOS and Linux.
-- On Windows, Git for Windows. The linter runs as `agrippa-lint` through
-  Claude Code's Bash tool, which uses Git Bash.
+  and subagent run on it, and so does the plan linter, `agrippa-lint`.
+  Without it the rules do not load and plans cannot be linted. Nothing else
+  is needed: the plugin has no dependencies to install, and since 0.2.0 it
+  has no PowerShell scripts.
 - Optional: the `engineering` plugin, whose `architecture` and `system-design`
   skills write decision records. Without it, the `design-first` skill gives
   the shape to write one by hand.

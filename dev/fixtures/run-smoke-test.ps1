@@ -7,20 +7,21 @@ a project and rejects a broken one, then removes what it created.
 Copies `smoke-workspace/` into `<RepoRoot>/plans/<today>-kit-smoke-test`
 (adding -2, -3, ... on a name collision), replaces the `__TODAY__` and
 `__PLAN__` tokens, and runs the plugin's
-`plugins/agrippa/scripts/validate_plan_workspace.ps1` from this Agrippa
-checkout against it. The run must PASS. It then marks stage M1 `Open` and
-deletes the M1 packet's `Return only` line, and the same linter must FAIL with
-both errors. The workspace is deleted afterwards either way; a `plans/` folder
-the script had to create is deleted too while it is still empty.
+`plugins/agrippa/scripts/validate_plan_workspace.mjs` from this Agrippa
+checkout against it with `node`. The run must PASS. It then marks stage M1
+`Open` and deletes the M1 packet's `Return only` line, and the same linter
+must FAIL with both errors. The workspace is deleted afterwards either way; a
+`plans/` folder the script had to create is deleted too while it is still
+empty.
 
 The linter runs from the project root without -RepoRoot, the way the
 `agrippa-lint` wrapper runs it, so it finds the root through git. RepoRoot
 must therefore be the top-level folder of a git repository. The project needs
-no copy of the linter.
+no copy of the linter. `node` must be on PATH.
 
 It runs the linter with -SkipLocalChecks, because the generic fixture cannot
 satisfy a project's own invariants in
-`tools/validate_plan_workspace.local.ps1`; prove those by linting one real
+`tools/validate_plan_workspace.local.mjs`; prove those by linting one real
 plan workspace instead.
 
 The fixture references only the project's root `AGENTS.md`, whose first line
@@ -41,13 +42,19 @@ $ErrorActionPreference = 'Stop'
 $root = (Resolve-Path -LiteralPath $RepoRoot).Path
 $fixture = Join-Path $PSScriptRoot 'smoke-workspace'
 # This script lives in dev/fixtures/ of the Agrippa repository.
-$linter = Join-Path $PSScriptRoot '../../plugins/agrippa/scripts/validate_plan_workspace.ps1'
+$linter = Join-Path $PSScriptRoot '../../plugins/agrippa/scripts/validate_plan_workspace.mjs'
 $failures = New-Object 'System.Collections.Generic.List[string]'
 
 if (-not (Test-Path -LiteralPath $linter -PathType Leaf)) {
     Write-Output "FAIL: the plugin linter is missing at $linter."
     exit 1
 }
+$nodeCommand = Get-Command -Name node -CommandType Application -ErrorAction SilentlyContinue
+if ($null -eq $nodeCommand) {
+    Write-Output 'FAIL: node is not on PATH, and the plugin linter runs on Node.'
+    exit 1
+}
+$node = $nodeCommand.Source
 if (-not (Test-Path -LiteralPath (Join-Path $root '.git'))) {
     Write-Output "FAIL: $root is not the top-level folder of a git repository, so the linter cannot find it without -RepoRoot."
     exit 1
@@ -74,15 +81,13 @@ function Invoke-Linter {
     # Windows PowerShell 5.1 turns a native command's redirected stderr into a
     # terminating error under 'Stop', and the linter reports through stderr.
     $ErrorActionPreference = 'Continue'
-    # Run the linter under the same PowerShell that runs this script, so the
-    # test also works with pwsh on macOS and Linux. The caller has set the
-    # location to the project root, and no -RepoRoot is passed.
-    $shell = (Get-Process -Id $PID).Path
-    $output = & $shell -NoProfile -ExecutionPolicy Bypass -File $linter -PlanPath $planRelative -SkipLocalChecks 2>&1 | ForEach-Object { [string]$_ }
+    # The caller has set the location to the project root, and no -RepoRoot is
+    # passed, so the linter finds the root through git as the wrapper does.
+    $output = & $node $linter -PlanPath $planRelative -SkipLocalChecks 2>&1 | ForEach-Object { [string]$_ }
     return [pscustomobject]@{
         ExitCode = $LASTEXITCODE
-        # Error records wrap at console width; collapse whitespace so a message
-        # split across lines still matches.
+        # Collapse whitespace so a message is matched the same way however the
+        # host presents stderr lines.
         Text = (($output -join ' ') -replace '\s+', ' ')
     }
 }

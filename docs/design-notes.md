@@ -29,12 +29,13 @@ they need it to recognize and search for an old install.
 - The kit linter is the linter every project runs. It is never edited per
   project.
 - Since Phase 4 of `docs/plugin-conversion-plan.md` (2026-10-18), the linter
-  lives at `plugins/agrippa/scripts/validate_plan_workspace.ps1` and runs from
-  the plugin. A project no longer gets a copy at
+  runs from the plugin. It is `plugins/agrippa/scripts/validate_plan_workspace.mjs`,
+  a Node script since 0.2.0 (it was a PowerShell script before; see "Linter
+  runs on Node" below). A project no longer gets a copy at
   `tools/validate_plan_workspace.ps1`. Inside Claude Code, the plugin's
-  `bin/agrippa-lint` wrapper runs it under `powershell` or `pwsh` and passes
-  every argument through. Outside Claude Code, for example in a terminal or
-  CI, you run it from a checkout of Agrippa at the project's pinned tag.
+  `bin/agrippa-lint` wrapper runs it and passes every argument through.
+  Outside Claude Code, for example in a terminal or CI, you run it with
+  `node` from a checkout of Agrippa at the project's pinned tag.
 - A plan's matrix row is `agrippa-lint -PlanPath plans/YYYY-MM-DD-name`. That
   command names no version-specific path, so check 13 has nothing to fail on.
   The plugin cache path changes with every version, and
@@ -44,20 +45,21 @@ they need it to recognize and search for an old install.
   all say this row runs through the Bash tool.
 - The repository root used to be the folder above the linter's own location.
   It is now `-RepoRoot`, or else the git top-level folder of the current
-  directory. The default is resolved in the script body, because Windows
-  PowerShell 5.1 leaves `$PSScriptRoot` empty in parameter defaults. Outside a
-  git repository and without `-RepoRoot`, the linter fails with one `[Files]`
-  error rather than guess.
-- The wrapper converts the linter's path with `cygpath -w` when it exists,
-  because Windows PowerShell needs a Windows path and Git Bash passes POSIX
-  ones. Git records the wrapper as executable (`git add --chmod=+x`), and
-  `.gitattributes` keeps it LF, which its `#!/bin/sh` line needs.
-  `validate-kit.ps1` checks all three.
-- Project checks go in an optional `tools/validate_plan_workspace.local.ps1`,
-  which the linter now loads from `<RepoRoot>/tools/` rather than from its own
-  folder, and dot-sources. It defines `Test-LocalValidationRow` (run once
-  per validation-matrix row) and `Test-LocalValidationMatrix` (run once per
-  matrix). The template carries nuro-battler's Godot checks as the example.
+  directory, from `git rev-parse --show-toplevel`. Outside a git repository
+  and without `-RepoRoot`, the linter fails with one `[Files]` error rather
+  than guess.
+- The wrapper is an extensionless Node script with a `#!/usr/bin/env node`
+  line. Git Bash runs it through that line and hands `node.exe` a path it
+  accepts, so the `cygpath -w` step the earlier `sh` wrapper needed for
+  Windows PowerShell is gone. Git records the wrapper as executable
+  (`git add --chmod=+x`), and `.gitattributes` keeps it LF, which the shebang
+  line needs. `validate-kit.ps1` checks all three.
+- Project checks go in an optional `tools/validate_plan_workspace.local.mjs`,
+  which the linter loads from `<RepoRoot>/tools/` rather than from its own
+  folder, with a dynamic `import()`. It may export `checkValidationRow` (run
+  once per validation-matrix row), `checkValidationMatrix` (run once per
+  matrix), and `commandPathExtensions`. The template carries nuro-battler's
+  Godot checks as the example.
 - `-SkipLocalChecks` exists for the smoke test, whose generic fixture cannot
   satisfy project rules.
 - With nuro-battler's local file installed, the kit linter reproduced the old
@@ -357,10 +359,73 @@ spawn logger after Phase 4".
 - **The event is a positional argument.** `inject_core_rules.mjs SessionStart`
   replaces `-HookEvent SessionStart`, because Node has no built-in parameter
   binding and one value does not need a flag.
-- **Still PowerShell.** The linter, `bin/agrippa-lint`, the smoke test, and
-  `validate-kit.ps1` are unchanged. Porting the linter also changes the
+- **The linter followed the same day.** Porting it changed the
   `tools/validate_plan_workspace.local.ps1` contract that installed projects
-  rely on, so it is a separate, breaking change.
+  rely on, so it shipped as its own breaking release, 0.2.0; see "Linter runs
+  on Node" below. The smoke test and `validate-kit.ps1` stay PowerShell: they
+  are Agrippa's development tools, not part of the plugin.
+
+## Linter runs on Node (2026-10-24, release 0.2.0)
+
+`scripts/validate_plan_workspace.ps1` became
+`scripts/validate_plan_workspace.mjs`, and `bin/agrippa-lint` became a Node
+script. The plugin now needs Node and nothing else. The reason is the one the
+hooks section gives: `node` has one name on every OS, and the `sh` wrapper
+only existed to find `powershell` or `pwsh` and convert a path for it.
+
+- **Same command, same output.** `agrippa-lint -PlanPath plans/<name>` is
+  unchanged, so no plan's matrix row and no `Bash(agrippa-lint:*)` permission
+  changes. The linter still accepts `-PlanPath`, `-RepoRoot`, and
+  `-SkipLocalChecks` (and `--plan-path` forms), prints one error per stderr
+  line, warnings prefixed `WARNING:`, and the same PASS or FAIL summary line
+  on stdout with the same exit codes. Every message keeps its text and its
+  `[Check N]` label, so the smoke test's expectations did not change.
+- **Parity proof.** Before the `.ps1` was deleted, a scratch harness ran both
+  linters on the two `history/plans/` workspaces, the ten newest nuro-battler
+  plans with `-SkipLocalChecks`, three of them again with nuro-battler's local
+  file ported to `.mjs`, and the smoke fixture in a valid and a broken copy.
+  Every run gave the same error set, check count, and exit code, including
+  the recorded baselines: `2026-10-01-inspector-fidelity` 18 errors / 711
+  checks with local checks and 647 checks without, and
+  `2026-10-01-inspector-redesign` 19 / 877.
+- **Where a transliteration goes wrong.** PowerShell's `-match`, `-eq`, `-in`,
+  and hashtable keys ignore case, while `[regex]::Matches`, `.Contains()`, and
+  `Select-Object -Unique` do not; the port gives the `i` flag to every former
+  `-match`, lowercases every former `-eq` string comparison, and keeps the
+  former `[regex]::Matches` patterns case-sensitive. `Get-Content` line counts
+  (checks 21, 24, 25) do not count a trailing newline as a line, so the port
+  drops a final empty element after splitting. Check 24 compares local
+  calendar dates, not timestamps. `Compare-Object` on unique lists is set
+  equality.
+- **One deliberate change.** Windows PowerShell 5.1 read a file without a
+  byte-order mark in the system code page; Node reads UTF-8. A check 4 or
+  check 25 comparison that involves non-ASCII text can now differ from the
+  old result, and the new result is the right one. No plan in the parity set
+  was affected.
+- **The local-checks contract.** `tools/validate_plan_workspace.local.mjs`
+  is an ES module with optional named exports `checkValidationRow({ row,
+  command, sandbox, check, repoRoot, planRoot })`, `checkValidationMatrix({
+  rows, check, repoRoot, planRoot })`, and `commandPathExtensions`. The
+  linter passes `check` in rather than exposing a global, so the file depends
+  on nothing but its arguments. A project that still has only the `.ps1` gets
+  a `[Local]` error and a failing run, never a silent skip, because the point
+  of the file is that its rules always run. `UPGRADING.md` "From G4 v0.1.2"
+  holds the construct-by-construct port.
+- **The wrapper is CommonJS.** It has no extension, and Node loads an
+  extensionless file as CommonJS below 22.7, so it uses `require` and a
+  dynamic `import()` of the linter and calls its exported `main`. Git Bash
+  honours its `#!/usr/bin/env node` line when the plugin's `bin/` folder is on
+  PATH in POSIX form, which is how Claude Code adds it; a `C:/...` entry on
+  bash's PATH is not searched, which is a bash fact, not a wrapper fault.
+- **The self-check reads the linter's source.** `validate-kit.ps1` still
+  pulls the required packet labels and the stage field names out of the
+  linter rather than keeping a second list, now from the
+  `requiredPacketLabels` constant and the `getField(stage, '...')` calls.
+- **Direct run outside Claude Code.** `node
+  plugins/agrippa/scripts/validate_plan_workspace.mjs -PlanPath <plan>
+  -RepoRoot <repository>`. The script detects whether it is the entry point
+  and only then runs `main`, so the wrapper can import it without side
+  effects.
 
 ## Linter rules that are easy to trip over
 

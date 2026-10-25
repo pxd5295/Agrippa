@@ -59,15 +59,15 @@ The methodology has three layers, and the kit installs all of them.
 | `agents/*.md` | Not installed; the plugin's agents `agrippa:repo-scout`, `agrippa:plan-reviewer`, `agrippa:design-reviewer`, and `agrippa:validator`. A project keeps no copy in `.claude/agents/` |
 | `skills/*/SKILL.md` | Not installed; the plugin's skills `agrippa:design-first`, `agrippa:systematic-debugging`, `agrippa:verify-before-done`, and `agrippa:receiving-review`, plus `plan` and `handoff` below. A project keeps no copy in `.claude/skills/` |
 | `templates/hooks/README.md` | Not installed; how to opt in to the plugin's spawn logger, the edit-lint hook a project writes for itself, and the permission allowlist |
-| `templates/validate-plan-workspace.local.ps1` | `tools/validate_plan_workspace.local.ps1`, only when the project has command invariants to enforce |
+| `templates/validate-plan-workspace.local.mjs` | `tools/validate_plan_workspace.local.mjs`, only when the project has command invariants to enforce |
 | `templates/MIGRATION.md` | `docs/planning/MIGRATION.md`, upgrades only |
 | `UPGRADING.md` | Not installed; the generation markers and rule mapping for upgrades |
 | `ADOPTION-CHECKLIST.md` | Not installed; every item is completed or reported |
 | `.claude-plugin/plugin.json` | Not installed; the plugin manifest |
 | `scripts/core-rules.md` | Not installed; the core rules the plugin adds to every session, kept under 10,000 characters |
 | `scripts/inject_core_rules.mjs` | Not installed; a Node script that prints `scripts/core-rules.md` as hook context |
-| `scripts/validate_plan_workspace.ps1` | Not installed; the shared plan-workspace linter, run from the plugin |
-| `bin/agrippa-lint` | Not installed; the plugin puts it on the Bash tool's PATH, and it runs `scripts/validate_plan_workspace.ps1` under `powershell` or `pwsh` |
+| `scripts/validate_plan_workspace.mjs` | Not installed; the shared plan-workspace linter, a Node script run from the plugin |
+| `bin/agrippa-lint` | Not installed; the plugin puts it on the Bash tool's PATH. It is a Node script that runs `scripts/validate_plan_workspace.mjs` and passes every argument through |
 | `scripts/log_subagent_spawns.mjs` | Not installed; the spawn logger, a Node script that does nothing unless the project sets `AGRIPPA_SPAWN_LOG=1` |
 | `hooks/hooks.json` | Not installed; runs `scripts/inject_core_rules.mjs` on `SessionStart` and `SubagentStart`, and `scripts/log_subagent_spawns.mjs` on `PreToolUse` for the Agent tool and on `SubagentStart`, all with `node` |
 | `skills/plan/SKILL.md` | Not installed; the `/agrippa:plan` skill, the planning entry point |
@@ -152,32 +152,42 @@ marker an older kit used around agent sections; none may survive an upgrade.
 regular expression `\[PROJECT:|Install note|optional live-app block` in every
 file outside the kit folder must find nothing.
 
-The shared linter, `scripts/validate_plan_workspace.ps1`, runs from the
+The shared linter, `scripts/validate_plan_workspace.mjs`, runs from the
 plugin and is never copied into or edited in a project. Inside Claude Code a
 plan runs it as `agrippa-lint -PlanPath plans/YYYY-MM-DD-name` through the
 Bash tool, because the plugin's `bin/` folder is on the Bash tool's PATH
 only. Without `-RepoRoot`, the linter uses the git top-level folder of the
-current directory. Outside Claude Code, run it from a checkout of Agrippa at
-the project's pinned tag with `-RepoRoot`. A project's own command invariants
-(one required binary, an invocation shape per test kind, a prerequisite that
-must come first) go in `tools/validate_plan_workspace.local.ps1` from
-`templates/validate-plan-workspace.local.ps1`, which the linter loads from the
-repository root when present. A plugin upgrade replaces the shared linter and
-keeps the local file. The smoke test runs with `-SkipLocalChecks`, because its
-generic fixture cannot satisfy project rules; prove local checks by linting
-one real plan workspace. The fixture's consumer census also expects line 1 of
-the project's `AGENTS.md` to read `# Agent Workflow`.
+current directory. Outside Claude Code, run it with
+`node <Agrippa>/plugins/agrippa/scripts/validate_plan_workspace.mjs` from a
+checkout of Agrippa at the project's pinned tag, with `-RepoRoot`. A
+project's own command invariants (one required binary, an invocation shape
+per test kind, a prerequisite that must come first) go in
+`tools/validate_plan_workspace.local.mjs` from
+`templates/validate-plan-workspace.local.mjs`, an ES module the linter
+imports from the repository root when present. It may export
+`checkValidationRow` (called once per validation-matrix row),
+`checkValidationMatrix` (called once with every row), and
+`commandPathExtensions` (the extensions check 13 verifies); each is optional.
+A plugin upgrade replaces the shared linter and keeps the local file. A
+`tools/validate_plan_workspace.local.ps1` from a plugin before 0.2.0 is no
+longer loaded; the linter fails with a `[Local]` error until the file is
+ported, as `UPGRADING.md` describes. The smoke test runs with
+`-SkipLocalChecks`, because its generic fixture cannot satisfy project rules;
+prove local checks by linting one real plan workspace. The fixture's consumer
+census also expects line 1 of the project's `AGENTS.md` to read
+`# Agent Workflow`.
 
 ## Requirements and fallbacks
 
-- Node.js for the hooks. They are ES modules that use only Node's built-in
-  modules, so the plugin needs no `npm install`. Without Node, the core rules
-  do not load.
-- PowerShell for the linter and the smoke test: Windows PowerShell 5.1 or
-  PowerShell 7 (`pwsh`) on macOS and Linux. All PowerShell scripts are
-  5.1-clean.
-- A POSIX shell for `bin/agrippa-lint`, which runs through the Bash tool. On
-  Windows that is Git Bash, from Git for Windows.
+- Node.js, for the hooks and the linter. They are ES modules that use only
+  Node's built-in modules, so the plugin needs no `npm install` and no other
+  runtime. Without Node, the core rules do not load and `agrippa-lint` cannot
+  run. `bin/agrippa-lint` runs through Claude Code's Bash tool, which on
+  Windows is Git Bash; that is Claude Code's own requirement, not one the
+  plugin adds.
+- PowerShell only for Agrippa's development checks, `dev/validate-kit.ps1`
+  and `dev/fixtures/run-smoke-test.ps1`: Windows PowerShell 5.1 or PowerShell
+  7 (`pwsh`). A project that uses the plugin does not need it.
 - `AskUserQuestion` for the planning interview. Without it, ask the same
   focused questions in chat and record the answers the same way.
 - The `engineering:architecture` and `engineering:system-design` skills (the
@@ -275,8 +285,10 @@ marketplace and enable `agrippa@agrippa`.
 what the plugin provides: the agents in `.claude/agents/`, the plugin's skills
 in `.claude/skills/`, `.claude/commands/handoff.md`,
 `tools/validate_plan_workspace.ps1`, the old PowerShell spawn logger, its
-`hook_payload.ps1` helper unless a project script still uses it, or a
-`settings.json` hook or permission that runs them. It must also keep no full
+`hook_payload.ps1` helper unless a project script still uses it, a
+`settings.json` hook or permission that runs them, or a
+`tools/validate_plan_workspace.local.ps1` not yet ported to
+`tools/validate_plan_workspace.local.mjs`. It must also keep no full
 copy of the rules that now ship in the skills: a `plans/README.md` or
 `docs/decisions/README.md` with the old methodology sections instead of the
 short pointer, the old `docs/planning/CLAUDE.md`, or the generic rule

@@ -136,8 +136,8 @@ named as not done, with the reason.
 - [ ] The shared linter runs from the plugin, and the repository has no copy
       of it at `tools/validate_plan_workspace.ps1`, nor of the spawn logger's
       scripts. This repository's command invariants and
-      any narrower `$CommandPathExtensions` live in
-      `tools/validate_plan_workspace.local.ps1`, proved by linting one real
+      any narrower `commandPathExtensions` list live in
+      `tools/validate_plan_workspace.local.mjs`, proved by linting one real
       workspace, or the file is deliberately not installed.
 - [ ] Optional edit-lint hook: written to the rules in
       `templates/hooks/README.md` and proved with one deliberate lint error,

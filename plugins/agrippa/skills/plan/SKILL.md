@@ -58,7 +58,7 @@ review.
 The linter parses the section shapes and the `A#`, `V#`, and `C#` id
 conventions of these templates. A change to a template changes every future
 plan, never an existing one, and must be mirrored in the plugin's
-`scripts/validate_plan_workspace.ps1`. Dated plan workspaces keep the shape
+`scripts/validate_plan_workspace.mjs`. Dated plan workspaces keep the shape
 they were written in.
 
 A repository keeps no copy of these guides or templates, for example under

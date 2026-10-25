@@ -28,7 +28,11 @@ ship in the plugin; apply "From G4 v0.1.0" below. A repository installed at
 v0.1.0 or v0.1.1 also has generic rule text inside its project documents;
 apply "From G4 v0.1.1" below. From v0.1.2 the plugin's hooks run on Node.js
 instead of Windows PowerShell, so every machine that uses the plugin needs
-`node` on PATH; a project file does not change for this.
+`node` on PATH; a project file does not change for this. From v0.2.0 the
+linter runs on Node.js too and loads `tools/validate_plan_workspace.local.mjs`
+instead of the PowerShell local file; a repository that has
+`tools/validate_plan_workspace.local.ps1` applies "From G4 v0.1.2" below.
+PowerShell is no longer required anywhere.
 
 ## Rule mapping
 
@@ -80,7 +84,7 @@ Then apply every G2 row below, because G1 also lacks all of them.
 | No debugging or done-evidence procedure | Replace | The plugin skills `agrippa:systematic-debugging` and `agrippa:verify-before-done` |
 | No session handoff | Replace | The plugin skill `/agrippa:handoff` |
 | No design-reference planning | Replace | "Plans that start from a design reference" in `agent-workflow.md`; `Design reference` sections in the `SPEC.md` template |
-| Linter with hardcoded source extensions, or with project toolchain checks edited into it | Replace | `agrippa-lint`, the plugin's linter, unedited; the project's own checks move to `tools/validate_plan_workspace.local.ps1` |
+| Linter with hardcoded source extensions, or with project toolchain checks edited into it | Replace | `agrippa-lint`, the plugin's linter, unedited; the project's own checks move to `tools/validate_plan_workspace.local.mjs` |
 
 Then apply every G3 row below to each copied-in file the repository has.
 
@@ -111,7 +115,7 @@ user confirms it.
 | `docs/agent-workflow.md` | Delete | `agent-workflow.md` in the `plan` skill. Move any project facts added to it into `project-contracts.md` or `validation-commands.md` |
 | `docs/planning/ROUTING.md` | Delete | `ROUTING.md` in the `plan` skill. Move any project facts added to it into `project-contracts.md` |
 | `docs/planning/templates/*.md` | Delete | The templates in the `plan` skill, which the plugin's linter parses |
-| `tools/validate_plan_workspace.ps1` | Delete | `agrippa-lint`, the plugin's linter. Keep `tools/validate_plan_workspace.local.ps1`; the plugin's linter loads it |
+| `tools/validate_plan_workspace.ps1` | Delete | `agrippa-lint`, the plugin's linter. Port `tools/validate_plan_workspace.local.ps1` to `tools/validate_plan_workspace.local.mjs` as "From G4 v0.1.2" says; the plugin's linter loads the `.mjs` |
 | `tools/log_subagent_spawns.ps1` | Delete | The plugin's spawn logger, which runs when the `env` block of `.claude/settings.json` sets `AGRIPPA_SPAWN_LOG=1` |
 | `tools/hook_payload.ps1` | Delete | Nothing; the plugin's spawn logger does not need it. Keep the project's copy only when another project script, such as the edit-lint hook, dot-sources it |
 | `.claude/settings.json` hook entries that run `tools/log_subagent_spawns.ps1` | Delete | The plugin's `hooks/hooks.json`. Add `AGRIPPA_SPAWN_LOG=1` to the `env` block instead, or every spawn is logged twice |
@@ -125,7 +129,8 @@ user confirms it.
 | Live-app bridge rules in `AGENTS.md` or `validation-commands.md` (confirm the session, no-persist run, both logs, stale frames, headless matrix rows, bridge down means not done) | Delete | The plugin agents and `agrippa:verify-before-done` ("Live-app bridge"). `AGENTS.md` keeps one or two sentences naming the server and pointing to `live-app.md`, in the shape of `templates/AGENTS.md`; the Godot facts go to `live-app.md` |
 
 Then apply the "From G4 v0.1.0" rows below, because a G3 install has full
-copies of those files too, and the "From G4 v0.1.1" rows after them.
+copies of those files too, the "From G4 v0.1.1" rows after them, and "From
+G4 v0.1.2" when the repository has a PowerShell local-checks file.
 
 ### From G4 v0.1.0
 
@@ -164,6 +169,33 @@ copy it recognizes by its template wording.
 | `project-contracts.md`: the opening paragraphs of "Ownership areas", "Architecture owners", and "Shared and public interfaces", the "cite them by path" sentence under "Contract documents", the paragraph after the "High-risk change classes" table, and the last two bullets of "Environment boundaries" | Delete | Keep every heading, table, and project bullet. Any project fact inside one of those paragraphs moves into the table or a bullet under the same heading |
 | `live-app.md`: the opening paragraph about which tools the agents may call, the "Which agents run the app" paragraph, the second and third sentences of the "Authoring tools" introduction, the citation sentences under "Serialized files", and the whole "Rules" section | Delete | Keep the headings, the tables, and the project's facts |
 | `AGENTS.md`: the opening paragraph's list of core-rule sections, and the live-app paragraph's bridge rules | Replace | The shape of `templates/AGENTS.md`: one sentence saying the plugin adds the core rules, and one or two sentences naming the server and pointing to `live-app.md`. The generated-files paragraph stays |
+
+### From G4 v0.1.2
+
+Up to v0.1.2 the linter was a PowerShell script, and a project's command
+invariants were PowerShell functions in
+`tools/validate_plan_workspace.local.ps1`, which the linter dot-sourced. From
+v0.2.0 the linter is a Node script and imports
+`tools/validate_plan_workspace.local.mjs` instead. A project with no local file
+changes nothing. A project with the `.ps1` ports it; until then `agrippa-lint`
+fails with a `[Local]` error naming the file, so the project's rules never
+silently stop running. The command, its arguments, the `Bash(agrippa-lint:*)`
+permission, and every plan's matrix row stay the same. One result can change:
+Node reads plan and source files as UTF-8, where Windows PowerShell 5.1 read a
+file without a byte-order mark in the system code page, so a check 4 or check
+25 comparison that involves non-ASCII text is now right where it was wrong.
+
+| v0.1.2 file or construct | Disposition | What happens |
+|---|---|---|
+| `tools/validate_plan_workspace.local.ps1` | Replace | `tools/validate_plan_workspace.local.mjs`, written from `templates/validate-plan-workspace.local.mjs` with the same rules, and proved by linting one recent plan workspace. Delete the `.ps1` after the user confirms |
+| `function Test-LocalValidationRow { param([object]$Row, [string]$Command, [string]$Sandbox) ... }` | Replace | `export function checkValidationRow({ row, command, sandbox, check }) { ... }` |
+| `function Test-LocalValidationMatrix { param([object[]]$Rows) ... }` | Replace | `export function checkValidationMatrix({ rows, check }) { ... }` |
+| `Add-Check ($condition) "message"` | Replace | `check(condition, 'message')` |
+| `$Row.'Validation ID'`, `$_.'Exact command or check'` | Replace | `row['Validation ID']`, `row['Exact command or check']`, keyed by the header text as the plan template writes it |
+| `$Command -match '(?i)pattern'`, `-notmatch` | Replace | `/pattern/i.test(command)`, `!/pattern/i.test(command)`. PowerShell `-match` ignores case even without `(?i)`, so give every ported pattern the `i` flag, and compare `-eq` strings with `.toLowerCase()` |
+| `$Command -match [regex]::Escape('literal')` | Replace | `command.toLowerCase().includes('literal'.toLowerCase())` |
+| `$CommandPathExtensions = @('gd', 'tscn')` | Replace | `export const commandPathExtensions = ['gd', 'tscn'];` |
+| A script-scope variable both functions share | Retain | A module-level `const` |
 
 ### Always
 
