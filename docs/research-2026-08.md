@@ -39,8 +39,9 @@ history alone does not explain them.
   A `packet gap` entry kind in `EVIDENCE.md` was suggested to collect it.
 - The only independent study of instruction files (ETH, arXiv 2602.11988)
   found more than 20% extra cost and no gain in success rate. This is an
-  unresolved bet, so keep the always-loaded pair (`AGENTS.md` and `CLAUDE.md`)
-  lean. On 2026-10-24 the on-demand area map (`/agrippa:survey`) became the
+  unresolved bet, so keep the always-loaded pair (the root `CLAUDE.md` and
+  the `.agrippa/project-rules.md` it imports, the root `AGENTS.md` before
+  release 0.5.0) lean. On 2026-10-24 the on-demand area map (`/agrippa:survey`) became the
   experiment for this: each plan that consults it records an `area map` entry
   in `EVIDENCE.md`, and those entries are the data for whether a larger
   knowledge layer is worth building (`docs/design-notes.md`).

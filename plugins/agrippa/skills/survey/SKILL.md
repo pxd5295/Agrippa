@@ -16,7 +16,7 @@ only as far as the evidence in plan workspaces shows it helps.
 
 Surveying authorizes one document write. Never change application code, never
 write a per-directory `CLAUDE.md` (the install decides those, one per area
-with real rules), never edit `AGENTS.md`, and preserve every unrelated user
+with real rules), never edit `.agrippa/project-rules.md`, and preserve every unrelated user
 change, including uncommitted ones.
 
 ## 1. Check the ground
@@ -83,7 +83,8 @@ placeholder convention: delete a slot with its row or bullet when the subject
 does not exist, write `None` only where the slot offers it, and keep every
 section heading. Delete every `Install note` comment once its section is
 filled. Cells hold paths, `file:symbol` entries, and short phrases; a rule
-belongs in the folder's `CLAUDE.md` or in `AGENTS.md`, never here.
+belongs in the folder's `CLAUDE.md` or in `.agrippa/project-rules.md`, never
+here.
 
 The planner and `repo-scout` read the whole file before a census, so keep it
 under about 8,000 characters by folding subfolders into their parents, never by

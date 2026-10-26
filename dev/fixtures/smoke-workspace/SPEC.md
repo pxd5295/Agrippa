@@ -2,7 +2,8 @@
 
 > Kit smoke-test fixture. `run-smoke-test.mjs` copies this workspace into
 > `plans/`, replaces its date and path tokens, lints it, and deletes it. It
-> references only the root `AGENTS.md`, the one file every project keeps.
+> references only `.agrippa/project-rules.md`, the one file every project
+> keeps.
 
 ## Objective
 
@@ -10,10 +11,10 @@ Prove that the agrippa plugin's workspace linter works in this repository.
 
 ## Background
 
-The project keeps its own `AGENTS.md`. The agrippa plugin provides the plan
-templates and the linter, which runs as `agrippa-lint`. This single-stage
-workspace exercises every linter check against `AGENTS.md` without changing
-it.
+The project keeps its own `.agrippa/project-rules.md`. The agrippa plugin
+provides the plan templates and the linter, which runs as `agrippa-lint`. This
+single-stage workspace exercises every linter check against
+`.agrippa/project-rules.md` without changing it.
 
 ## Planning interview decisions
 
@@ -61,7 +62,7 @@ None: no design reference.
 
 ## Acceptance criteria
 
-- [ ] **A1:** The root AGENTS.md names the project contracts document.
+- [ ] **A1:** The project rules file names the project contracts document.
 - [ ] **A2:** The plan-workspace linter reports PASS for this workspace.
 
 ## Handoff gate

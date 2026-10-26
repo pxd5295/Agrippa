@@ -23,7 +23,7 @@ The kit files this skill uses are in the plugin:
 
 | File | Use |
 |---|---|
-| `${CLAUDE_PLUGIN_ROOT}/UPGRADING.md` | The generation markers and the rule mapping for each generation, including "From G3", "From G4 v0.1.0", "From G4 v0.1.1", "From G4 v0.1.2", "From G4 v0.2.0", and "From G4 v0.3.0" |
+| `${CLAUDE_PLUGIN_ROOT}/UPGRADING.md` | The generation markers and the rule mapping for each generation, including "From G3", "From G4 v0.1.0", "From G4 v0.1.1", "From G4 v0.1.2", "From G4 v0.2.0", "From G4 v0.3.0", "From G4 v0.3.1", and "From G4 v0.4.1" |
 | `${CLAUDE_PLUGIN_ROOT}/README.md` | The layout table, "Enabling the plugin in a project", the placeholder convention, and the install-marker scan |
 | `${CLAUDE_PLUGIN_ROOT}/ADOPTION-CHECKLIST.md` | Every item is done or reported at the end |
 | `${CLAUDE_PLUGIN_ROOT}/templates/` | The project-side documents, including `MIGRATION.md` |
@@ -203,10 +203,20 @@ Wait for every answer before step 4.
   folder unless given `--hidden`. Move an earlier upgrade's record from
   `docs/planning/` to `.agrippa/MIGRATION.md` the same way, as "From G4
   v0.3.0" says, and append this upgrade's sections to it.
+- Move the kit's "Project contracts" and "Project rules" sections out of the
+  root `AGENTS.md` into `.agrippa/project-rules.md`, written from
+  `templates/PROJECT-RULES.md` with the project's filled-in text, and change
+  the root `CLAUDE.md` import from `@AGENTS.md` to `@.agrippa/project-rules.md`,
+  as "From G4 v0.4.1" in `UPGRADING.md` says. Whatever the project wrote in
+  `AGENTS.md` itself stays there, and the kit never edits that file again;
+  when the kit's sections were all it held, delete it once the user confirms.
+  Replace "root `AGENTS.md`" in `.agrippa/CLAUDE.md` and the per-directory
+  `CLAUDE.md` files with the new path.
 - Replace a full copy of `plans/README.md` or `.agrippa/decisions/README.md` with
   the short pointer from its template, and delete `docs/planning/CLAUDE.md`
   once the user confirms, as "From G4 v0.1.0" in `UPGRADING.md` says. Move
-  any project rule added to those files into `AGENTS.md` first.
+  any project rule added to those files into `.agrippa/project-rules.md`
+  first.
 - Move project-specific checks that an old linter enforced into
   `tools/validate_plan_workspace.local.pl`, written from
   `templates/validate-plan-workspace.local.pl`. A

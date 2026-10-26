@@ -25,9 +25,9 @@ The methodology has three layers, and the kit installs all of them.
   trigger and size gate, launch, roster, skills, planner read ladder, and
   validation reach), which a `SessionStart` hook adds to every session and a
   `SubagentStart` hook adds to every subagent. The project keeps only its own
-  facts in a root `AGENTS.md` (project contracts and project rules) and a root
-  `CLAUDE.md` that imports it and lists project skills. Per-directory
-  `CLAUDE.md` files hold rules that matter only in one folder.
+  facts in `.agrippa/project-rules.md` (project contracts and project rules)
+  and a root `CLAUDE.md` that imports it and lists project skills.
+  Per-directory `CLAUDE.md` files hold rules that matter only in one folder.
 - **On-demand guides.** The plugin's `plan` skill holds `agent-workflow.md`
   (lifecycle, interview, design states, design-reference planning, risk,
   workspace shapes, evidence), `ROUTING.md` (tier table, fork or fresh,
@@ -54,7 +54,7 @@ The methodology has three layers, and the kit installs all of them.
 
 | Source | Destination in the target repository |
 |---|---|
-| `templates/AGENTS.md` | `AGENTS.md`, adapted and merged |
+| `templates/PROJECT-RULES.md` | `.agrippa/project-rules.md`, the always-loaded project contracts and project rules, which the root `CLAUDE.md` imports |
 | `templates/CLAUDE.md` | `CLAUDE.md` (root), adapted and merged |
 | `templates/directory-CLAUDE.md` | `<ownership area>/CLAUDE.md`, one per area that has real rules |
 | `templates/PROJECT-CONTRACTS.md` | `.agrippa/project-contracts.md` |
@@ -98,7 +98,11 @@ claims part of a repository's own `docs/`. Claude Code loads
 `.agrippa/CLAUDE.md` when a session reads a file in the folder, as it does for
 any folder. Command-line `rg` skips hidden folders unless given `--hidden`;
 `git grep` and Claude Code's own search tools do not. Plan workspaces stay in
-`plans/`, where people work in them every day.
+`plans/`, where people work in them every day. The always-loaded project rules
+live in the folder too, as `project-rules.md`, and the root `CLAUDE.md`
+imports them, so the kit writes nothing to `AGENTS.md`: that file belongs to
+the repository and to the other coding agents that read it, and a repository
+often has one already.
 
 The development tools live outside this folder, in the `dev/` folder of the
 Agrippa repository, and are never installed. `dev/fixtures/run-smoke-test.mjs`
@@ -197,8 +201,8 @@ loaded; the linter fails with a `[Local]` error until the file is ported, as
 `UPGRADING.md` describes. The smoke test runs with
 `-SkipLocalChecks`, because its generic fixture cannot satisfy project rules;
 prove local checks by linting one real plan workspace. The fixture's consumer
-census also expects line 1 of the project's `AGENTS.md` to read
-`# Agent Workflow`.
+census also expects line 1 of the project's `.agrippa/project-rules.md` to
+read `# Project rules`.
 
 ## Requirements and fallbacks
 
@@ -359,10 +363,12 @@ project that has no copy of the linter.
 `node dev/validate-kit.mjs -InstalledRepo <path>` also checks a project that uses
 the plugin. Its committed `.claude/settings.json` must declare the `agrippa`
 marketplace and enable `agrippa@agrippa`.
-`.agrippa/project-contracts.md` and
-`.agrippa/validation-commands.md` must exist, and the folders under `docs/`
-where plugins up to 0.2.0 kept the project documents and the decision records
-must be gone, moved as "From G4 v0.2.0" in `UPGRADING.md` says. It must keep
+`.agrippa/project-rules.md`, `.agrippa/project-contracts.md`, and
+`.agrippa/validation-commands.md` must exist, the root `CLAUDE.md` must import
+the first of them, a root `AGENTS.md` must no longer open with the kit's
+sentence, moved as "From G4 v0.4.1" in `UPGRADING.md` says, and the folders
+under `docs/` where plugins up to 0.2.0 kept the project documents and the
+decision records must be gone, moved as "From G4 v0.2.0" says. It must keep
 no copy of
 what the plugin provides: the agents in `.claude/agents/`, the plugin's skills
 in `.claude/skills/`, `.claude/commands/handoff.md`,
@@ -376,8 +382,9 @@ copy of the rules that now ship in the skills: a `plans/README.md` or
 `.agrippa/decisions/README.md` with the old methodology sections instead of the
 short pointer, the old `docs/planning/CLAUDE.md`, or the generic rule
 sentences that templates up to v0.1.1 wrote into `project-contracts.md`,
-`validation-commands.md`, `live-app.md`, and `AGENTS.md`, which it recognizes
-by their template wording. A `.agrippa/area-map.md`, when present,
+`validation-commands.md`, `live-app.md`, and the project rules (then the root
+`AGENTS.md`, now `.agrippa/project-rules.md`), which it recognizes by their
+template wording. A `.agrippa/area-map.md`, when present,
 must carry its `Built at` commit and no install marker. Each failure names the
 file or setting and what to do. Without `-InstalledRepo`, it checks only the
 kit.

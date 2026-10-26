@@ -21,10 +21,10 @@
 // `tools/validate_plan_workspace.local.pl`; prove those by linting one real
 // plan workspace instead.
 //
-// The fixture references only the project's root `AGENTS.md`, whose first line
-// is the consumer-census snippet `# Agent Workflow`. If an adapted `AGENTS.md`
-// has a different first line, the pass run fails on check 25; fix the fixture's
-// census snippet, not the linter.
+// The fixture references only the project's `.agrippa/project-rules.md`, whose
+// first line is the consumer-census snippet `# Project rules`. If an adapted
+// `project-rules.md` has a different first line, the pass run fails on check
+// 25; fix the fixture's census snippet, not the linter.
 //
 // Usage: node dev/fixtures/run-smoke-test.mjs -RepoRoot <repository>
 // (`--repo-root <repository>` and a bare path work too).

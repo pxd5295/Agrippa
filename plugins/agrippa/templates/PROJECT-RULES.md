@@ -1,9 +1,10 @@
-# Agent Workflow
+# Project rules
 
 This repository uses the Agrippa planning methodology, whose core rules the
 `agrippa` plugin adds to every session. This file holds only this repository's
-project contracts and project rules. Where a rule here is stricter than a core
-rule, this one wins.
+project contracts and project rules, and the root `CLAUDE.md` imports it so
+that every session and subagent starts with it. Where a rule here is stricter
+than a core rule, this one wins.
 
 ## Project contracts
 

@@ -1102,3 +1102,60 @@ changed, so the linter output and the local-checks contract are as they were.
   the templates and forbid an ID range in `PLAN.md`.
 - **What is not proven.** Whether first-time planners now reach `PASS` in
   fewer rounds can only be counted on new plans in installed repositories.
+
+## The project rules leave the root `AGENTS.md` (2026-10-25, release 0.5.0)
+
+Up to 0.4.1 an install wrote the project contracts and project rules to the
+repository's root `AGENTS.md` and had the root `CLAUDE.md` import it with
+`@AGENTS.md`. The content now installs as `.agrippa/project-rules.md`, from
+`templates/PROJECT-RULES.md`, and the root `CLAUDE.md` imports that file. The
+kit writes nothing to `AGENTS.md` any more.
+
+- **Why.** `AGENTS.md` is the file most other coding agents read from a
+  repository root, so a repository often has one before Agrippa arrives, and
+  the install was merging the kit's sections into a file the kit did not own.
+  This is the same reason the project documents left `docs/` in 0.3.0: a name
+  that is someone else's convention is not the kit's to fill. The merge rule
+  handled the collision, but every upgrade then had to find the kit's sections
+  inside a file the project also edits.
+- **What was decided against, twice.** Earlier on 2026-10-25 a rename of the
+  file to `AGRIPPA.md` was asked for and withdrawn, because the file holds the
+  project's own decisions, not the plugin's rules, and a plugin-named file
+  would send someone wanting to change a methodology rule to the wrong place.
+  The new name keeps that distinction: `project-rules.md` says whose rules
+  they are, and the folder says which kit installed the file. The other
+  option, keeping the root file and mirroring it into `.agrippa/`, was
+  rejected because every drift problem in these notes came from a second copy
+  of a fact.
+- **What is given up.** Codex, Cursor, Copilot, and Gemini CLI read a root
+  `AGENTS.md` on their own and will no longer see the ownership areas and
+  shared interfaces unless the repository copies them there itself. The
+  methodology targets Claude Code (`docs/goals.md`, "Non-goals"), so this is
+  accepted, and `UPGRADING.md` says the copy is the repository's to make.
+- **Loading.** The rules reach a session only through the `@` import, where
+  `AGENTS.md` at least reached other tools without one. A probe in the
+  sandbox on 2026-10-25 confirmed that Claude Code follows an import whose
+  path starts with a hidden folder: a fresh session whose root `CLAUDE.md`
+  carried a temporary `@.agrippa/probe-rules.md` line had that file's
+  codeword in context before its first tool call. So the installed
+  repository check now fails when the root `CLAUDE.md` lacks the
+  `@.agrippa/project-rules.md` line, not only when the file is missing. The
+  folder's `CLAUDE.md` explains that `project-rules.md` is the one
+  always-loaded file in `.agrippa/` and the rest load on demand, because the
+  folder otherwise looks like a set of on-demand documents.
+- **Detection.** The kit's opening sentence, "whose core rules the `agrippa`
+  plugin adds to every session", marks a root `AGENTS.md` that has not been
+  moved. A project's own `AGENTS.md` never contains it, so the check cannot
+  misfire on a file the project wrote. The generic-rules check for v0.1.1
+  wording looks in both the old and the new file.
+- **The fixture.** The smoke fixture used to cite `AGENTS.md:1` with the
+  census snippet `# Agent Workflow`, a heading left from the copied-in kit. It
+  now cites `.agrippa/project-rules.md:1` with `# Project rules`, and the
+  self-check pins the template's first line so the two cannot drift. The
+  simulated project is a git repository holding only that file, which also
+  proves the linter's path checks accept a hidden folder.
+- **Release.** This changes an installed repository's layout, so the release
+  that ships it is 0.5.0, with "From G4 v0.4.1" in `UPGRADING.md` as the move.
+  The upgrade keeps whatever the project itself wrote in `AGENTS.md` and
+  deletes the file only when the kit's sections were all it held, after the
+  user confirms.

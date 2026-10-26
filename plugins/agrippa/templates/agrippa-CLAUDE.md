@@ -1,8 +1,8 @@
 # .agrippa/ — canonical architecture contracts
 
-This is the **stable-contracts** ownership area (root `AGENTS.md`). These
-Markdown files are the repository's own source-of-truth memory. Code and plans
-cite them; they must stay accurate.
+This is the **stable-contracts** ownership area, named in `project-rules.md`
+here. These Markdown files are the repository's own source-of-truth memory.
+Code and plans cite them; they must stay accurate.
 
 The folder is hidden so that it never collides with the repository's own
 `docs/`. Claude Code's Read, Glob, and Grep tools and `git grep` see it, but
@@ -13,6 +13,12 @@ unrecorded.
 
 ## The files
 
+- `project-rules.md` — the one always-loaded file here: the ownership areas,
+  the shared interfaces, the generated-files rule, and the project rules that
+  are stricter than the Agrippa core rules. The root `CLAUDE.md` imports it,
+  so every session and subagent starts with it; everything else in this
+  folder is read on demand. The kit writes it here so that it never touches a
+  root `AGENTS.md` the repository may keep for other tools.
 - `project-contracts.md` — ownership areas, architecture owners, shared
   interfaces, high-risk change classes, and environment boundaries.
 - `validation-commands.md` — the **authoritative** command catalog; every plan

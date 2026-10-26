@@ -15,7 +15,7 @@ Wave 2: [Integration]
 
 | Validation ID | Acceptance IDs | Exact command or check | Style | Sandbox | Determinism | When |
 |---|---|---|---|---|---|---|
-| V1 | A1 | `git grep -n "project-contracts.md" -- AGENTS.md` | lint | sandboxed | deterministic | M1 |
+| V1 | A1 | `git grep -n "project-contracts.md" -- .agrippa/project-rules.md` | lint | sandboxed | deterministic | M1 |
 | V2 | A1-A2 | `agrippa-lint -PlanPath __PLAN__` | lint | sandboxed | deterministic | Integration |
 
 V2 runs through the Bash tool, because the agrippa plugin puts `agrippa-lint`
@@ -25,7 +25,7 @@ on the Bash tool's PATH only.
 
 | Path | Wave | Owning stage | Worktree / merge owner |
 |---|---|---|---|
-| `AGENTS.md` | 1 | M1 | None |
+| `.agrippa/project-rules.md` | 1 | M1 | None |
 
 ## Milestones
 
@@ -40,8 +40,8 @@ on the Bash tool's PATH only.
 | Assigned tier | sonnet |
 | Routing inputs | no long-context; 1 file; 1 ownership area; no shared interface; no risk flag; deterministic |
 | Risk flags | None |
-| Owned files/modules | `AGENTS.md` |
-| Line-anchored edit sites | `AGENTS.md:1` |
+| Owned files/modules | `.agrippa/project-rules.md` |
+| Line-anchored edit sites | `.agrippa/project-rules.md:1` |
 | Allowed interfaces | None |
 | Forbidden scope | Every other path |
 | Pre-authorized ownership expansion | None |

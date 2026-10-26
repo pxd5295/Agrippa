@@ -44,7 +44,9 @@
 // -InstalledRepo (or --installed-repo) names the root of a project that uses
 // the plugin. Its committed .claude/settings.json must declare the agrippa
 // marketplace and enable agrippa@agrippa, it must have
-// .agrippa/project-contracts.md and validation-commands.md, with no
+// .agrippa/project-rules.md (imported by the root CLAUDE.md, with the kit's
+// sections no longer in a root AGENTS.md), project-contracts.md, and
+// validation-commands.md, with no
 // docs/agent_memory/ or docs/decisions/ folder left from a plugin before
 // 0.3.0 and no docs/planning/MIGRATION.md from an upgrade before 0.3.1, and
 // it must keep no local copy of what the plugin provides: the
@@ -257,7 +259,7 @@ const required = [
     'skills/plan/reference/workspace-files.md',
     'skills/plan/reference/low-usage.md',
     'skills/design-first/reference/decision-records.md',
-    'templates/AGENTS.md',
+    'templates/PROJECT-RULES.md',
     'templates/CLAUDE.md',
     'templates/directory-CLAUDE.md',
     'templates/PROJECT-CONTRACTS.md',
@@ -359,7 +361,7 @@ const adoption = readKitFile('ADOPTION-CHECKLIST.md');
 const upgrading = readKitFile('UPGRADING.md');
 const coreRules = readKitFile('scripts/core-rules.md');
 const hooksJson = readKitFile('hooks/hooks.json');
-const agents = readKitFile('templates/AGENTS.md');
+const projectRules = readKitFile('templates/PROJECT-RULES.md');
 const claude = readKitFile('templates/CLAUDE.md');
 const workflow = readKitFile('skills/plan/reference/agent-workflow.md');
 const routing = readKitFile('skills/plan/reference/ROUTING.md');
@@ -440,8 +442,8 @@ testClauses('README', readme, [
     'AskUserQuestion',
 ]);
 // The methodology's always-loaded rules live in the core rules the plugin
-// injects. The AGENTS and CLAUDE templates hold project content only, so they
-// must not carry a second copy of a core section.
+// injects. The PROJECT-RULES and CLAUDE templates hold project content only,
+// so they must not carry a second copy of a core section.
 testClauses('Core rules', coreRules, [
     '## Request boundaries',
     '## Engineering standards',
@@ -474,18 +476,31 @@ for (const name of [...agentNames, ...skillNames]) {
     addCheck(coreRules.includes(`\`agrippa:${name}\``), `Core rules do not name \`agrippa:${name}\` in the roster.`);
 }
 addCheck(coreRules.length < 10000, `Core rules exceed the 10,000-character hook context cap: ${coreRules.length}.`);
-testClauses('AGENTS template', agents, [
+// The project rules are the one always-loaded project file. They live in
+// .agrippa/ since 0.5.0, so the kit never writes to a root AGENTS.md, which
+// other coding agents read and a repository often already has; the root
+// CLAUDE.md imports them instead. The smoke fixture cites line 1 of the
+// installed file, so the template's first line is fixed here.
+testClauses('PROJECT-RULES template', projectRules, [
+    '(?m)^# Project rules\\s*$',
     '## Project contracts',
     '\\.agrippa/project-contracts\\.md',
     '\\.agrippa/validation-commands\\.md',
 ]);
+addCheck(projectRules.startsWith('# Project rules'), 'PROJECT-RULES template must start with the line `# Project rules`, which the smoke fixture\'s consumer census cites.');
 testClauses('CLAUDE template', claude, [
-    '@AGENTS\\.md',
+    '(?m)^@\\.agrippa/project-rules\\.md\\s*$',
 ]);
+addCheck(!/@AGENTS\.md/.test(claude), 'CLAUDE template still imports @AGENTS.md; the project rules are .agrippa/project-rules.md since 0.5.0.');
+addCheck(!existsSync(join(kitRoot, 'templates', 'AGENTS.md')), 'templates/AGENTS.md must not exist: the project rules template is templates/PROJECT-RULES.md, installed as .agrippa/project-rules.md.');
 for (const section of ['## Engineering standards', '### Definition of done', '## Planning trigger', '## Planner read ladder', '## Validation reach']) {
-    addCheck(!agents.includes(section), `AGENTS template repeats the core rules section '${section}'.`);
+    addCheck(!projectRules.includes(section), `PROJECT-RULES template repeats the core rules section '${section}'.`);
     addCheck(!claude.includes(section), `CLAUDE template repeats the core rules section '${section}'.`);
 }
+// The core rules and the planner read ladder name the file the project's
+// rules are in, so a session knows where to look without the README.
+addCheck((coreRules.match(/\.agrippa\/project-rules\.md/g) || []).length >= 2, 'Core rules must name .agrippa/project-rules.md in the opening paragraph and in the planner read ladder.');
+addCheck(!/`AGENTS\.md`/.test(coreRules), 'Core rules still send the reader to AGENTS.md; the project rules are .agrippa/project-rules.md since 0.5.0.');
 
 // The hooks are POSIX sh scripts, run by the sh that Git Bash provides on
 // Windows and /bin/sh elsewhere, so the same hook command works on every OS.
@@ -712,6 +727,10 @@ testClauses('UPGRADING', upgrading, [
     '### From G4 v0\\.3\\.1',
     '`tools/validate_plan_workspace\\.local\\.mjs` \\| Replace \\| `tools/validate_plan_workspace\\.local\\.pl`',
     'scalar\\(\\$command =~',
+    '### From G4 v0\\.4\\.1',
+    '"Project contracts", and "Project rules" \\| Move \\| `\\.agrippa/project-rules\\.md`',
+    '`@AGENTS\\.md` in the root `CLAUDE\\.md`, and the sentence under it \\| Replace \\| `@\\.agrippa/project-rules\\.md`',
+    'What the project itself wrote in `AGENTS\\.md` \\| Retain',
     'docs/planning/CLAUDE\\.md` \\| Delete',
     'tools/log_subagent_spawns\\.ps1` \\| Delete',
     'tools/hook_payload\\.ps1` \\| Delete',
@@ -752,6 +771,11 @@ testClauses('Skill install', installSkill, [...setupClauses,
     'Never copy the plugin',
     '/agrippa:upgrade',
     '`agrippa:survey`',
+    // The project rules go to .agrippa/, imported by the root CLAUDE.md, and
+    // an AGENTS.md the repository already has is left alone.
+    'Write `\\.agrippa/project-rules\\.md` from `templates/PROJECT-RULES\\.md`',
+    '`@\\.agrippa/project-rules\\.md`',
+    'Never edit an existing\\s+`AGENTS\\.md`',
     // The engineering plugin is offered like the spawn logger: one question,
     // recommended no, and the enabledPlugins entry only on a yes, because a
     // committed entry reaches every collaborator.
@@ -833,6 +857,9 @@ testClauses('Skill upgrade', upgradeSkill, [...setupClauses,
     'From G4 v0\\.2\\.0',
     'From G4 v0\\.3\\.0',
     'From G4 v0\\.3\\.1',
+    'From G4 v0\\.4\\.1',
+    'out of the\\s+root `AGENTS\\.md` into `\\.agrippa/project-rules\\.md`',
+    'templates/PROJECT-RULES\\.md',
     'templates/agrippa-CLAUDE\\.md',
     '\\$\\{CLAUDE_PLUGIN_ROOT\\}/UPGRADING\\.md',
     '\\.agrippa/MIGRATION\\.md',
@@ -1084,6 +1111,14 @@ const substringTerms = [
 // in .agrippa/ now, so a shipped file that still names the old paths would
 // send a reader to a path an installed repository no longer has.
 const oldLayoutTerms = ['docs/agent_memory', 'docs/decisions', 'docs/planning/MIGRATION'];
+// Up to 0.4.1 the project rules were the root AGENTS.md, imported by the root
+// CLAUDE.md. They are .agrippa/project-rules.md now, so a shipped file that
+// still names the old template or import would have an install write to a
+// file the kit no longer owns. The bare name AGENTS.md stays allowed, because
+// the install and upgrade skills read a repository's own one, and the upgrade
+// skill may name the old import, because it replaces it.
+const oldRulesTerms = ['templates/AGENTS.md', '@AGENTS.md'];
+const oldRulesExempt = ['plugins/agrippa/skills/upgrade/SKILL.md'];
 // Up to 0.3.1 the plugin's scripts were Node, and the install and upgrade
 // skills checked for it. A shipped file that still names them would send a
 // reader to a script or a requirement the plugin no longer has. The
@@ -1132,6 +1167,11 @@ for (const file of checkedFiles) {
     }
     for (const term of oldLayoutTerms) {
         addCheck(!new RegExp(escapeRegex(term), 'i').test(text), `Old project-document path '${term}' found in ${relative}; the documents live in .agrippa/ since 0.3.0.`);
+    }
+    if (!containsName(oldRulesExempt, relative)) {
+        for (const term of oldRulesTerms) {
+            addCheck(!new RegExp(escapeRegex(term), 'i').test(text), `Old project-rules reference '${term}' found in ${relative}; the project rules are .agrippa/project-rules.md since 0.5.0, and the kit never writes to AGENTS.md.`);
+        }
     }
     // The linter names the old local-checks file so it can report a leftover
     // one, as UPGRADING.md names old markers to recognize them.
@@ -1183,13 +1223,15 @@ for (const script of checkedFiles.filter((path) => extname(path).toLowerCase() =
 
 // --- End-to-end: simulated project plus the smoke test ---------------------
 
-// The simulated project is a git repository with only its own AGENTS.md. It
-// has no tools/ folder, so the smoke test proves the plugin's linter needs no
-// copy in the project and finds the repository root through git.
+// The simulated project is a git repository with only its own
+// .agrippa/project-rules.md, the one file every installed project keeps and
+// the one the smoke fixture cites. It has no tools/ folder, so the smoke test
+// proves the plugin's linter needs no copy in the project and finds the
+// repository root through git.
 const simRoot = join(tmpdir(), `kit-sim-${randomBytes(4).toString('hex')}`);
 try {
-    mkdirSync(simRoot);
-    copyFileSync(join(kitRoot, 'templates', 'AGENTS.md'), join(simRoot, 'AGENTS.md'));
+    mkdirSync(join(simRoot, '.agrippa'), { recursive: true });
+    copyFileSync(join(kitRoot, 'templates', 'PROJECT-RULES.md'), join(simRoot, '.agrippa', 'project-rules.md'));
     const gitInit = run('git', ['init', '-q', simRoot]);
     addCheck(gitInit.exitCode === 0, `git init failed for the simulated project:\n${gitInit.output}`);
     addCheck(!existsSync(join(simRoot, 'tools')), 'The simulated project must have no tools/ folder.');
@@ -1315,6 +1357,22 @@ if (installedRepo) {
             addProjectCheck(isFile(join(projectRoot, document)), `${document} is missing. Write it from plugins/agrippa/${template}, or move it from the docs/ folder a plugin before 0.3.0 used; the plugin's agents and skills read the project's facts from it.`);
         }
 
+        // Up to 0.4.1 the project rules were the root AGENTS.md, imported by
+        // the root CLAUDE.md. From 0.5.0 they are .agrippa/project-rules.md,
+        // and the kit leaves AGENTS.md to the repository. The rules reach a
+        // session only through the import, so a missing import is as bad as
+        // a missing file; a root AGENTS.md that still opens with the kit's
+        // sentence has not been moved.
+        const kitRulesOpening = /whose core rules the\s+`agrippa` plugin adds to every session/i;
+        const rulesPath = join(projectRoot, '.agrippa', 'project-rules.md');
+        addProjectCheck(isFile(rulesPath), '.agrippa/project-rules.md is missing. Write it from plugins/agrippa/templates/PROJECT-RULES.md, or move the kit\'s "Project contracts" and "Project rules" sections out of the root AGENTS.md, as "From G4 v0.4.1" in UPGRADING.md says; it is the always-loaded project file.');
+        const rootClaudePath = join(projectRoot, 'CLAUDE.md');
+        addProjectCheck(isFile(rootClaudePath) && /^\s*@\.agrippa\/project-rules\.md\s*$/m.test(readText(rootClaudePath)), 'The root CLAUDE.md does not import .agrippa/project-rules.md. Add the line `@.agrippa/project-rules.md`, as plugins/agrippa/templates/CLAUDE.md has it, or the project rules never load; a repository upgraded from 0.4.1 replaces its `@AGENTS.md` line, as "From G4 v0.4.1" in UPGRADING.md says.');
+        const rootAgentsPath = join(projectRoot, 'AGENTS.md');
+        if (isFile(rootAgentsPath)) {
+            addProjectCheck(!kitRulesOpening.test(readText(rootAgentsPath)), 'AGENTS.md still opens with the kit\'s sentence about the agrippa plugin adding the core rules, so the project rules have not moved. Move the kit\'s sections into .agrippa/project-rules.md and leave the file to the project, as "From G4 v0.4.1" in UPGRADING.md says.');
+        }
+
         const moveFacts = 'Move any project facts it holds into .agrippa/project-contracts.md, validation-commands.md, or live-app.md, then delete it';
         for (const name of agentNames) {
             const path = `.claude/agents/${name}.md`;
@@ -1350,7 +1408,7 @@ if (installedRepo) {
         for (const [document, pattern, template, skill] of fullCopies) {
             const copyPath = join(projectRoot, document);
             if (isFile(copyPath)) {
-                addProjectCheck(!matches(readText(copyPath), pattern), `${document} is a full copy of rules that now ship in the plugin skill agrippa:${skill}. Move any project rule in it into "Project rules" in AGENTS.md, then replace it with the short pointer plugins/agrippa/${template}, as "From G4 v0.1.0" in UPGRADING.md says.`);
+                addProjectCheck(!matches(readText(copyPath), pattern), `${document} is a full copy of rules that now ship in the plugin skill agrippa:${skill}. Move any project rule in it into "Project rules" in .agrippa/project-rules.md, then replace it with the short pointer plugins/agrippa/${template}, as "From G4 v0.1.0" in UPGRADING.md says.`);
             }
         }
         // Up to v0.1.1 the project-document templates carried generic rule
@@ -1375,6 +1433,10 @@ if (installedRepo) {
             ['.agrippa/live-app.md', 'Which agents run the app:', 'the "Which agents run the app" paragraph, which the plugin agents already state'],
             ['.agrippa/live-app.md', 'Cite a bridge-sourced fact as', 'the citation sentences under "Serialized files", which the plugin agent agrippa:repo-scout already states'],
             ['.agrippa/live-app.md', '(?m)^## Rules\\s*$', 'the "Rules" section, now in the plugin agents and the plugin skill agrippa:verify-before-done ("Live-app bridge")'],
+            // The project rules were the root AGENTS.md up to 0.4.1, so a
+            // repository that has not moved them yet is checked there too.
+            ['.agrippa/project-rules.md', 'adds its core rules to every session: request boundaries, Engineering', 'the opening paragraph\'s list of core-rule sections, which goes stale; the template now has one sentence'],
+            ['.agrippa/project-rules.md', 'never report a visual or GPU-dependent check as done when the bridge was down', 'the live-app paragraph\'s bridge rules, now in the plugin agents and agrippa:verify-before-done; keep one or two sentences pointing to live-app.md'],
             ['AGENTS.md', 'adds its core rules to every session: request boundaries, Engineering', 'the opening paragraph\'s list of core-rule sections, which goes stale; the template now has one sentence'],
             ['AGENTS.md', 'never report a visual or GPU-dependent check as done when the bridge was down', 'the live-app paragraph\'s bridge rules, now in the plugin agents and agrippa:verify-before-done; keep one or two sentences pointing to live-app.md'],
         ];
