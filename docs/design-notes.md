@@ -1103,7 +1103,7 @@ changed, so the linter output and the local-checks contract are as they were.
 - **What is not proven.** Whether first-time planners now reach `PASS` in
   fewer rounds can only be counted on new plans in installed repositories.
 
-## The project rules leave the root `AGENTS.md` (2026-10-25, release 0.5.0)
+## The project rules leave the root `AGENTS.md` (2026-10-25, release 0.4.2)
 
 Up to 0.4.1 an install wrote the project contracts and project rules to the
 repository's root `AGENTS.md` and had the root `CLAUDE.md` import it with
@@ -1154,8 +1154,11 @@ kit writes nothing to `AGENTS.md` any more.
   self-check pins the template's first line so the two cannot drift. The
   simulated project is a git repository holding only that file, which also
   proves the linter's path checks accept a hidden folder.
-- **Release.** This changes an installed repository's layout, so the release
-  that ships it is 0.5.0, with "From G4 v0.4.1" in `UPGRADING.md` as the move.
+- **Release.** This changes an installed repository's layout. The plan was
+  to ship it as 0.5.0; on 2026-10-27 the owner chose to release it as 0.4.2
+  instead, with "From G4 v0.4.1" in `UPGRADING.md` as the move. A repository
+  pinned to a tag moves only when its `ref` changes, so the upgrade step
+  still runs when it does.
   The upgrade keeps whatever the project itself wrote in `AGENTS.md` and
   deletes the file only when the kit's sections were all it held, after the
   user confirms.

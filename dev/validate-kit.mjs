@@ -477,7 +477,7 @@ for (const name of [...agentNames, ...skillNames]) {
 }
 addCheck(coreRules.length < 10000, `Core rules exceed the 10,000-character hook context cap: ${coreRules.length}.`);
 // The project rules are the one always-loaded project file. They live in
-// .agrippa/ since 0.5.0, so the kit never writes to a root AGENTS.md, which
+// .agrippa/ since 0.4.2, so the kit never writes to a root AGENTS.md, which
 // other coding agents read and a repository often already has; the root
 // CLAUDE.md imports them instead. The smoke fixture cites line 1 of the
 // installed file, so the template's first line is fixed here.
@@ -491,7 +491,7 @@ addCheck(projectRules.startsWith('# Project rules'), 'PROJECT-RULES template mus
 testClauses('CLAUDE template', claude, [
     '(?m)^@\\.agrippa/project-rules\\.md\\s*$',
 ]);
-addCheck(!/@AGENTS\.md/.test(claude), 'CLAUDE template still imports @AGENTS.md; the project rules are .agrippa/project-rules.md since 0.5.0.');
+addCheck(!/@AGENTS\.md/.test(claude), 'CLAUDE template still imports @AGENTS.md; the project rules are .agrippa/project-rules.md since 0.4.2.');
 addCheck(!existsSync(join(kitRoot, 'templates', 'AGENTS.md')), 'templates/AGENTS.md must not exist: the project rules template is templates/PROJECT-RULES.md, installed as .agrippa/project-rules.md.');
 for (const section of ['## Engineering standards', '### Definition of done', '## Planning trigger', '## Planner read ladder', '## Validation reach']) {
     addCheck(!projectRules.includes(section), `PROJECT-RULES template repeats the core rules section '${section}'.`);
@@ -500,7 +500,7 @@ for (const section of ['## Engineering standards', '### Definition of done', '##
 // The core rules and the planner read ladder name the file the project's
 // rules are in, so a session knows where to look without the README.
 addCheck((coreRules.match(/\.agrippa\/project-rules\.md/g) || []).length >= 2, 'Core rules must name .agrippa/project-rules.md in the opening paragraph and in the planner read ladder.');
-addCheck(!/`AGENTS\.md`/.test(coreRules), 'Core rules still send the reader to AGENTS.md; the project rules are .agrippa/project-rules.md since 0.5.0.');
+addCheck(!/`AGENTS\.md`/.test(coreRules), 'Core rules still send the reader to AGENTS.md; the project rules are .agrippa/project-rules.md since 0.4.2.');
 
 // The hooks are POSIX sh scripts, run by the sh that Git Bash provides on
 // Windows and /bin/sh elsewhere, so the same hook command works on every OS.
@@ -1170,7 +1170,7 @@ for (const file of checkedFiles) {
     }
     if (!containsName(oldRulesExempt, relative)) {
         for (const term of oldRulesTerms) {
-            addCheck(!new RegExp(escapeRegex(term), 'i').test(text), `Old project-rules reference '${term}' found in ${relative}; the project rules are .agrippa/project-rules.md since 0.5.0, and the kit never writes to AGENTS.md.`);
+            addCheck(!new RegExp(escapeRegex(term), 'i').test(text), `Old project-rules reference '${term}' found in ${relative}; the project rules are .agrippa/project-rules.md since 0.4.2, and the kit never writes to AGENTS.md.`);
         }
     }
     // The linter names the old local-checks file so it can report a leftover
@@ -1358,7 +1358,7 @@ if (installedRepo) {
         }
 
         // Up to 0.4.1 the project rules were the root AGENTS.md, imported by
-        // the root CLAUDE.md. From 0.5.0 they are .agrippa/project-rules.md,
+        // the root CLAUDE.md. From 0.4.2 they are .agrippa/project-rules.md,
         // and the kit leaves AGENTS.md to the repository. The rules reach a
         // session only through the import, so a missing import is as bad as
         // a missing file; a root AGENTS.md that still opens with the kit's

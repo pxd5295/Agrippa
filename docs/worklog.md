@@ -5,6 +5,22 @@ entry says what was done, what was proven and how, what comes next, and any
 decision made on a default because only the owner could settle it. The
 format and the reason for the log are in `docs/goals.md`.
 
+## 2026-10-27: release 0.4.2
+
+- **Done.** The plugin is released as 0.4.2: the version in `plugin.json`
+  and the marketplace entry, the pinned `ref` in both READMEs, and tag
+  `v0.4.2` on the release commit. The move of the project rules into
+  `.agrippa/project-rules.md`, planned as 0.5.0, ships in this release, so
+  `UPGRADING.md`, the self-check messages, and the design and research notes
+  now say v0.4.2 where they said v0.5.0.
+- **Proven.** `node dev/validate-kit.mjs`; the result is in the release
+  commit message.
+- **Next.** `/agrippa:upgrade` in a fresh session in the sandbox as the live
+  proof of "From G4 v0.4.1", then the same in nuro-battler.
+- **Decided by the owner.** The release and its number: the owner asked for
+  0.4.2 rather than 0.5.0 although the release changes an installed
+  repository's layout.
+
 ## 2026-10-25: project rules move out of the root AGENTS.md
 
 - **Done.** The always-loaded project contracts and project rules now install

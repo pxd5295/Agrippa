@@ -42,7 +42,7 @@ and the decision records lived under `docs/`; a repository that has
 to v0.3.0 an upgrade wrote its record to `docs/planning/MIGRATION.md`; a
 repository that has that file applies "From G4 v0.3.0" below. Up to v0.4.1
 the project contracts and project rules were the root `AGENTS.md`, which the
-root `CLAUDE.md` imported; from v0.5.0 they are `.agrippa/project-rules.md`,
+root `CLAUDE.md` imported; from v0.4.2 they are `.agrippa/project-rules.md`,
 and the kit writes nothing to `AGENTS.md`. A repository whose `AGENTS.md`
 opens with the kit's sentence about the `agrippa` plugin adding the core rules
 applies "From G4 v0.4.1" below.
@@ -145,7 +145,7 @@ Then apply the "From G4 v0.1.0" rows below, because a G3 install has full
 copies of those files too, the "From G4 v0.1.1" rows after them, "From G4
 v0.1.2" when the repository has a PowerShell local-checks file, "From G4
 v0.2.0", because every install before v0.3.0 wrote its documents under
-`docs/`, and "From G4 v0.4.1", because every install before v0.5.0 wrote the
+`docs/`, and "From G4 v0.4.1", because every install before v0.4.2 wrote the
 project rules to the root `AGENTS.md`.
 
 ### From G4 v0.1.0
@@ -283,7 +283,7 @@ Up to v0.4.1 an install wrote the project contracts and project rules to the
 root `AGENTS.md` and had the root `CLAUDE.md` import it with `@AGENTS.md`.
 `AGENTS.md` is a file that other coding agents read from a repository root
 and that a repository often already has, so the kit was editing a file it did
-not own. From v0.5.0 the same content is `.agrippa/project-rules.md`, beside
+not own. From v0.4.2 the same content is `.agrippa/project-rules.md`, beside
 the other project documents, and the root `CLAUDE.md` imports that file
 instead. The sections, their slots, the core rules, the agents, the skills,
 and `agrippa-lint` do not change. The kit never writes to `AGENTS.md` again;
