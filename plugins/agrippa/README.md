@@ -113,8 +113,16 @@ they run the plugin's scripts with. All run with `node`.
 ## Enabling the plugin in a project
 
 A project enables the plugin in its committed `.claude/settings.json`. The
-marketplace's `ref` pins the release the project gets. Set it to a release
-tag, such as the current `v0.4.2`.
+simplest way is to open Claude Code at the repository root, in the terminal,
+the desktop app, or an IDE extension, and send:
+
+```text
+Install the Claude Code plugin from https://github.com/pxd5295/Agrippa in this repository
+```
+
+Claude then writes the two keys below. The marketplace's `ref` pins the
+release the project gets. Set it to a release tag, such as the current
+`v0.4.2`.
 
 ```json
 {
@@ -128,7 +136,9 @@ tag, such as the current `v0.4.2`.
 ```
 
 Merge these two keys into the existing file; never replace its other entries.
-The settings take effect once the user trusts the folder.
+The settings take effect in the next session, once the user trusts the
+folder. The plugin's skills, agents, and hooks never load into a session that
+is already running.
 
 ## Placeholder convention
 
@@ -247,17 +257,9 @@ read `# Project rules`.
 
 ## Installing in a project with no planning methodology
 
-Enable the plugin for the session first. Either add the two entries from
-"Enabling the plugin in a project" to the target repository's
-`.claude/settings.json`, or install it once for yourself:
-
-```text
-/plugin marketplace add pxd5295/Agrippa
-/plugin install agrippa@agrippa
-```
-
-Then start Claude Code at the target repository's root on a strong model at
-high effort and run:
+Enable the plugin first, as "Enabling the plugin in a project" shows. Then
+start a new Claude Code session at the target repository's root on a strong
+model at high effort and run:
 
 ```text
 /agrippa:install

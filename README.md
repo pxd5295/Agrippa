@@ -7,12 +7,18 @@ workspace, and shows evidence before calling anything done.
 
 ## Setup
 
-### 1. Enable the plugin
+### 1. Install the plugin
 
-Pick one of two ways.
+Open Claude Code at the repository root and send this message. It works in
+the terminal, the desktop app, and the IDE extensions.
 
-**For everyone who works in the repository.** Merge these two keys into the
-repository's committed `.claude/settings.json`. The `ref` pins the release.
+```text
+Install the Claude Code plugin from https://github.com/pxd5295/Agrippa in this repository
+```
+
+Claude merges the two keys below into the repository's committed
+`.claude/settings.json` and keeps the file's other entries. You can also add
+them by hand. The `ref` pins the release.
 
 ```json
 {
@@ -25,16 +31,12 @@ repository's committed `.claude/settings.json`. The `ref` pins the release.
 }
 ```
 
-**For yourself only.** Run these two commands inside Claude Code:
-
-```text
-/plugin marketplace add pxd5295/Agrippa
-/plugin install agrippa@agrippa
-```
+Then start a new session. The plugin's skills, agents, and hooks load only
+when a session starts, and only in a folder you have trusted.
 
 ### 2. Set up the repository
 
-Start Claude Code at the repository root, on a strong model, and run:
+In the new session, on a strong model, run:
 
 ```text
 /agrippa:install
