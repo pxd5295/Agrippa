@@ -5,6 +5,55 @@ entry says what was done, what was proven and how, what comes next, and any
 decision made on a default because only the owner could settle it. The
 format and the reason for the log are in `docs/goals.md`.
 
+## 2026-10-29: packet gaps are recorded (backlog item 4)
+
+Unattended session on branch `goal/packet-gap-evidence`, not pushed.
+
+- **Done.** `EVIDENCE.md` offers a `packet gap` entry kind, and
+  `workspace-files.md` says what an entry records: the stage, the packet
+  field that was missing or wrong, how the gap surfaced, and how it was
+  closed. The `PACKETS.md` template's `Return only:` line asks the worker for
+  packet gaps, and `ROUTING.md` lists them in worker results and has the lead
+  record each one. `dev/validate-kit.mjs` gained seven clauses that keep the
+  wording in place. The design notes have a dated entry, "Packet gaps are
+  recorded", and the research note's open question points at it.
+- **Proven.** `node dev/validate-kit.mjs`:
+  `PASS: 2280 kit checks, 61 required files, smoke test passed, 2 warning(s).`
+  (2273 on `main`). With the four plugin files stashed, the same run failed
+  with 7 errors, one for each new clause. A scratch harness linted a copy of
+  the smoke fixture in a throwaway repository, once as it is and once with
+  the new `Return only:` line and a `packet gap` entry; both passed 118
+  workspace-shape checks. No linter, hook, or core-rules file changed, so no
+  sandbox run was needed.
+- **Audit baseline (backlog item 5).** `node dev/validate-kit.mjs -InstalledRepo ../evolution-game/nuro-battler`
+  reports 0 findings from 81 checks on `main` and on this branch, and leaves
+  nuro-battler's working tree clean. nuro-battler has been upgraded to 0.4.2
+  since the 26-from-67 count of 2026-10-25, so 0 from 81 is the new baseline.
+- **Not proven.** How often packets are incomplete; that needs plans in an
+  installed repository that dispatch packets after this change.
+- **Next.** Backlog item 1 still needs a push to GitHub for its macOS leg.
+  Its Linux leg could be proven locally first under WSL, whose `/bin/sh` is
+  dash. Items 3 and 4 can be removed from the backlog once the owner agrees
+  they are proven, and item 5 once the owner accepts the baseline above.
+- **Decided on a default.**
+  - Items 1 and 2 were skipped again, for the reasons in the 2026-10-25
+    entry: item 1 needs a push and item 2 needs a person to answer the
+    interviews. Item 3's work is already on `main`.
+  - Gaps get an entry only when they happen; a clean stage records nothing,
+    and the denominator is the dispatched packets in `PACKETS.md`. The
+    alternative, an entry or line per stage, gives a surer denominator at a
+    token cost on every plan. The design notes say what to do if the counts
+    look too low.
+  - Only dispatched packets count, not the packet of a single-stage plan the
+    lead implements itself.
+  - The smoke fixture keeps the old `Return only:` wording, so it keeps
+    covering older plans.
+  - The `design-reviewer` pass was skipped under the size floor: 12 lines of
+    code in `dev/validate-kit.mjs`, with no class, conditional, constant, or
+    config key. The rest of the diff is documentation.
+  - No plan workspace was made, because the session held one backlog item.
+  - The backlog in `docs/goals.md` was not edited, because the owner edits it.
+
 ## 2026-10-27: release 0.4.2
 
 - **Done.** The plugin is released as 0.4.2: the version in `plugin.json`

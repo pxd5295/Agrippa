@@ -1162,3 +1162,41 @@ kit writes nothing to `AGENTS.md` any more.
   The upgrade keeps whatever the project itself wrote in `AGENTS.md` and
   deletes the file only when the kit's sections were all it held, after the
   user confirms.
+
+## Packet gaps are recorded (2026-10-29)
+
+The August research left one question about packets open: how often a
+dispatched packet turns out to be incomplete (`docs/research-2026-08.md`,
+"Still open"). `EVIDENCE.md` now has a `packet gap` entry kind for it, built
+the way the `area map` entry was: the template's kind list offers it, and
+`workspace-files.md`, which owns what `EVIDENCE.md` holds, says what an entry
+records.
+
+- **What counts as a gap.** Anything a dispatched stage needed that its
+  packet did not give or gave wrong: an unlisted consumer, an edit site, a
+  contract value, a covering test, acceptance detail, or a packet-linked
+  section the worker had to open. The entry names the stage, the packet
+  field, how the gap surfaced, and how it was closed. The packet field is
+  what makes the data useful, because it says which part of packet writing
+  to strengthen.
+- **Who reports it.** The worker is the one who meets the gap, so the
+  `PACKETS.md` template's `Return only:` line now asks for packet gaps, or
+  `None`, and `ROUTING.md` lists them in worker results. The lead writes the
+  entry, for reported gaps and for gaps an escalation, review, or failed
+  validation exposes, because workers do not write workspace files.
+- **Why no entry for a clean stage.** A stage with no entry had no gap, and
+  the share of incomplete packets is the entry count over the dispatched
+  packets in `PACKETS.md`. Asking for an entry per stage would give a sure
+  denominator, but it would add an entry to every stage of every plan to
+  record nothing, which works against the token-cost direction in
+  `docs/goals.md`. If the counts later look too low to trust, a per-wave
+  `Packet gaps:` line is the next step.
+- **Scope.** Only dispatched packets count. A single-stage plan's packet is
+  a record the lead implements from, not a handoff, so a gap there measures
+  nothing about packet completeness.
+- **What did not change.** The linter only checks that a packet has a
+  `Return only` label, so the longer line needs no linter change, and old
+  plans keep their wording. The self-check gained seven clauses that keep the
+  wording in the four plugin files. A scratch harness linted a copy of the
+  smoke fixture with the new `Return only:` line and a `packet gap` entry,
+  and it passed the same 118 checks as the unchanged fixture.

@@ -846,6 +846,18 @@ testClauses('AREA-MAP template', areaMap, [
 addCheck(/## Area map/.test(repoScout) && /\.agrippa\/area-map\.md/.test(repoScout) && /`Area map:` line/.test(repoScout), 'agents/repo-scout.md must read .agrippa/area-map.md first and end its fact pack with an `Area map:` line.');
 addCheck(/area map/.test(evidence), 'EVIDENCE template must offer the `area map` entry kind.');
 addCheck(/area map/.test(workspaceFiles), 'Plan skill workspace-files.md must name the `area map` evidence entry.');
+// Packet gaps are the data docs/research-2026-08.md asked for on how often
+// dispatched packets are incomplete: the worker reports them, the lead
+// records them, and the entry count over the packet count is the measure.
+addCheck(/packet gap/.test(evidence), 'EVIDENCE template must offer the `packet gap` entry kind.');
+testClauses('Plan skill workspace-files.md', workspaceFiles, [
+    '`packet gap` entry',
+    'how the gap surfaced',
+    'how it was closed',
+    'A stage with no entry had no gap',
+]);
+addCheck(/packet\s+gaps\./.test(routing) && /`packet gap` entry/.test(routing), 'ROUTING.md must list packet gaps in worker results and have the lead record each as a `packet gap` entry.');
+addCheck(/^Return only:[^`]*packet gaps/m.test(packets), 'PACKETS template\'s "Return only:" line must ask the worker for packet gaps.');
 testClauses('Skill upgrade', upgradeSkill, [...setupClauses,
     'SHA-256 manifest',
     'Get-FileHash -Algorithm SHA256',

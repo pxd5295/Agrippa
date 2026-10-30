@@ -55,6 +55,15 @@ there.
   `area map` entry when the plan consulted `.agrippa/area-map.md`
   (the rows used, the rows found stale, and whether they saved a read or
   misled).
+- It also holds one `packet gap` entry for each thing a dispatched stage
+  needed that its packet did not give or gave wrong: an unlisted consumer, an
+  edit site, a contract value, a covering test, acceptance detail, or a
+  packet-linked section the worker had to open. The entry names the stage,
+  the packet field, how the gap surfaced (worker result, escalation, review,
+  or failed validation), and how it was closed (packet completed, bounded
+  expansion, fork, or re-plan). A stage with no entry had no gap, so the
+  share of incomplete packets is the entry count over the dispatched packets
+  in `PACKETS.md`.
 
 ## Selective reads and soft budgets
 

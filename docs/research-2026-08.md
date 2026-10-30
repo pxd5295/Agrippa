@@ -36,7 +36,9 @@ history alone does not explain them.
 ## Still open
 
 - There is no data on how often full-shape packets turn out to be incomplete.
-  A `packet gap` entry kind in `EVIDENCE.md` was suggested to collect it.
+  A `packet gap` entry kind in `EVIDENCE.md` was suggested to collect it, and
+  on 2026-10-29 it was added (`docs/design-notes.md`, "Packet gaps are
+  recorded"). No plan has recorded one yet.
 - The only independent study of instruction files (ETH, arXiv 2602.11988)
   found more than 20% extra cost and no gain in success rate. This is an
   unresolved bet, so keep the always-loaded pair (the root `CLAUDE.md` and

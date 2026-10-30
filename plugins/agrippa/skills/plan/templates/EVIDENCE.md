@@ -8,7 +8,7 @@
 
 ### [YYYY-MM-DD] [Stage or event]
 
-- **Kind:** [command / manual check / routing outcome / escalation / budget exception / area map]
+- **Kind:** [command / manual check / routing outcome / escalation / budget exception / area map / packet gap]
 - **Acceptance IDs:** [A1, A2 or `None`]
 - **Validation IDs:** [V1 or `None`]
 - **Command/check:** `[exact command or manual procedure]`

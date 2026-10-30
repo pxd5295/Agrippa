@@ -90,7 +90,8 @@ Stop/escalate when:
 - [unexpected consumer, ownership conflict, interface ambiguity, or failed bounded repair]
 
 Return only: files changed; behavior implemented; validation results;
-unresolved dependencies/risks.
+unresolved dependencies/risks; packet gaps (what this packet lacked or got
+wrong, or None).
 ```
 
 Add one packet per implementation, validator, and review stage. A

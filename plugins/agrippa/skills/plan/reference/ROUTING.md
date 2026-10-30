@@ -123,7 +123,9 @@ worker escalates instead of substituting it.
 
 Workers do not read the complete workspace. They may open one packet-linked
 section for a concrete ambiguity. Results contain changed files, implemented
-behavior, validation outcomes, and unresolved dependencies or risks.
+behavior, validation outcomes, unresolved dependencies or risks, and packet
+gaps. The lead records each reported gap, and each one an escalation, review,
+or failed validation exposes, as a `packet gap` entry (`workspace-files.md`).
 
 ## Contract landing and ownership
 
