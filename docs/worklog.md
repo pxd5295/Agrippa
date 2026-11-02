@@ -5,6 +5,31 @@ entry says what was done, what was proven and how, what comes next, and any
 decision made on a default because only the owner could settle it. The
 format and the reason for the log are in `docs/goals.md`.
 
+## 2026-11-01: three planning levels decided
+
+- **Done.** The owner set a new top goal: plans sized to the work, with three
+  levels (no plan, a medium `BRIEF.md`, the full workspace) and a routing
+  rule that states the level and asks only on close calls. After a
+  discussion, two critiques, and an interview, every decision was recorded
+  with who made it and why in `plans/2026-11-01-plan-levels/SPEC.md`. The
+  goal and backlog items 1, 2, 10, and 11 were added to `docs/goals.md`, and
+  the older items were renumbered 3 to 9. No kit file changed.
+- **Proven.** `node dev/validate-kit.mjs`:
+  `PASS: 2273 kit checks, 61 required files, smoke test passed, 2 warning(s).`
+  The two warnings are the existing guide-length soft targets. The workspace
+  holds only `SPEC.md` and `STATUS.md` and is not linted yet.
+- **Next.** Write `PLAN.md`, `PACKETS.md`, and `EVIDENCE.md` for the plan and
+  lint it, then build backlog item 1.
+- **Decided on a default.** Five rows in the `SPEC.md` decisions table say
+  `default`: the user's words decide whether there is a plan but not its
+  level; the risk signals are the existing gate's; the contents of
+  `BRIEF.md`; the `UPGRADING.md` note; and what the linter checks for a
+  medium plan. Each can be overturned by editing its row.
+- **Decided by the owner, with trade-offs accepted.** Building before
+  measuring, so the template and the 300k estimate are unproven until
+  backlog item 2. Recording the level only in plan files, so nothing shows
+  whether a "no plan" call was right.
+
 ## 2026-10-27: release 0.4.2
 
 - **Done.** The plugin is released as 0.4.2: the version in `plugin.json`
