@@ -7,19 +7,18 @@
 ## Current state
 
 - Planner: Opus
-- Phase: Integration, validation done, waiting on the owner's commit approval
+- Phase: Complete, committed on `goal/plan-levels` as `a3bdbb2`; not merged
+  into `main`
 - Low-usage mode: off (the plugin is not installed in this repository)
 - Level: full workspace. The change spans the core rules, three skills, a
   template, the linter, and the self-check.
-- Active wave/stage: Integration
-- Progress: 3/4; remaining: Integration (V5 only)
-- Current owner/allocation: lead, assigned lead, actual lead, active lead
-- Next action: the owner accepts V5 or asks for more, then commit on this
-  branch. After the level step moved into `design-first`, the 2026-11-03
-  medium request stated a medium plan, wrote and linted `BRIEF.md`, and
-  implemented. The 2026-11-02 small request chose no plan correctly but
-  stated it only in visible thinking before the edit.
-- User action required: Yes. Approve the commit on this branch. V5 passed
+- Active wave/stage: none
+- Progress: 4/4
+- Current owner/allocation: none
+- Next action: merge `goal/plan-levels` into `main` when the owner asks,
+  then measure the levels on real medium work (backlog item 2 in
+  `docs/goals.md`).
+- User action required: No. The owner approved the commit. V5 passed
   for both requests on 2026-11-03: the small run after the core-rules
   sentence was reworded to "Start your reply with the level", the medium
   run after the level step moved into `design-first`. The owner chose to
@@ -39,7 +38,7 @@
 | M1 | Complete | lead | lead | A3, A6 | V1, V2, V3 | Pass |
 | M2 | Complete | lead | lead | A1, A2, A3, A4, A5 | V1 | Pass |
 | M3 | Complete | lead | lead | A7, A8 | V1 | Pass |
-| Integration | Awaiting commit | lead | lead | A1, A2, A3, A4, A5, A6, A7, A8, A9 | V1, V2, V3, V4, V5, V6 | V1, V2, V4, V5 pass; V3 and V6 match the old linter |
+| Integration | Complete | lead | lead | A1, A2, A3, A4, A5, A6, A7, A8, A9 | V1, V2, V3, V4, V5, V6 | V1, V2, V4, V5 pass; V3 and V6 match the old linter |
 
 ## Blockers and risks
 
@@ -52,4 +51,5 @@
 - Branch `goal/packet-gap-evidence` is not merged into `main` and also adds a
   top entry to `docs/worklog.md`, so merging both branches needs a small
   conflict resolution there.
-- Nothing is committed on `goal/plan-levels` beyond the planning commit.
+- The sandbox holds uncommitted edits and one plan folder from the live
+  test sessions, and two local branches from the first run.
