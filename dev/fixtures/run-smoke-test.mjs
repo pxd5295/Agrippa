@@ -1,15 +1,22 @@
 // Proves the agrippa plugin's plan-workspace linter accepts a valid workspace
-// in a project and rejects a broken one, then removes what it created.
+// and a valid medium plan in a project and rejects broken ones, then removes
+// what it created.
 //
-// Copies `smoke-workspace/` into `<RepoRoot>/plans/<today>-kit-smoke-test`
-// (adding -2, -3, ... on a name collision), replaces the `__TODAY__` and
-// `__PLAN__` tokens, and runs the plugin's
+// Copies `smoke-workspace/` into `<RepoRoot>/plans/<today>-kit-smoke-test` and
+// `smoke-brief/` into `<RepoRoot>/plans/<today>-kit-smoke-brief` (adding -2,
+// -3, ... on a name collision), replaces the `__TODAY__` and `__PLAN__`
+// tokens, and runs the plugin's
 // `plugins/agrippa/scripts/validate_plan_workspace.pl` from this Agrippa
-// checkout against it with the perl that `dev/tool-paths.mjs` finds, which
-// on Windows is the one Git for Windows bundles. The run must PASS. It then marks stage M1 `Open` and deletes the M1 packet's `Return only`
-// line, and the same linter must FAIL with both errors. The workspace is
-// deleted afterwards either way; a `plans/` folder the script had to create is
-// deleted too while it is still empty.
+// checkout against each with the perl that `dev/tool-paths.mjs` finds, which
+// on Windows is the one Git for Windows bundles. Both runs must PASS. It then
+// marks the workspace's stage M1 `Open` and deletes the M1 packet's
+// `Return only` line, and the same linter must FAIL with both errors. In the
+// medium plan it removes the `## State` heading, points the covering tests at
+// a missing file, and turns the manual row into a command, and the linter
+// must FAIL with all three errors; the command error says either that the
+// command is not in `.agrippa/validation-commands.md` or that the project has
+// no catalog. Both folders are deleted afterwards either way; a `plans/`
+// folder the script had to create is deleted too while it is still empty.
 //
 // The linter runs from the project root without -RepoRoot, the way the
 // `agrippa-lint` wrapper runs it, so it finds the root through git. RepoRoot
@@ -82,6 +89,7 @@ if (parsed.error) {
 // This script lives in dev/fixtures/ of the Agrippa repository.
 const scriptRoot = dirname(fileURLToPath(import.meta.url));
 const fixture = join(scriptRoot, 'smoke-workspace');
+const briefFixture = join(scriptRoot, 'smoke-brief');
 const linter = join(scriptRoot, '..', '..', 'plugins', 'agrippa', 'scripts', 'validate_plan_workspace.pl');
 const failures = [];
 
@@ -133,22 +141,29 @@ const today = [
     String(now.getMonth() + 1).padStart(2, '0'),
     String(now.getDate()).padStart(2, '0'),
 ].join('-');
-let name = `${today}-kit-smoke-test`;
-let suffix = 1;
-while (existsSync(join(plansDir, name))) {
-    suffix++;
-    name = `${today}-kit-smoke-test-${suffix}`;
+function freeName(base) {
+    let name = base;
+    let suffix = 1;
+    while (existsSync(join(plansDir, name))) {
+        suffix++;
+        name = `${base}-${suffix}`;
+    }
+    return name;
 }
+const name = freeName(`${today}-kit-smoke-test`);
 const workspace = join(plansDir, name);
 const planRelative = `plans/${name}`;
+const briefName = freeName(`${today}-kit-smoke-brief`);
+const briefFolder = join(plansDir, briefName);
+const briefRelative = `plans/${briefName}`;
 
-function runLinter() {
+function runLinter(planPath) {
     // The linter runs with the project root as the current directory and no
     // -RepoRoot, so it finds the root through git as the wrapper does. It
     // reports errors through stderr and the summary through stdout; both are
     // collapsed to single-spaced text so a message is matched the same way
     // however the lines are presented.
-    const result = spawnSync(perl, [linter, '-PlanPath', planRelative, '-SkipLocalChecks'], {
+    const result = spawnSync(perl, [linter, '-PlanPath', planPath, '-SkipLocalChecks'], {
         cwd: root,
         encoding: 'utf8',
     });
@@ -168,20 +183,25 @@ function replaceFirstOccurrence(path, oldText, newText) {
     return true;
 }
 
-let fatal = null;
-try {
-    mkdirSync(workspace);
-    for (const entry of readdirSync(fixture, { withFileTypes: true })) {
+function copyFixture(source, target, targetRelative) {
+    mkdirSync(target);
+    for (const entry of readdirSync(source, { withFileTypes: true })) {
         if (!entry.isFile()) {
             continue;
         }
-        const text = readFileSync(join(fixture, entry.name), 'utf8')
+        const text = readFileSync(join(source, entry.name), 'utf8')
             .split('__TODAY__').join(today)
-            .split('__PLAN__').join(planRelative);
-        writeFileSync(join(workspace, entry.name), text, 'utf8');
+            .split('__PLAN__').join(targetRelative);
+        writeFileSync(join(target, entry.name), text, 'utf8');
     }
+}
 
-    const pass = runLinter();
+let fatal = null;
+try {
+    copyFixture(fixture, workspace, planRelative);
+    copyFixture(briefFixture, briefFolder, briefRelative);
+
+    const pass = runLinter(planRelative);
     if (pass.exitCode !== 0 || !/PASS:/i.test(pass.text)) {
         failures.push(`Valid fixture did not pass:\n${pass.text}`);
     }
@@ -192,7 +212,7 @@ try {
         throw new Error('The fixture no longer contains the text the broken run replaces.');
     }
 
-    const fail = runLinter();
+    const fail = runLinter(planRelative);
     if (fail.exitCode === 0) {
         failures.push('Broken fixture passed; the linter accepted an Open stage and a packet without Return only.');
     }
@@ -202,11 +222,40 @@ try {
     if (!/M1 packet is missing 'Return only'/i.test(fail.text)) {
         failures.push(`Broken fixture did not report the missing packet label:\n${fail.text}`);
     }
+
+    const briefPass = runLinter(briefRelative);
+    if (briefPass.exitCode !== 0 || !/PASS:/i.test(briefPass.text)) {
+        failures.push(`Valid medium plan did not pass:\n${briefPass.text}`);
+    }
+
+    const briefPath = join(briefFolder, 'BRIEF.md');
+    const briefBroken = replaceFirstOccurrence(briefPath, '## State', 'State')
+        && replaceFirstOccurrence(briefPath, 'Covering tests: `.agrippa/project-rules.md`', 'Covering tests: `.agrippa/missing-test.md`')
+        && replaceFirstOccurrence(briefPath, '| manual | sandboxed | manual |', '| lint | sandboxed | deterministic |');
+    if (!briefBroken) {
+        throw new Error('The medium-plan fixture no longer contains the text the broken run replaces.');
+    }
+
+    const briefFail = runLinter(briefRelative);
+    if (briefFail.exitCode === 0) {
+        failures.push('Broken medium plan passed; the linter accepted a missing section, a missing covering test, and an uncatalogued command.');
+    }
+    if (!/\[Brief\] BRIEF\.md is missing the section '## State'/i.test(briefFail.text)) {
+        failures.push(`Broken medium plan did not report the missing State section:\n${briefFail.text}`);
+    }
+    if (!/\[Check 26\] BRIEF\.md covering test does not exist: \.agrippa\/missing-test\.md/i.test(briefFail.text)) {
+        failures.push(`Broken medium plan did not report the missing covering test:\n${briefFail.text}`);
+    }
+    if (!/\[Brief\] (?:V2 command is not in|\.agrippa\/validation-commands\.md is missing)/i.test(briefFail.text)) {
+        failures.push(`Broken medium plan did not report the uncatalogued command:\n${briefFail.text}`);
+    }
 } catch (error) {
     fatal = error;
 } finally {
-    if (existsSync(workspace)) {
-        rmSync(workspace, { recursive: true, force: true });
+    for (const folder of [workspace, briefFolder]) {
+        if (existsSync(folder)) {
+            rmSync(folder, { recursive: true, force: true });
+        }
     }
     // Remove a plans/ folder this script created, but only while it is empty,
     // so a plan another session wrote meanwhile survives.
@@ -226,5 +275,5 @@ if (failures.length > 0) {
     console.log(`FAIL: smoke test, ${failures.length} problem(s).`);
     process.exit(1);
 }
-console.log(`PASS: valid fixture passed and broken fixture failed with the expected errors (${planRelative}, removed).`);
+console.log(`PASS: valid fixtures passed and broken fixtures failed with the expected errors (${planRelative} and ${briefRelative}, removed).`);
 process.exit(0);

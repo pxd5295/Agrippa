@@ -143,6 +143,11 @@ values" in the `plan` skill's `agent-workflow.md`.]
 
 ## Command catalog
 
+The plan linter reads this table and "Full-suite inventory" below: a medium
+plan's commands must match a backticked command in their "Exact command"
+column, where an `<...>` placeholder matches one word with no spaces. Keep
+those headings and that column name.
+
 | Purpose | Working directory | Style | Sandbox | Determinism | Exact command or manual check |
 |---|---|---|---|---|---|
 | Prerequisite | `[PROJECT: path]` | prerequisite | `[PROJECT: stance]` | deterministic | `[PROJECT: exact command, or delete the row]` |

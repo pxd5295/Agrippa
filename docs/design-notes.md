@@ -760,6 +760,9 @@ designs.
   `EVIDENCE.md` gets an entry for each decision the mode changed. As with the
   area map, those entries decide whether a rule stays in the mode. The spawn
   log, when on, shows whether the tier and effort rules were followed.
+- **Six rules since 2026-11-01.** The one-writer planning rule left the mode
+  when the medium planning level made it a normal-mode level; see "Three
+  planning levels" below. This note keeps its title as a dated record.
 
 ## License: Mozilla Public License 2.0 (2026-10-25)
 
@@ -1200,3 +1203,128 @@ records.
   wording in the four plugin files. A scratch harness linted a copy of the
   smoke fixture with the new `Return only:` line and a `packet gap` entry,
   and it passed the same 118 checks as the unchanged fixture.
+
+## Three planning levels (2026-11-01)
+
+Every change request now gets one of three levels: no plan, a medium plan
+(one `BRIEF.md` in its own plan folder), or the full workspace. Before, the
+core rules had only a skip-workspace gate for a diff that fits in one
+sentence, and the single-stage workspace still cost all five linted files, a
+packet that is never dispatched, and a separate `Integration` stage. A
+medium feature, roughly 100 to 400 lines across a few files, was too large
+for the gate and paid nearly the whole cost of the workspace. The owner
+found the methodology effective for large features and too costly for small
+and medium ones, while plain prompting did not hold enough quality. Every
+decision below is recorded, with who made it, in
+`plans/2026-11-01-plan-levels/SPEC.md`.
+
+- **The model routes, from the core rules.** A `UserPromptSubmit` hook was
+  rejected: it is a POSIX `sh` script that can only match keywords, cannot
+  judge size, and adds text to every prompt, including questions. The core
+  rules already load at every session start, so the routing rule is the
+  rewritten "Planning trigger" section. It had to fit the hook context cap,
+  which had about 30 characters of room with the low-usage line, so the
+  section is no longer than before (1,428 characters, from 1,436) and each
+  level's definition lives in "Planning levels" in `agent-workflow.md`. The
+  sentence that the design statement and definition of done apply at every
+  level was dropped from the section because the Engineering standards
+  already say so for every change request.
+- **Risk sets a floor; the cheapest level above it wins.** The signals are
+  the existing gate's: ownership areas, a shared-interface change, an
+  uncertain approach, and work that spans sessions. A size estimate may raise
+  the level and never lower it. Line count alone was rejected because it is
+  known only after the work and does not track risk. The floor holds quality
+  and the cheapest-safe choice holds cost, which is the balance the owner
+  asked for.
+- **State, and ask only on a close call.** Asking on every change request
+  slows small fixes, and a question asked every time gets clicked through.
+  Asking with the three levels as options when a signal sits on the boundary
+  gives the user a say where their knowledge of stakes, budget, and session
+  plans matters. The user's words decide whether there is a plan, and a
+  level the user names is used. The statement is required before the first
+  edit and for "no plan" too, because the first live test had a model with
+  the new rules decide "no planning is needed" in its reasoning, never say
+  so, and skip the medium plan for a three-function change.
+- **`design-first` applies the level.** A retry on 2026-11-03 with the
+  reworded sentence did the same thing, so the core rules alone do not make
+  the model state the level. Every session in these tests loaded
+  `design-first` just before its first edit, so its step 1 now ends with
+  the level, checked against the trigger's floors by pointer and naming the
+  one-sentence-diff floor the models skipped, and its step 3 opens the
+  reply with the level line. The floors stay defined only in the core
+  rules. The next medium run stated the level, wrote and linted a
+  `BRIEF.md`, and then implemented.
+- **The reply opens with the level.** Small changes do not load
+  `design-first`, and a small run with "Before the first edit, state the
+  level" never named one. The sentence now says where the line goes, "Start
+  your reply with the level and why", which is also 7 characters shorter.
+  The next small run's first output was the level line.
+- **A medium plan is one ownership area.** Tests that cover the change do not
+  count as a second area: nuro-battler lists `tests/` as its own area, so
+  counting it would push almost every medium feature into a workspace. One
+  area also matches `design-first` step 1, which already says a two-area
+  change is not a direct edit. If implementation finds a second area or a
+  shared interface, the model stops and asks whether to move up, narrow the
+  scope, or continue; the owner wanted the call each time rather than an
+  automatic move.
+- **A folder, a distinct name, one owner for the contents.** A medium plan is
+  `plans/YYYY-MM-DD-name/BRIEF.md` with an optional `design/` folder, because
+  three of nuro-battler's 74 plans carry PNG concepts or HTML mockups and
+  because `agrippa-lint -PlanPath` accepts only a directory. A flat file
+  would have changed that contract. The name `BRIEF.md` differs from every
+  workspace file, so a workspace with a missing `SPEC.md` is never mistaken
+  for a medium plan, and the linter chooses the shape by which files the
+  folder holds. The template is the one list of a medium plan's contents;
+  `design-first` points to it rather than repeating it.
+- **The linter's medium branch adds nothing to a workspace lint.** A folder
+  without `BRIEF.md` takes exactly the checks it took before; checks 1 to 3
+  and 13 to 18 moved into shared subs that both shapes call. The parity
+  method held: the old and new linter printed byte-identical stdout, stderr,
+  and exit codes on all 74 nuro-battler plan folders. For a medium plan the
+  linter checks the level line, the section headings, the acceptance and
+  validation IDs, the matrix checks, that each command is a command of
+  `.agrippa/validation-commands.md`, and the covering-test paths. A
+  validation ID in a `BRIEF.md` is used by its mapping row, so the orphan
+  check applies only to acceptance IDs there. The census entries are not
+  checked against their lines, because the decision listed only IDs,
+  commands, and covering tests; a medium plan is usually implemented the day
+  it is written.
+- **The catalog match is narrow on purpose.** A command must equal a
+  backticked span in the "Exact command" column of the catalog's "Command
+  catalog" or "Full-suite inventory" table, with each `<...>` placeholder
+  matching one word. The design review found that reading every backticked
+  span let a stance such as `sandboxed` pass as a command and let a
+  placeholder-only span match anything, and a test against nuro-battler's
+  catalog showed that a placeholder matching any text let
+  `-s res://tests/<file>` accept an added `--quit-after 9`, an invocation its
+  catalog lists as a trap. `manual` rows and `agrippa-lint` are exempt. The
+  catalog template now says that the linter reads those two tables.
+- **Where to implement is estimated, then confirmed.** After writing
+  `BRIEF.md` the model estimates the implementation cost from the census and
+  covering-test sizes plus room for rereads, edits, test output, and
+  reasoning, and recommends this session when the current context plus the
+  estimate stays under 300k tokens, and a fresh session with the resume
+  prompt otherwise. The owner wants no session to reach 400k to 500k tokens,
+  because quality drops above 300k to 400k. Most of the cost is reading code,
+  which happens in either session, so a fresh session costs little extra.
+  Both the estimate and the model's sense of its own context are
+  approximate, and the user's confirmation covers the error.
+- **No handoff file for medium work.** `BRIEF.md` carries a State section
+  and a resume prompt, which the model updates when it stops partway.
+  Reworking or removing `/agrippa:handoff` is backlog item 10, because
+  removing it changes a skill name.
+- **The level is recorded only in plan files.** A `Level:` line in
+  `BRIEF.md` and in `STATUS.md`. A commit trailer (under 100 tokens a change)
+  and a log file (about 150 to 200) were rejected on coverage, not cost; the
+  owner accepted that nothing shows whether a "no plan" call was right.
+- **Low-usage mode replaces six rules.** Its "One-writer planning" row is
+  deleted, because the medium level now does in normal mode most of what the
+  row did, and keeping both would have two rules for one choice. The 2026-10-25
+  note rejected low, medium, and high profiles for drift; these levels follow
+  the size and risk of the work, not the token budget, so they are not those
+  profiles. The hook's appended line names no count and did not change.
+- **Built before it is measured.** The owner chose to build first. The
+  template's contents and the 300k estimate stay unproven until backlog item
+  2 measures token cost, lint rounds, files a later session read, repair
+  waves, and estimate error on three to five medium features, so any cost
+  claim about the levels says it is unmeasured.

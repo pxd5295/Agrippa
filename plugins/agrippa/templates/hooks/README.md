@@ -52,18 +52,17 @@ when the project sets this variable, and nothing otherwise:
 }
 ```
 
-The mode replaces seven rules with cheaper ones and changes nothing else.
+The mode replaces six rules with cheaper ones and changes nothing else.
 The two that apply to every change are in the appended line itself: the
 `design-reviewer` size floor rises from about 30 changed lines to about 80,
 and the `design-reviewer` and `plan-reviewer` agents never escalate
 themselves to Opus, naming the question they could not settle instead. The
-other five apply to plans and are in `low-usage.md`, a reference file of the
+other four apply to plans and are in `low-usage.md`, a reference file of the
 `agrippa:plan` skill that loads only when the line is present: a risk-flagged
 stage routes to Sonnet at high effort instead of Opus, every spawn starts at
-low effort, each wave has one writer, a plan skips the workspace or uses the
-single-stage shape whenever one sequential writer can do the work, and
-planning reads stop at the third rung of the read ladder with the scout
-taking long reads. Every floor still holds: the design statement, the
+low effort, each wave has one writer, and planning reads stop at the third
+rung of the read ladder with the scout taking long reads. The planning level
+is the same in both modes. Every floor still holds: the design statement, the
 definition of done, the consumer census, the decision record, the linter,
 the `verify-before-done` gate, and the full suite at Integration. The lead's
 own model and reasoning effort are never touched.

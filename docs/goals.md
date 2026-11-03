@@ -61,6 +61,13 @@ first task under any goal is often to start recording it.
 - **Evidence accumulates and is read.** `EVIDENCE.md` entries about the
   area map, low-usage mode, and packet gaps exist in real plans, and no rule
   in those areas changes without citing them.
+- **Plans fit the size of the work.** Every change request gets one of three
+  levels, no plan, a medium plan (`BRIEF.md`), or the full workspace, which
+  the model picks from risk signals and states in one line. On medium-sized
+  changes, token cost per change, measured from session usage, falls below
+  that of the single-stage workspace, while repair waves and stages that stay
+  done hold steady. The decisions behind the levels, with who made each one
+  and why, are in `plans/2026-11-01-plan-levels/SPEC.md`.
 - **Token cost per plan goes down.** Measured from spawn logs or session
   usage on comparable plans, never estimated. Until a measurement exists,
   cost claims in a commit or note say so.
@@ -147,33 +154,51 @@ finish and prove, and may add an item it discovered at the bottom with a
 one-line reason. An item is removed when its worklog entry says it was
 proven, not when its code is written.
 
-1. **Prove the kit on macOS and Linux.** Add a GitHub Actions workflow that
+1. **Build the three planning levels.** Add the medium level, a `BRIEF.md`
+   in its own plan folder, and the routing rule that recommends a level for
+   each change request, as decided in `plans/2026-11-01-plan-levels/SPEC.md`.
+   The owner chose to build before measuring, so the template's contents and
+   the token estimate behind the 300k rule stay unproven until item 2, and
+   any cost claim says so.
+2. **Measure the planning levels.** On the next three to five medium
+   features in an installed repository, record token cost, lint rounds,
+   which plan files a later session read, whether a repair wave was needed,
+   and how the implementation estimate in `BRIEF.md` compared with the real
+   cost. Compare them with three to five recent single-stage plans.
+3. **Prove the kit on macOS and Linux.** Add a GitHub Actions workflow that
    runs `node dev/validate-kit.mjs` on Ubuntu, macOS, and Windows at each
    push. Everything so far ran only on Windows under Git Bash; the design
    notes name this as the recommended follow-up to the 0.4.0 port.
-2. **Prove the install and upgrade interviews end to end.** Run
+4. **Prove the install and upgrade interviews end to end.** Run
    `/agrippa:install` in a fresh sandbox session and `/agrippa:upgrade` on a
    sandbox copy of an older install, and record what each interview asked,
    skipped, and got wrong. The self-check requires their clauses but nothing
    has yet run them.
-3. **Retire the lint traps.** Work through the trap list in
+5. **Retire the lint traps.** Work through the trap list in
    `docs/design-notes.md` ("These cost three lint rounds"). For each, change
    the template wording or the linter message so a first-time planner does
    not hit it, and keep the check itself unchanged.
-4. **Start recording packet gaps.** Add the `packet gap` entry kind to
+6. **Start recording packet gaps.** Add the `packet gap` entry kind to
    `EVIDENCE.md` that `docs/research-2026-08.md` leaves open, so the
    question of how often full-shape packets are incomplete gets data.
-5. **Baseline the installed-repo audit.** Record the current finding and
+7. **Baseline the installed-repo audit.** Record the current finding and
    check counts of `node dev/validate-kit.mjs -InstalledRepo` for
    nuro-battler in the worklog, so the "no more findings" measure has a
    starting point.
-6. **Time the two-writer wave.** Run one real two-writer wave sequentially
+8. **Time the two-writer wave.** Run one real two-writer wave sequentially
    and in parallel in the sandbox and record the difference, which the
    research note says has never been measured.
-7. **Development visibility.** A small local page or report under `dev/`
+9. **Development visibility.** A small local page or report under `dev/`
    that shows, for a sandbox session, what the hooks injected and what the
    spawn log recorded. Low priority; it exists to help the owner watch the
    plugin work, not to ship.
+10. **Rework or remove the handoff skill.** Added 2026-11-01: the owner
+    wants `/agrippa:handoff` reworked or removed, and medium plans no longer
+    need it because `BRIEF.md` carries its own state. Removing it changes a
+    skill name, which needs an `UPGRADING.md` entry and the owner's yes.
+11. **Find why design files sit loose in plan folders.** Added 2026-11-01:
+    three nuro-battler plans keep their images or HTML mockups beside the
+    plan files instead of in the `design/` folder the workspace rules name.
 
 ## Decisions reserved for the owner
 

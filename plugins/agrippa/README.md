@@ -22,7 +22,7 @@ The methodology has three layers, and the kit installs all of them.
 
 - **Always-loaded rules.** The plugin's core rules (`scripts/core-rules.md`:
   request boundaries, Engineering standards, definition of done, planning
-  trigger and size gate, launch, roster, skills, planner read ladder, and
+  trigger and planning levels, launch, roster, skills, planner read ladder, and
   validation reach), which a `SessionStart` hook adds to every session and a
   `SubagentStart` hook adds to every subagent. The project keeps only its own
   facts in `.agrippa/project-rules.md` (project contracts and project rules)
@@ -83,9 +83,9 @@ The methodology has three layers, and the kit installs all of them.
 | `skills/plan/reference/agent-workflow.md` | Not installed; the lifecycle guide, a `plan` skill reference file |
 | `skills/plan/reference/ROUTING.md` | Not installed; the routing guide, a `plan` skill reference file |
 | `skills/plan/reference/workspace-files.md` | Not installed; what each plan-workspace file owns, handoff files, selective reads, soft budgets, and linting, a `plan` skill reference file |
-| `skills/plan/reference/low-usage.md` | Not installed; the seven rules low-usage mode replaces with cheaper ones, a `plan` skill reference file read only when the project sets `AGRIPPA_LOW_USAGE=1` |
+| `skills/plan/reference/low-usage.md` | Not installed; the six rules low-usage mode replaces with cheaper ones, a `plan` skill reference file read only when the project sets `AGRIPPA_LOW_USAGE=1` |
 | `skills/design-first/reference/decision-records.md` | Not installed; where decision records go, when one is required, and their shape, a `design-first` skill reference file |
-| `skills/plan/templates/*.md` | Not installed; the blank plan-workspace files, copied into each `plans/YYYY-MM-DD-<name>/` |
+| `skills/plan/templates/*.md` | Not installed; the blank plan-workspace files, copied into each `plans/YYYY-MM-DD-<name>/`, and `BRIEF.md`, the medium plan, which is the only file in its folder |
 | `skills/handoff/SKILL.md` | Not installed; the `/agrippa:handoff` skill, which writes a short session handoff |
 | `skills/install/SKILL.md` | Not installed; the `/agrippa:install` skill, which installs the methodology in a repository that has none |
 | `skills/upgrade/SKILL.md` | Not installed; the `/agrippa:upgrade` skill, which upgrades an older methodology using `UPGRADING.md` |
@@ -326,8 +326,13 @@ project facts move.
 Make a plan for [change]
 ```
 
-Small changes skip the workspace under the size gate in the core rules and are
-implemented directly after a design statement. A plan ends with the first
+Every change request gets a planning level, which the model states in one
+line and asks about only on a close call. Small changes get no plan and are
+implemented directly after a design statement. Medium changes, a few files in
+one ownership area with no shared-interface change, get a single
+`plans/YYYY-MM-DD-<name>/BRIEF.md`, and the model recommends implementing in
+the same session or a fresh one from its cost estimate. Larger or riskier
+changes get the full workspace. A plan ends with the first
 allocation and an exact resume prompt. `Implement plan [path]` then runs the
 lead plus routed subagents; no opt-in phrase or per-spawn confirmation is
 needed. `/agrippa:handoff` writes a short brief when a session ends mid-plan.
@@ -335,11 +340,11 @@ needed. `/agrippa:handoff` writes a short brief when a session ends mid-plan.
 **Low-usage mode.** A project whose token limits the normal methodology
 would exhaust sets `AGRIPPA_LOW_USAGE=1` in the `env` block of
 `.claude/settings.json`; `/agrippa:install` asks. The hook then appends one
-line to the core rules, and the `plan` skill's `low-usage.md` replaces seven
+line to the core rules, and the `plan` skill's `low-usage.md` replaces six
 rules with cheaper ones: a higher design-reviewer size floor, no reviewer
 self-escalation, Sonnet instead of Opus for risk-flagged stages, low spawn
-effort, one writer per wave, a wider skip-workspace gate, and shallower
-planning reads. Nothing else changes, every floor holds, and an absent
+effort, one writer per wave, and shallower planning reads. The planning level
+is chosen the same way in both modes. Nothing else changes, every floor holds, and an absent
 variable is normal mode, so a normal session is not affected by the mode
 existing. "Low-usage mode" in `templates/hooks/README.md` has the details and
 the per-person override.

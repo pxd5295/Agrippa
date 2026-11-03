@@ -300,6 +300,30 @@ import it, or while the root `AGENTS.md` still opens with the kit's sentence.
 | "root `AGENTS.md`" in `.agrippa/CLAUDE.md` and in per-directory `CLAUDE.md` files | Replace | `.agrippa/project-rules.md`, as `templates/agrippa-CLAUDE.md` and `templates/directory-CLAUDE.md` now say. Find them with `git grep -n AGENTS.md` |
 | `AGENTS.md:N` citations inside dated plan workspaces | Retain | They are records and are never edited; a reader follows the moved file |
 
+### From G4 v0.4.2
+
+After v0.4.2 the plugin changes behavior, not files. No installed document,
+setting, or local-checks interface changes, and the `.agrippa/` layout, the
+agents, the skills, and the `agrippa-lint` command and its output stay as
+they were. What a user notices is that a session now states a planning level
+in one line for every change request, no plan, a medium plan, or a full
+workspace, and asks with the three levels as options when the call is close.
+The medium plan is a folder that holds one `BRIEF.md`, written from the
+`plan` skill's new template; `agrippa-lint -PlanPath` accepts it and checks
+its acceptance and validation IDs, that its commands are in
+`.agrippa/validation-commands.md`, and that its covering tests exist. The
+medium plan ends with a recommendation to implement in the same session or a
+fresh one, which the user confirms. Low-usage mode replaces six rules instead
+of seven: its "One-writer planning" row is gone, because the medium level now
+does in normal mode what the row did.
+
+| Before | Disposition | What happens |
+|---|---|---|
+| Dated plan workspaces and loose `plans/*-BRIEF.md` notes | Retain | They are records. A loose `*-BRIEF.md` file is not a medium plan, because the linter reads only a folder; leave it where it is |
+| `STATUS.md` in a dated workspace without a `Level:` line | Retain | The line is new in the template; old workspaces keep their shape |
+| A project rule that requires a workspace for every change | Merge | The stricter rule wins, as the core rules say; the project keeps it, and the model plans at the level it requires |
+| A low-usage project that relied on the wider skip-workspace gate | Replace | The medium level, chosen by the routing rule in both modes |
+
 ### Always
 
 - Keep stricter project safety, validation, and review rules (Merge, never

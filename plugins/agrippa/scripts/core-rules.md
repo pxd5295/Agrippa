@@ -110,18 +110,16 @@ plan` start planning at once in the current session, with no special mode. If
 the model is weaker and the change is complex or high-risk, recommend a
 stronger model once, then proceed on whatever the user chooses.
 
-Skip the workspace entirely when the diff fits in one sentence, touches one
-ownership area, changes no shared interface, and has deterministic
-validation. The design statement and definition of done still apply; say the
-workspace was skipped and why, and offer one.
-
-Create a workspace when the approach is uncertain, the change spans files or
-ownership areas, or the code is unfamiliar. Bounded one-writer work in one
-area uses the single-stage shape in `agent-workflow.md`; parallel or
-cross-area work uses the full shape. Load `agrippa:plan`, read
-`agent-workflow.md`, inspect
-only relevant code and contracts, interview with `AskUserQuestion` when
-choices are material, and record planning risk in `STATUS.md`.
+Every change request gets one of three levels: no plan, a medium plan
+(`BRIEF.md`), or a full workspace. Risk signals set the lowest allowed
+level: no plan needs a one-sentence diff done this session; a medium plan
+needs one ownership area and a settled approach; both need deterministic
+validation and no shared-interface change. Pick the cheapest level at or
+above it; a size estimate may raise it, never lower it. Start your reply
+with the level and why in one line, even for no plan; ask with
+`AskUserQuestion`, recommendation first, only on a close call. The user's words decide whether to plan; use a level they name.
+To plan, load `agrippa:plan` and follow "Planning levels" in
+`agent-workflow.md`.
 
 Never overwrite a historical plan; if the path exists, append `-2`, `-3`, and
 so on. A planning-only response ends with the first implementation allocation

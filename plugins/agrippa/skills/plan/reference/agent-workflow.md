@@ -7,10 +7,40 @@ owns the project contracts and project rules. This file owns planning, evidence,
 and project contracts. `ROUTING.md`, the skill's other reference file, owns
 topology, tier selection, packets, waves, launch, and review.
 
+## Planning levels
+
+The core rules give every change request one of three levels and say how to
+pick one: risk signals set the lowest allowed level, and the cheapest level
+at or above it wins. This section defines the levels.
+
+| Level | Lowest allowed when | What it produces |
+|---|---|---|
+| No plan | The diff fits in one sentence, touches one ownership area, changes no shared interface, has deterministic validation, and ends in this session | The design statement in the reply, then the change |
+| Medium plan | One ownership area, no shared-interface change, a settled approach, and deterministic validation, but the work is too large for one sentence or spans sessions | `plans/YYYY-MM-DD-name/BRIEF.md` from the `BRIEF.md` template, with an optional `design/` folder |
+| Full workspace | Two or more ownership areas, a shared-interface change, an approach that needs an interview, or acceptance that is not deterministic | The five workspace files, in the single-stage or full shape under "Workspace shape" |
+
+Tests that cover the change never count as a second ownership area, even
+where the project lists its tests as an area of their own. A close call, the
+only case for asking the user, is a signal on the boundary: a census that
+turns up a second area, a consumer of what may be a shared interface, or work
+the user may want to split across sessions. Ask with the three levels as
+options, the recommendation first.
+
+A medium plan follows "Make a medium plan" in the `agrippa:plan` skill. Of
+the lifecycle below it keeps the narrow inspection, the consumer census with
+covering tests, and the exact validation commands; it has no interview
+rounds, stages, or packets. If implementation finds a second ownership area
+or a shared-interface change, stop and ask the user whether to move up to a
+workspace, narrow the scope, or continue as planned, and record the answer in
+the State section of `BRIEF.md`.
+
+The level is recorded only in plan files, in the `Level:` line of `BRIEF.md`
+or `STATUS.md`. A change with no plan records nothing.
+
 ## Planning lifecycle
 
-The core rules own the trigger and the gate that decides whether a workspace
-is warranted at all. This lifecycle starts once it is.
+The core rules own the trigger and the routing rule, and "Planning levels"
+above defines each level. This lifecycle builds a full workspace.
 
 ### 1. Inspect narrowly
 
@@ -168,11 +198,12 @@ acceptance text matches `SPEC.md` after whitespace normalization.
 
 ### Workspace shape
 
-Two shapes are allowed; the trigger gate in the core rules chooses between them,
-and the linter applies unchanged to both.
+A full workspace has two shapes, and the linter applies unchanged to both. A
+medium plan is not a workspace shape; it is the `BRIEF.md` level above.
 
-The **single-stage shape** is the default for bounded work in one ownership area
-with one writer. It contains the same linted files, one implementation stage
+The **single-stage shape** is the default for one-writer work that still needs
+a workspace, such as a change in one ownership area that alters a shared
+interface or needs an interview. It contains the same linted files, one implementation stage
 plus the required `Integration` stage, one wave, and no parallelism. The lead
 implements it directly, so its packet exists for the ownership and
 acceptance/validation record rather than for dispatch. Do not invent waves,
@@ -331,7 +362,10 @@ Durable behaviors this workflow must preserve:
 | Ordinary non-planning request | Preserve the user's model/effort; no switch prompt |
 | Question about a possible feature | Answer and offer; edit only after an explicit go-ahead |
 | New planning request | Start immediately; recommend a stronger model only if complex, then proceed |
-| Planning request for a one-sentence diff | Skip the workspace; implement directly and say why |
+| Planning request for a one-sentence diff | No plan; open the reply with the level and why, then implement directly |
+| Change request in one ownership area, too large for one sentence | Medium plan; state the level and the reason in one line |
+| Close routing call | Ask with the three levels as options, the recommendation first |
+| Medium implementation finds a second area or a shared interface | Stop and ask: move up, narrow the scope, or continue |
 | Stage depends on the lead's live context | Complete the packet, or fork and record the forfeited tier |
 | User says to proceed on the recommendations mid-interview | End the interview; each unresolved entry becomes a `Bounded-choice` with the recommendation as its default |
 | Low-risk plan after interview | Reduce scope; route more stages to cheaper tiers |
