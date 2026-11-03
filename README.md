@@ -24,7 +24,7 @@ them by hand. The `ref` pins the release.
 {
   "extraKnownMarketplaces": {
     "agrippa": {
-      "source": { "source": "github", "repo": "pxd5295/Agrippa", "ref": "v0.4.2" }
+      "source": { "source": "github", "repo": "pxd5295/Agrippa", "ref": "v0.5.0" }
     }
   },
   "enabledPlugins": { "agrippa@agrippa": true }

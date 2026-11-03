@@ -1204,7 +1204,7 @@ records.
   smoke fixture with the new `Return only:` line and a `packet gap` entry,
   and it passed the same 118 checks as the unchanged fixture.
 
-## Three planning levels (2026-11-01)
+## Three planning levels (2026-11-01, release 0.5.0)
 
 Every change request now gets one of three levels: no plan, a medium plan
 (one `BRIEF.md` in its own plan folder), or the full workspace. Before, the

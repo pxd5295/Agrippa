@@ -5,6 +5,23 @@ entry says what was done, what was proven and how, what comes next, and any
 decision made on a default because only the owner could settle it. The
 format and the reason for the log are in `docs/goals.md`.
 
+## 2026-11-03: release 0.5.0
+
+- **Done.** The plugin is released as 0.5.0: the version in `plugin.json`
+  and the marketplace entry, the pinned `ref` in both READMEs, and tag
+  `v0.5.0` on the release commit, pushed to GitHub with `main`. The release
+  ships the three planning levels and the packet-gap evidence entries.
+  "From G4 v0.4.2" in `UPGRADING.md` now names v0.5.0 and says the move is
+  the `ref` change alone.
+- **Proven.** `node dev/validate-kit.mjs`; the result is in the release
+  commit message. A fresh sandbox session on the merged `main` loaded the
+  plugin from this checkout, opened its reply with the level line, and
+  passed every catalog check.
+- **Next.** Backlog item 2: measure the levels on real medium work, and
+  move nuro-battler's `ref` to `v0.5.0` when its owner chooses.
+- **Decided by the owner.** The release, its number (0.5.0 rather than
+  0.4.3), and the push.
+
 ## 2026-11-01 to 2026-11-03: three planning levels built (backlog item 1)
 
 Session on branch `goal/plan-levels`, committed there and merged into

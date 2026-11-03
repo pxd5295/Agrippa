@@ -15,9 +15,9 @@
 - Active wave/stage: none
 - Progress: 4/4
 - Current owner/allocation: none
-- Next action: merge `goal/plan-levels` into `main` when the owner asks,
-  then measure the levels on real medium work (backlog item 2 in
-  `docs/goals.md`).
+- Next action: none in this workspace. It was merged into `main` and
+  released as v0.5.0; measuring the levels on real medium work is backlog
+  item 2 in `docs/goals.md`.
 - User action required: No. The owner approved the commit. V5 passed
   for both requests on 2026-11-03: the small run after the core-rules
   sentence was reworded to "Start your reply with the level", the medium

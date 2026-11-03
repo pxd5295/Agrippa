@@ -302,12 +302,14 @@ import it, or while the root `AGENTS.md` still opens with the kit's sentence.
 
 ### From G4 v0.4.2
 
-After v0.4.2 the plugin changes behavior, not files. No installed document,
-setting, or local-checks interface changes, and the `.agrippa/` layout, the
-agents, the skills, and the `agrippa-lint` command and its output stay as
-they were. What a user notices is that a session now states a planning level
-in one line for every change request, no plan, a medium plan, or a full
-workspace, and asks with the three levels as options when the call is close.
+v0.5.0 changes behavior, not files. No installed document, setting, or
+local-checks interface changes, and the `.agrippa/` layout, the agent and
+skill names, and the `agrippa-lint` command and its output stay as they were;
+moving to v0.5.0 is the `ref` change alone. What a user notices is that a
+session now states a planning level at the start of its reply for every
+change request, no plan, a medium plan, or a full workspace, and asks with
+the three levels as options when the call is close. `design-first` checks the level in its
+step 1 before any edit.
 The medium plan is a folder that holds one `BRIEF.md`, written from the
 `plan` skill's new template; `agrippa-lint -PlanPath` accepts it and checks
 its acceptance and validation IDs, that its commands are in

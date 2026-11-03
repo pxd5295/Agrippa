@@ -122,13 +122,13 @@ Install the Claude Code plugin from https://github.com/pxd5295/Agrippa in this r
 
 Claude then writes the two keys below. The marketplace's `ref` pins the
 release the project gets. Set it to a release tag, such as the current
-`v0.4.2`.
+`v0.5.0`.
 
 ```json
 {
   "extraKnownMarketplaces": {
     "agrippa": {
-      "source": { "source": "github", "repo": "pxd5295/Agrippa", "ref": "v0.4.2" }
+      "source": { "source": "github", "repo": "pxd5295/Agrippa", "ref": "v0.5.0" }
     }
   },
   "enabledPlugins": { "agrippa@agrippa": true }
