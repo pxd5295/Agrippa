@@ -18,7 +18,7 @@
 // the core rules stay under the 10,000-character hook context cap, and the
 // injection hook prints them when run with sh, unchanged without
 // AGRIPPA_LOW_USAGE and with the low-usage line after them, still under the
-// cap, when AGRIPPA_LOW_USAGE=1. The plan skill's low-usage.md names the seven
+// cap, when AGRIPPA_LOW_USAGE=1. The plan skill's low-usage.md names the six
 // rules the mode replaces, the reviewers stop escalating in the mode, and the
 // install and upgrade skills offer it. The install skill's interview follows
 // the planning interview's open-decisions procedure and records every entry
@@ -33,7 +33,9 @@
 // builds a
 // simulated project in a temporary git repository with no copy of the linter
 // and runs `dev/fixtures/run-smoke-test.mjs` against it, which proves the
-// plugin's linter accepts the valid fixture and rejects the broken one.
+// plugin's linter accepts the valid workspace and medium-plan fixtures and
+// rejects broken ones; in the same project it proves that a medium plan's
+// commands are matched against the project's validation catalog.
 //
 // Like the workspace linter it ships, this checks shape and the presence of
 // documented contracts, never semantic truth. Uses only Node's built-in
@@ -71,7 +73,7 @@
 import { spawnSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import {
-    copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync,
+    copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, dirname, extname, join, resolve } from 'node:path';
@@ -276,6 +278,7 @@ const required = [
     ...agentNames.map((name) => `agents/${name}.md`),
     ...shippedSkillNames.map((name) => `skills/${name}/SKILL.md`),
     ...planningNames.map((name) => `skills/plan/templates/${name}.md`),
+    'skills/plan/templates/BRIEF.md',
 ];
 
 // Development files are not shipped with the plugin.
@@ -284,6 +287,7 @@ const devRequired = [
     'tool-paths.mjs',
     'fixtures/run-smoke-test.mjs',
     ...planningNames.map((name) => `fixtures/smoke-workspace/${name}.md`),
+    'fixtures/smoke-brief/BRIEF.md',
 ];
 
 for (const path of required) {
@@ -368,6 +372,7 @@ const routing = readKitFile('skills/plan/reference/ROUTING.md');
 const plan = readKitFile('skills/plan/templates/PLAN.md');
 const packets = readKitFile('skills/plan/templates/PACKETS.md');
 const spec = readKitFile('skills/plan/templates/SPEC.md');
+const brief = readKitFile('skills/plan/templates/BRIEF.md');
 const workspaceFiles = readKitFile('skills/plan/reference/workspace-files.md');
 const decisionRecords = readKitFile('skills/design-first/reference/decision-records.md');
 const workspaceLinter = readKitFile('scripts/validate_plan_workspace.pl');
@@ -456,8 +461,22 @@ testClauses('Core rules', coreRules, [
     'is an answer\\s+request',
     "Non-planning requests preserve the user's active model and reasoning effort",
     '## Planning trigger',
-    'Skip the workspace\\s+entirely',
-    'single-stage\\s+shape',
+    // Every change request gets a level: the risk signals set a floor, the
+    // cheapest level at or above it wins, the level is stated in one line,
+    // and the user is asked only on a close call. The levels themselves are
+    // defined in agent-workflow.md, which keeps the core rules short.
+    'one of three levels: no plan, a medium plan\\s+\\(`BRIEF\\.md`\\), or a full workspace',
+    'Risk signals',
+    'no plan needs a one-sentence diff',
+    'a medium plan\\s+needs one ownership area',
+    'deterministic\\s+validation and no shared-interface change',
+    'cheapest level at or\\s+above it',
+    'never lower it',
+    // Sandbox runs showed models deciding "no plan" silently, even with the
+    // statement required "before the first edit", so the reply opens with it.
+    'Start your reply\\s+with the level and why in one line, even for no plan',
+    'only on a\\s+close call',
+    '"Planning levels" in\\s+`agent-workflow\\.md`',
     'No stage may hand off as `Open`',
     '## Implementation launch',
     'engineering:architecture',
@@ -637,6 +656,17 @@ testClauses('Workflow template', workflow, [
     // round count or a confidence score, and the user can end it early.
     'never ends on a\\s+self-reported confidence score',
     'proceed on the recommendations',
+    // The planning levels: the medium plan is one ownership area with its
+    // covering tests not counted, no shared-interface change, and
+    // deterministic validation, and it stops to ask when more scope turns up.
+    '## Planning levels',
+    '\\| No plan \\|',
+    '\\| Medium plan \\| One ownership area, no shared-interface change',
+    'deterministic validation',
+    '\\| Full workspace \\|',
+    'Tests that cover the change never count as a second ownership area',
+    'stop and ask the user whether to move up',
+    'State section of `BRIEF\\.md`',
 ]);
 testClauses('Routing template', routing, [
     '## Model-tier routing table',
@@ -708,6 +738,27 @@ testClauses('PLAN template lint-trap wording', plan, [
 testClauses('SPEC template lint-trap wording', spec, [
     'capital A, C, or V followed by digits',
 ]);
+// The medium plan is one BRIEF.md. The linter requires its level line and
+// these section headings, so the template must carry each of them, and it
+// says what the linter checks where the planner writes that line.
+testClauses('BRIEF template', brief, [
+    '(?m)^Level: medium\\.',
+    '\\*\\*A1:\\*\\*',
+    'agrippa:design-first',
+    '(?m)^Covering tests: `',
+    '\\| Validation ID \\| Acceptance IDs \\| Exact command or check \\| Style \\| Sandbox \\| Determinism \\| When \\|',
+    '\\.agrippa/validation-commands\\.md',
+    'unmeasured',
+    'stop and ask',
+    'optional `design/` folder',
+]);
+// The 300k rule has one owner, the plan skill's "Make a medium plan".
+addCheck(!/300k/.test(brief), 'BRIEF template restates the 300k rule; point to the plan skill, which owns it.');
+const briefHeadingBlock = /my @brief_headings = \((.+?)\);/s.exec(workspaceLinter);
+addCheck(briefHeadingBlock !== null, 'Could not find the BRIEF.md heading array in the workspace linter.');
+for (const heading of briefHeadingBlock === null ? [] : [...briefHeadingBlock[1].matchAll(/'([^']+)'/g)].map((match) => match[1])) {
+    addCheck(new RegExp(`^${escapeRegex(heading)}\\s*$`, 'm').test(brief), `BRIEF template lacks the heading '${heading}' the linter requires.`);
+}
 addCheck(!/\b[AV]\d+\s*(?:-|to)\s*[AV]/.test(plan), 'PLAN template writes an ID range; the linter reads only its two ends, so list every ID.');
 const boundedExample = plan.indexOf('Options: [A or B]');
 addCheck(boundedExample >= 0 && boundedExample < plan.indexOf('### M1:'), 'PLAN template must show the Bounded choice row before the first stage record, where the linter does not read it as stage text.');
@@ -731,6 +782,10 @@ testClauses('UPGRADING', upgrading, [
     '"Project contracts", and "Project rules" \\| Move \\| `\\.agrippa/project-rules\\.md`',
     '`@AGENTS\\.md` in the root `CLAUDE\\.md`, and the sentence under it \\| Replace \\| `@\\.agrippa/project-rules\\.md`',
     'What the project itself wrote in `AGENTS\\.md` \\| Retain',
+    '### From G4 v0\\.4\\.2',
+    'states a planning level',
+    '`BRIEF\\.md`',
+    'One-writer planning',
     'docs/planning/CLAUDE\\.md` \\| Delete',
     'tools/log_subagent_spawns\\.ps1` \\| Delete',
     'tools/hook_payload\\.ps1` \\| Delete',
@@ -902,7 +957,7 @@ testClauses('MIGRATION template', readKitFile('templates/MIGRATION.md'), [
     '## Validation and residual risks',
     'never edit its decisions',
 ]);
-// Low-usage mode replaces exactly seven rules, named in the plan skill's
+// Low-usage mode replaces exactly six rules, named in the plan skill's
 // guide, which loads only when the injected line says the mode is on. The
 // guide lists only the replacements, so a normal session is never affected
 // by it; the two every-session rules travel in the line itself and the two
@@ -918,16 +973,23 @@ testClauses('Plan skill low-usage.md', lowUsage, [
     '\\| Opus row of the tier table \\|',
     '\\| Spawn reasoning effort \\|',
     '\\| Concurrent writers \\|',
-    '\\| One-writer planning \\|',
     '\\| Read depth and the scout \\|',
     'never put to the user',
     '`Resolved by: default`',
     '`Low-usage mode: on`',
     'EVIDENCE\\.md',
 ]);
-addCheck((lowUsage.match(/^\| [^|]+ \| [^|]+ \| [^|]+ \|$/gm) || []).length === 8, 'Plan skill low-usage.md must have exactly seven rule rows under its header row; add a rule to the kit, the README, and this check together.');
+addCheck((lowUsage.match(/^\| [^|]+ \| [^|]+ \| [^|]+ \|$/gm) || []).length === 7, 'Plan skill low-usage.md must have exactly six rule rows under its header row; add a rule to the kit, the README, and this check together.');
+// The "One-writer planning" row left the mode when the planning levels made
+// the medium plan a normal-mode level, so no text may still count seven
+// rules or describe the mode's wider skip-workspace gate.
+addCheck(!/One-writer planning/.test(lowUsage), 'Plan skill low-usage.md still has the "One-writer planning" row; the medium planning level replaced it.');
+for (const [label, text] of [['low-usage.md', lowUsage], ['Skill plan', readKitFile('skills/plan/SKILL.md')], ['README', readme], ['templates/hooks/README.md', hooksReadme]]) {
+    addCheck(!/\bseven\s+rules\b|wider skip-workspace gate/i.test(text), `${label} still counts seven low-usage rules or names the wider skip-workspace gate; the mode replaces six.`);
+}
 addCheck(/\$\{CLAUDE_SKILL_DIR\}\/reference\/low-usage\.md/.test(readKitFile('skills/plan/SKILL.md')) && /low-usage mode is on/i.test(readKitFile('skills/plan/SKILL.md')), 'Skill plan must list reference/low-usage.md and say it is read only when the core rules say low-usage mode is on.');
 addCheck(/^- Low-usage mode:/m.test(statusTemplate), 'STATUS template must carry the "Low-usage mode:" line under Current state.');
+addCheck(/^- Level: full workspace/m.test(statusTemplate), 'STATUS template must carry the "Level:" line under Current state; a plan records its level only in its own files.');
 for (const name of ['design-reviewer', 'plan-reviewer']) {
     addCheck(/low-usage mode is\s+on, do not\s+escalate/i.test(readKitFile(`agents/${name}.md`)), `agents/${name}.md must say that in low-usage mode it does not escalate and names the question instead.`);
 }
@@ -1084,8 +1146,41 @@ const planSkill = readKitFile('skills/plan/SKILL.md');
 for (const reference of ['reference/agent-workflow.md', 'reference/ROUTING.md', 'reference/workspace-files.md', 'templates/']) {
     addCheck(planSkill.includes(`\${CLAUDE_SKILL_DIR}/${reference}`), `Skill plan does not point to \${CLAUDE_SKILL_DIR}/${reference}.`);
 }
+addCheck(planSkill.includes('${CLAUDE_SKILL_DIR}/templates/BRIEF.md'), 'Skill plan does not point to ${CLAUDE_SKILL_DIR}/templates/BRIEF.md.');
+// The plan skill owns the medium plan's procedure, including where it is
+// implemented: an estimate from the census and test sizes, written into
+// BRIEF.md, a recommendation against the 300k ceiling, and the user's
+// confirmation.
+testClauses('Skill plan', planSkill, [
+    '## Make a medium plan',
+    'BRIEF\\.md',
+    'Estimate the implementation cost',
+    'Implementation estimate section',
+    'under 300k tokens',
+    'fresh\\s+session',
+    'Ask the user to\\s+confirm',
+    'needs no handoff file',
+]);
 const designFirstSkill = readKitFile('skills/design-first/SKILL.md');
 addCheck(designFirstSkill.includes('${CLAUDE_SKILL_DIR}/reference/decision-records.md'), 'Skill design-first does not point to ${CLAUDE_SKILL_DIR}/reference/decision-records.md.');
+// The medium section of design-first points to the BRIEF.md template, the one
+// list of a medium plan's contents, and repeats none of it; the steps before it
+// stay the same at every level.
+testClauses('Skill design-first', designFirstSkill, [
+    '## Medium plans',
+    'applies only when the planning level',
+    'steps 1 to 5 above are the same at every level',
+    '`templates/BRIEF\\.md`',
+    // Live runs on 2026-11-01 and 2026-11-03 showed the core-rules sentence
+    // alone does not make the model state the level; design-first is loaded
+    // before the first edit, so it applies the trigger's floors by pointer.
+    '\\*\\*Which planning level\\*\\*, by the floors in the core rules\' "Planning\\s+trigger"',
+    'no plan needs a one-sentence diff',
+    'load `agrippa:plan` and make that plan before step 2',
+    'in the reply before the first edit, not only in your reasoning',
+    'states the planning level from step 1, item 5, and\\s+why, even when it is no plan',
+]);
+addCheck(designFirstSkill.indexOf('## Medium plans') > designFirstSkill.indexOf('## 5. Report against the definition of done'), 'Skill design-first must keep its medium section after steps 1 to 5, so the steps for smaller changes are unchanged.');
 addCheck(/agrippa-lint -PlanPath/i.test(planSkill) && /Bash tool/i.test(planSkill), 'Skill plan must lint with agrippa-lint through the Bash tool.');
 addCheck(/agrippa-lint -PlanPath/i.test(plan) && /Bash tool/i.test(plan), 'PLAN template must name the agrippa-lint row and say it runs through the Bash tool.');
 const validatorAgent = readKitFile('agents/validator.md');
@@ -1237,6 +1332,40 @@ try {
     addCheck(!existsSync(join(simRoot, 'tools')), 'The simulated project must have no tools/ folder.');
     const smoke = run(node, [join(devRoot, 'fixtures', 'run-smoke-test.mjs'), '-RepoRoot', simRoot]);
     addCheck(smoke.exitCode === 0, `Smoke test against a simulated project failed:\n${smoke.output}`);
+
+    // A medium plan's commands must come from the project's catalog. The smoke
+    // fixture uses only exempt rows, so it passes in any project; here the
+    // simulated project gets a catalog with a placeholder, and the fixture's
+    // manual row becomes a command that matches it, then one that does not,
+    // then a backticked stance that is in the file but not a command. The
+    // placeholder-only command would match anything and must be ignored.
+    writeFileSync(join(simRoot, '.agrippa', 'validation-commands.md'), [
+        '# Validation commands', '',
+        '## Sandbox stance', '', 'Every target is `sandboxed`.', '',
+        '## Command catalog', '',
+        '| Purpose | Sandbox | Exact command or manual check |', '|---|---|---|',
+        '| Grep | `sandboxed` | `git grep -n <pattern> -- .agrippa/project-rules.md` |',
+        '| Anything | `sandboxed` | `<command>` |', '',
+    ].join('\n'), 'utf8');
+    const catalogPlan = 'plans/kit-catalog-brief';
+    mkdirSync(join(simRoot, catalogPlan), { recursive: true });
+    const briefFixture = readText(join(devRoot, 'fixtures', 'smoke-brief', 'BRIEF.md')).split('__PLAN__').join(catalogPlan).split('__TODAY__').join('2026-01-01');
+    const catalogued = briefFixture.replace('| Read the project rules file and find the project contracts document named in it | manual | sandboxed | manual |', '| `git grep -n "project-contracts.md" -- .agrippa/project-rules.md` | lint | sandboxed | deterministic |');
+    addCheck(catalogued !== briefFixture, 'dev/fixtures/smoke-brief/BRIEF.md no longer has the manual V2 row the catalog check replaces.');
+    const lintBrief = (text) => {
+        writeFileSync(join(simRoot, catalogPlan, 'BRIEF.md'), text, 'utf8');
+        return run(perlCommand, [join(kitRoot, 'scripts', 'validate_plan_workspace.pl'), '-PlanPath', catalogPlan, '-RepoRoot', simRoot, '-SkipLocalChecks']);
+    };
+    const cataloguedRun = lintBrief(catalogued);
+    addCheck(cataloguedRun.exitCode === 0 && /^PASS:/m.test(cataloguedRun.stdout), `A medium plan whose command matches a catalog command with a placeholder did not pass:\n${cataloguedRun.output}`);
+    const uncataloguedRun = lintBrief(catalogued.replace('git grep -n', 'git grep -c'));
+    addCheck(uncataloguedRun.exitCode === 1 && /\[Brief\] V2 command is not in \.agrippa\/validation-commands\.md: git grep -c/.test(uncataloguedRun.output), `A medium plan with a command that is not in the catalog did not fail with the catalog message:\n${uncataloguedRun.output}`);
+    const stanceRun = lintBrief(catalogued.replace('`git grep -n "project-contracts.md" -- .agrippa/project-rules.md`', '`sandboxed`'));
+    addCheck(stanceRun.exitCode === 1 && /\[Brief\] V2 command is not in \.agrippa\/validation-commands\.md: sandboxed/.test(stanceRun.output), `A medium plan whose command is a backticked stance, not a catalog command, did not fail:\n${stanceRun.output}`);
+    // A BRIEF.md beside workspace files is reported, so the two shapes never mix.
+    writeFileSync(join(simRoot, catalogPlan, 'SPEC.md'), '# Change Specification\n', 'utf8');
+    const mixedRun = lintBrief(catalogued);
+    addCheck(mixedRun.exitCode === 1 && /\[Files\] BRIEF\.md shares a folder with workspace files/.test(mixedRun.output), `A folder with BRIEF.md and SPEC.md did not fail with the mixed-shape message:\n${mixedRun.output}`);
 } finally {
     if (existsSync(simRoot)) {
         rmSync(simRoot, { recursive: true, force: true });

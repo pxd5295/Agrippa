@@ -111,8 +111,9 @@ named as not done, with the reason.
 - [ ] Natural planning requests (`Make a plan`, `Plan:`, ...) trigger
       immediately on the user's current model, without a special mode.
 - [ ] Non-planning requests never trigger a model-switch request.
-- [ ] The size gate skips the workspace for a one-sentence diff, and the
-      single-stage shape exists for bounded one-writer work.
+- [ ] A change request gets a planning level stated in one line: no plan for
+      a one-sentence diff, a medium `BRIEF.md` for work in one ownership
+      area with no shared-interface change, and a full workspace otherwise.
 - [ ] The interview lists the open decisions first, asks the user only the
       ones reading code cannot settle with `AskUserQuestion` (or a recorded
       fallback), continues until none is left or the user says to proceed, and

@@ -20,6 +20,12 @@ plans/YYYY-MM-DD-short-change-name/
   design/       # only with a design reference: frozen artboard and render
 ```
 
+A medium plan is a folder of the same name that holds only `BRIEF.md`, from
+the skill's `BRIEF.md` template, and an optional `design/` folder. It
+carries its own State section and resume prompt, so it needs no `STATUS.md`
+or handoff file, and the linter tells the two shapes apart by which files the
+folder holds.
+
 `plans/handoff-YYYY-MM-DD-<slug>.md` files are short session handoffs written
 by the `/agrippa:handoff` skill; they link into workspaces and never replace
 them.

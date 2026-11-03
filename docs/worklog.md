@@ -5,6 +5,83 @@ entry says what was done, what was proven and how, what comes next, and any
 decision made on a default because only the owner could settle it. The
 format and the reason for the log are in `docs/goals.md`.
 
+## 2026-11-01: three planning levels built (backlog item 1, not yet proven)
+
+Session on branch `goal/plan-levels`, nothing committed or pushed.
+
+- **Done.** `PLAN.md`, `PACKETS.md`, and `EVIDENCE.md` for
+  `plans/2026-11-01-plan-levels/`, linted in two rounds. Then A1 to A8:
+  the "Planning trigger" section routes every change request to no plan, a
+  medium plan, or a full workspace and is shorter than before; a "Planning
+  levels" section in `agent-workflow.md`; the `BRIEF.md` template; "Make a
+  medium plan" in the `plan` skill with the 300k rule; a medium section in
+  `design-first`; a `Level:` line in the `STATUS.md` template; the linter's
+  medium branch with a smoke fixture and self-check cases; low-usage mode at
+  six rules; "From G4 v0.4.2" in `UPGRADING.md`; a note in the catalog
+  template that the linter reads it; and the design note "Three planning
+  levels". A `design-reviewer` pass found two Design issues (a copied
+  covering-test check, a catalog match that read every backticked span),
+  both fixed.
+- **Proven.** `node dev/validate-kit.mjs`:
+  `PASS: 2387 kit checks, 63 required files, smoke test passed, 2 warning(s).`
+  (2273 before). The old and new linter printed byte-identical stdout,
+  stderr, and exit codes on all 74 nuro-battler plan folders, rerun after
+  every linter edit. `node dev/validate-kit.mjs -InstalledRepo ../evolution-game/nuro-battler`:
+  0 findings from 81 checks, the same as before the change. The 26-from-67
+  baseline in the entry below is out of date, because nuro-battler has since
+  been upgraded; 0 from 81 is the new baseline. The injected rules are 9,972
+  characters with low-usage mode on.
+- **Not proven.** A9's live routing test. Two fresh sandbox sessions stated
+  no level. One was given the old 0.4.1 rules from the plugin cache, because
+  the user settings and the sandbox both name a marketplace `agrippa`. The
+  other had the new rules, decided "no planning is needed" in its reasoning
+  without saying so, and implemented a three-function change with no plan.
+  The routing sentence now requires the statement before the first edit and
+  for "no plan" too; that wording has not been tested live. Details are in
+  the plan's `EVIDENCE.md`. The template contents and the 300k estimate stay
+  unmeasured until backlog item 2.
+  On 2026-11-02 the test was rerun one session at a time. The small request
+  got the new rules and chose "no plan" with its reason before the first
+  edit, but only in visible thinking; the reply said it after the edit. The
+  medium request got the 0.4.1 rules again, so it tells nothing. On
+  2026-11-03 a retried medium request, of the same size, got the new rules
+  and was still implemented with no plan and no stated level. With the
+  owner's yes, `design-first` gained a level step (step 1, item 5) and its
+  step 3 now opens the reply with the level line; the self-check then gave
+  `PASS: 2392 kit checks, 63 required files, smoke test passed, 2 warning(s).`
+  The next medium request stated a medium plan before its first edit,
+  wrote a `BRIEF.md` that lints clean, and implemented. It skipped the
+  `AskUserQuestion` confirmation of where to implement.
+  The owner chose to leave the skipped confirmation unfixed, and did not
+  accept the small result. A small rerun (rename a private helper) had the
+  new rules and never named a level at all; small changes do not load
+  `design-first`.
+  With the owner's choice, the core-rules sentence became "Start your reply
+  with the level and why in one line, even for no plan" (low-usage
+  injection 9,965 characters). The next small run (rename a private
+  helper) opened its reply with "No plan needed: this is a one-sentence
+  rename of a private helper inside one file." V5 has now passed once for
+  each request size.
+- **Next.** Commit on this branch once the owner approves.
+- **Decided on a default.**
+  - The linter also checks the `Level: medium` line and the seven
+    `BRIEF.md` section headings, beyond the IDs, commands, and covering tests
+    the `SPEC.md` row lists. It does not check a `BRIEF.md`'s census lines.
+  - Catalog matching reads only the "Exact command" column of the "Command
+    catalog" and "Full-suite inventory" tables; a `<...>` placeholder matches
+    one word; `manual` rows and `agrippa-lint` are exempt.
+  - The cost estimate reads file sizes at about four characters per token.
+  - A validation ID in a `BRIEF.md` is not checked for use beyond its own
+    table.
+  - The hook's low-usage line was left without a count of rules, which
+    satisfies "says six" without spending core-rules room.
+  - Integration ran as one lead with a `design-reviewer` pass and no
+    `plan-reviewer` pass.
+  - The live test ran both requests at once in the shared sandbox checkout.
+    The sessions left uncommitted edits on the sandbox's `main`, including
+    in the untracked `.agrippa/` documents of the owner's install, and the
+    local branches `cli-unknown-command-help` and `task-query-helpers`.
+
 ## 2026-11-01: three planning levels decided
 
 - **Done.** The owner set a new top goal: plans sized to the work, with three

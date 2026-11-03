@@ -44,6 +44,14 @@
 # stay ASCII, and a `.` outside /s is written [^\r\n] so a CRLF workspace
 # lints like an LF one.
 #
+# A plan folder has one of two shapes. A workspace holds SPEC.md, PLAN.md,
+# PACKETS.md, STATUS.md, and EVIDENCE.md. A medium plan holds only BRIEF.md,
+# with an optional design/ folder; it gets the ID trace, the validation-matrix
+# checks, a match of its commands against the project's
+# `.agrippa/validation-commands.md`, and its covering-test paths. The shape is
+# chosen by which files the folder holds, and a folder without BRIEF.md is
+# linted exactly as it was before the medium plan existed.
+#
 # It is coupled to the plan templates in `skills/plan/templates/`: a change to
 # the template shape must be reflected here, and the reverse. Keep it
 # read-only.
@@ -495,6 +503,248 @@ sub load_local_checks {
     return undef;
 }
 
+# --- Checks both plan shapes share ------------------------------------------
+
+# Checks 1-3: every acceptance ID is mapped by a validation row, no ID is
+# defined twice, every referenced ID is defined, and every defined ID is used
+# somewhere besides its definition. A medium plan passes an empty contract
+# list, so any C# it mentions is reported as undefined, and it names the ID
+# kinds whose use is checked: its validation IDs appear only in their own
+# table, where the mapping to acceptance IDs is their use.
+sub check_id_traceability {
+    my ($check, $text, $acceptance_ids, $validation_ids, $contract_ids, $validation_rows, $used_prefixes) = @_;
+    my %check_use = map { $_ => 1 } @{ $used_prefixes // [ 'A', 'V', 'C' ] };
+    $check->(scalar(unique(@$acceptance_ids)) == @$acceptance_ids, '[Check 2] Duplicate Acceptance ID definition.');
+    $check->(scalar(unique(@$validation_ids)) == @$validation_ids, '[Check 2] Duplicate Validation ID definition.');
+    $check->(scalar(unique(@$contract_ids)) == @$contract_ids, '[Check 3] Duplicate Contract ID definition.');
+
+    for my $acceptance_id (unique(@$acceptance_ids)) {
+        my $id_pattern = qr/\b\Q$acceptance_id\E\b/ia;
+        my $mapped = grep { cell($_, 'Acceptance IDs') =~ $id_pattern } @$validation_rows;
+        $check->($mapped, "[Check 1] $acceptance_id is not mapped by any validation row.");
+    }
+
+    for my $group ([ 'A', $acceptance_ids, 2 ], [ 'V', $validation_ids, 2 ], [ 'C', $contract_ids, 3 ]) {
+        my ($prefix, $ids, $check_number) = @$group;
+        my @defined = unique(@$ids);
+        my %defined_lower = map { lc($_) => 1 } @defined;
+        my @referenced = unique(map { $_->[0] } matches($text, qr/\b$prefix\d+\b/a));
+        for my $id (@referenced) {
+            $check->($defined_lower{ lc $id }, "[Check $check_number] Referenced $id is undefined.");
+        }
+        next if !$check_use{$prefix};
+        for my $id (@defined) {
+            my $occurrences = scalar matches($text, qr/\b\Q$id\E\b/a);
+            $check->($occurrences > 1, "[Check $check_number] Defined $id is orphaned.");
+        }
+    }
+    return;
+}
+
+# Checks 13-18 over the validation matrix, with the project's local checks.
+sub check_validation_rows {
+    my ($context, $validation_rows) = @_;
+    my ($check, $repo_root, $plan_root, $options) = @$context{qw(check repo_root plan_root options)};
+    my @validation_rows = @$validation_rows;
+
+    # Project-specific extension point: load the optional local checks. The
+    # file returns a hash that may hold command_path_extensions (replacing the
+    # default list), check_validation_row (called once per matrix row), and
+    # check_validation_matrix (called once with every row); both subs get
+    # check to report with. A missing file changes nothing. The file belongs
+    # to the project, so it is read from the repository root, never from this
+    # script's folder.
+    my @command_path_extensions = @default_command_path_extensions;
+    my $local;
+    if (!$options->{skip_local_checks}) {
+        $local = load_local_checks($repo_root, $check);
+    }
+    if ($local && ref($local->{command_path_extensions}) eq 'ARRAY') {
+        @command_path_extensions = map { lc "$_" } @{ $local->{command_path_extensions} };
+    }
+    my $local_row_check = $local && ref($local->{check_validation_row}) eq 'CODE' ? $local->{check_validation_row} : undef;
+    my $local_matrix_check = $local && ref($local->{check_validation_matrix}) eq 'CODE' ? $local->{check_validation_matrix} : undef;
+    my %local_context = ( check => $check, repo_root => $repo_root, plan_root => $plan_root );
+
+    # 13-18: validation commands are runnable and honestly classified.
+    $check->(scalar @validation_rows > 0, '[Validation] Validation matrix is missing or empty.');
+    for my $row (@validation_rows) {
+        my $validation_id = cell($row, 'Validation ID');
+        my $command = cell($row, 'Exact command or check');
+        my $style = cell($row, 'Style');
+        # Current templates name this column Sandbox. Workspaces written from an
+        # earlier kit named it Environment; accept either so older plans still lint.
+        my $sandbox = cell($row, 'Sandbox');
+        $sandbox = cell($row, 'Environment') if $sandbox eq '';
+        my $determinism = cell($row, 'Determinism');
+        $check->($style ne '', "[Check 18] $validation_id is missing Style.");
+        $check->($sandbox ne '', "[Check 18] $validation_id is missing Sandbox.");
+        $check->((grep { $_ eq lc $determinism } @allowed_determinism) ? 1 : 0, "[Check 18] $validation_id has invalid Determinism '$determinism'.");
+
+        # Check 13: every source or test path a command names must exist, relative
+        # to the repository root or to the plan folder (for a file under design/
+        # or another plan-local folder). A URL is not a repository path.
+        my $path_pattern = qr/(?<![\w.-])([A-Za-z][A-Za-z0-9+.-]*:\/\/)?((?:[\w.-]+\/)+[\w.-]+\.([A-Za-z0-9]{1,10}))(?![\w\/-])/ia;
+        for my $target (matches($command, $path_pattern)) {
+            my $scheme = $target->[1] // '';
+            next if $scheme =~ /^https?:\/\/$/ia;
+            next if !grep { $_ eq lc $target->[3] } @command_path_extensions;
+            my $relative = $target->[2];
+            my $exists = fs_is_file("$repo_root/$relative") || fs_is_file("$plan_root/$relative");
+            $check->($exists, "[Check 13] $validation_id names missing path $relative.");
+        }
+
+        # Project-specific extension point, per row (checks 14-17).
+        if ($local_row_check) {
+            local $@;
+            eval {
+                $local_row_check->({ row => $row, command => $command, sandbox => $sandbox, %local_context });
+                1;
+            } or do {
+                my $error = $@ // 'unknown error';
+                $error =~ s/\s+$//a;
+                $check->(0, "[Local] check_validation_row failed on $validation_id: $error");
+            };
+        }
+    }
+    # Project-specific extension point, across rows (ordering invariants).
+    if ($local_matrix_check) {
+        local $@;
+        eval {
+            $local_matrix_check->({ rows => \@validation_rows, %local_context });
+            1;
+        } or do {
+            my $error = $@ // 'unknown error';
+            $error =~ s/\s+$//a;
+            $check->(0, "[Local] check_validation_matrix failed: $error");
+        };
+    }
+    return;
+}
+
+# Check 26: every backticked path in a covering-tests list exists under the
+# repository root. Each caller finds its own list and names its owner, a
+# contract ID or BRIEF.md, for the message.
+sub check_covering_paths {
+    my ($check, $repo_root, $covering, $owner) = @_;
+    for my $entry (matches($covering, qr/`([^`\r\n]+\.[A-Za-z0-9]+)(?::\d+)?`/a)) {
+        my $relative = $entry->[1];
+        $check->(fs_is_file("$repo_root/$relative"), "[Check 26] $owner covering test does not exist: $relative.");
+    }
+    return;
+}
+
+# --- The medium plan ----------------------------------------------------------
+
+# A medium plan is one BRIEF.md, shaped like skills/plan/templates/BRIEF.md,
+# with an optional design/ folder beside it. It has no stages, packets, or
+# contracts, so only the ID trace, the validation matrix, the catalog match,
+# and the covering tests are checked.
+my @brief_headings = (
+    '## Acceptance', '## Design statement', '## Census', '## Validation',
+    '## Implementation estimate', '## State', '## Resume prompt',
+);
+
+my $catalog_name = '.agrippa/validation-commands.md';
+
+# The catalog's commands are the backticked spans in the "Exact command"
+# column of these tables, which templates/VALIDATION-COMMANDS.md names. Other
+# spans in the file (stances, paths, messages) are not commands.
+my @catalog_sections = ('## Command catalog', '## Full-suite inventory');
+
+# Each catalog command as an anchored pattern, with its whitespace collapsed
+# and each <...> placeholder matching one word, so a filled-in command cannot
+# carry extra arguments the catalog does not show. A span that is only
+# placeholders would match nearly every command, so it is skipped.
+sub catalog_patterns {
+    my ($catalog_text) = @_;
+    my @patterns;
+    my $in_section = 0;
+    my @headers;
+    my $command_column;
+    for my $line (split_lines($catalog_text)) {
+        if ($line =~ /^##\s/a) {
+            my $heading = lc trim($line);
+            $in_section = grep { lc($_) eq $heading } @catalog_sections;
+            @headers = ();
+            next;
+        }
+        next if !$in_section;
+        if ($line !~ /^\s*\|/a) {
+            @headers = ();
+            next;
+        }
+        my @cells = split_markdown_row($line);
+        if (!@headers) {
+            @headers = @cells;
+            ($command_column) = grep { $headers[$_] =~ /^Exact command/ia } 0 .. $#headers;
+            next;
+        }
+        next if !defined $command_column || !grep { $_ !~ /^:?-+:?$/a } @cells;
+        for my $span (matches($cells[$command_column] // '', qr/`([^`\r\n]+)`/a)) {
+            my @literal = split(/<[^<>\r\n]+>/a, normalize_text($span->[1]), -1);
+            next if join('', @literal) !~ /\S/a;
+            my $source = join('\S+', map { quotemeta } @literal);
+            push @patterns, qr/^$source$/a;
+        }
+    }
+    return @patterns;
+}
+
+sub lint_brief {
+    my ($context) = @_;
+    my ($check, $errors, $repo_root, $plan_root) = @$context{qw(check errors repo_root plan_root)};
+    my $brief = read_text("$plan_root/BRIEF.md");
+
+    $check->(scalar($brief =~ /^Level:\s*medium\b/ima), '[Brief] BRIEF.md must have the line "Level: medium".');
+    for my $heading (@brief_headings) {
+        $check->(scalar($brief =~ /^\Q$heading\E[ \t]*\r?$/ma), "[Brief] BRIEF.md is missing the section '$heading'.");
+    }
+
+    # 1-3: ID traceability, as in a workspace, over the one file.
+    my @acceptance_ids = map { $_->[1] } matches($brief, qr/^\s*-\s*\[[ xX]\]\s*\*\*(A\d+):\*\*/ma);
+    my @validation_rows = get_table($brief, qr/^\s*\|\s*Validation ID\s*\|/ia, $errors);
+    my @validation_ids = grep { /^V\d+$/ia } map { cell($_, 'Validation ID') } @validation_rows;
+    $check->(scalar @acceptance_ids > 0, '[Brief] BRIEF.md defines no acceptance ID.');
+    check_id_traceability($check, $brief, \@acceptance_ids, \@validation_ids, [], \@validation_rows, [ 'A' ]);
+
+    # 13-18 and the local checks, as in a workspace.
+    check_validation_rows($context, \@validation_rows);
+
+    # Every command comes from the catalog. A manual check and the kit's own
+    # linter are not catalog commands.
+    my $catalog_path = "$repo_root/$catalog_name";
+    my $has_catalog = fs_is_file($catalog_path);
+    my @patterns = $has_catalog ? catalog_patterns(read_text($catalog_path)) : ();
+    my $reported_missing = 0;
+    for my $row (@validation_rows) {
+        next if lc cell($row, 'Determinism') eq 'manual';
+        my $validation_id = cell($row, 'Validation ID');
+        my $cell_text = cell($row, 'Exact command or check');
+        my @commands = map { normalize_text($_->[1]) } matches($cell_text, qr/`([^`]+)`/a);
+        @commands = (normalize_text($cell_text)) if !@commands;
+        for my $command (@commands) {
+            next if $command =~ /^agrippa-lint\b/a;
+            if (!$has_catalog) {
+                $check->(0, "[Brief] $catalog_name is missing; a medium plan's commands come from it.") if !$reported_missing;
+                $reported_missing = 1;
+                next;
+            }
+            my $found = grep { $command =~ $_ } @patterns;
+            $check->($found ? 1 : 0, "[Brief] $validation_id command is not in $catalog_name: $command");
+        }
+    }
+
+    # 26: covering tests, read from the line that names them up to the next
+    # blank line.
+    if ($brief =~ /^Covering tests:[ \t]*([^\r\n]*(?:\r?\n[ \t]*\S[^\r\n]*)*)/ma) {
+        check_covering_paths($check, $repo_root, $1, 'BRIEF.md');
+    } else {
+        $check->(0, '[Brief] BRIEF.md has no Covering tests line under Census; list the tests that reference the owned files, or None.');
+    }
+    return;
+}
+
 sub main {
     my @argv = @_;
     my $parsed = parse_arguments(@argv);
@@ -555,6 +805,20 @@ sub main {
         $check->(fs_is_file($path), "[Files] Missing $name.");
         return fs_is_file($path) ? read_text($path) : '';
     };
+    # A folder that holds BRIEF.md and none of the workspace files is a medium
+    # plan. Any other folder is a workspace and is linted exactly as before; a
+    # BRIEF.md beside workspace files adds one error at the end.
+    my @workspace_files = ('SPEC.md', 'PLAN.md', 'PACKETS.md', 'STATUS.md');
+    my $has_brief = fs_is_file("$plan_root/BRIEF.md");
+    my %context = (
+        check => $check, errors => \@errors, warnings => \@warnings,
+        repo_root => $repo_root, plan_root => $plan_root, options => $options,
+    );
+    if ($has_brief && !grep { fs_is_file("$plan_root/$_") } @workspace_files) {
+        lint_brief(\%context);
+        return $finish->(summary_line(scalar @errors, $checks));
+    }
+
     my $spec = $read_required_file->('SPEC.md');
     my $plan = $read_required_file->('PLAN.md');
     my $packets = $read_required_file->('PACKETS.md');
@@ -566,30 +830,7 @@ sub main {
     my @validation_rows = get_table($plan, qr/^\s*\|\s*Validation ID\s*\|/ia, \@errors);
     my @validation_ids = grep { /^V\d+$/ia } map { cell($_, 'Validation ID') } @validation_rows;
     my @contract_ids = map { $_->[1] } matches($packets, qr/^###\s+(C\d+):/ma);
-
-    $check->(scalar(unique(@acceptance_ids)) == @acceptance_ids, '[Check 2] Duplicate Acceptance ID definition.');
-    $check->(scalar(unique(@validation_ids)) == @validation_ids, '[Check 2] Duplicate Validation ID definition.');
-    $check->(scalar(unique(@contract_ids)) == @contract_ids, '[Check 3] Duplicate Contract ID definition.');
-
-    for my $acceptance_id (unique(@acceptance_ids)) {
-        my $id_pattern = qr/\b\Q$acceptance_id\E\b/ia;
-        my $mapped = grep { cell($_, 'Acceptance IDs') =~ $id_pattern } @validation_rows;
-        $check->($mapped, "[Check 1] $acceptance_id is not mapped by any validation row.");
-    }
-
-    for my $group ([ 'A', \@acceptance_ids, 2 ], [ 'V', \@validation_ids, 2 ], [ 'C', \@contract_ids, 3 ]) {
-        my ($prefix, $ids, $check_number) = @$group;
-        my @defined = unique(@$ids);
-        my %defined_lower = map { lc($_) => 1 } @defined;
-        my @referenced = unique(map { $_->[0] } matches($workspace_text, qr/\b$prefix\d+\b/a));
-        for my $id (@referenced) {
-            $check->($defined_lower{ lc $id }, "[Check $check_number] Referenced $id is undefined.");
-        }
-        for my $id (@defined) {
-            my $occurrences = scalar matches($workspace_text, qr/\b\Q$id\E\b/a);
-            $check->($occurrences > 1, "[Check $check_number] Defined $id is orphaned.");
-        }
-    }
+    check_id_traceability($check, $workspace_text, \@acceptance_ids, \@validation_ids, \@contract_ids, \@validation_rows);
 
     my $normalized_spec = normalize_text($spec);
     for my $quote (matches($packets, qr/^\s*-\s*(A\d+):\s*([^\r\n]+)\r?$/ma)) {
@@ -809,78 +1050,7 @@ sub main {
         $check->($has_integration_row, '[Check 22] Integration Validation IDs must include a matrix row scheduled for Integration.');
     }
 
-    # Project-specific extension point: load the optional local checks. The
-    # file returns a hash that may hold command_path_extensions (replacing the
-    # default list), check_validation_row (called once per matrix row), and
-    # check_validation_matrix (called once with every row); both subs get
-    # check to report with. A missing file changes nothing. The file belongs
-    # to the project, so it is read from the repository root, never from this
-    # script's folder.
-    my @command_path_extensions = @default_command_path_extensions;
-    my $local;
-    if (!$options->{skip_local_checks}) {
-        $local = load_local_checks($repo_root, $check);
-    }
-    if ($local && ref($local->{command_path_extensions}) eq 'ARRAY') {
-        @command_path_extensions = map { lc "$_" } @{ $local->{command_path_extensions} };
-    }
-    my $local_row_check = $local && ref($local->{check_validation_row}) eq 'CODE' ? $local->{check_validation_row} : undef;
-    my $local_matrix_check = $local && ref($local->{check_validation_matrix}) eq 'CODE' ? $local->{check_validation_matrix} : undef;
-    my %local_context = ( check => $check, repo_root => $repo_root, plan_root => $plan_root );
-
-    # 13-18: validation commands are runnable and honestly classified.
-    $check->(scalar @validation_rows > 0, '[Validation] Validation matrix is missing or empty.');
-    for my $row (@validation_rows) {
-        my $validation_id = cell($row, 'Validation ID');
-        my $command = cell($row, 'Exact command or check');
-        my $style = cell($row, 'Style');
-        # Current templates name this column Sandbox. Workspaces written from an
-        # earlier kit named it Environment; accept either so older plans still lint.
-        my $sandbox = cell($row, 'Sandbox');
-        $sandbox = cell($row, 'Environment') if $sandbox eq '';
-        my $determinism = cell($row, 'Determinism');
-        $check->($style ne '', "[Check 18] $validation_id is missing Style.");
-        $check->($sandbox ne '', "[Check 18] $validation_id is missing Sandbox.");
-        $check->((grep { $_ eq lc $determinism } @allowed_determinism) ? 1 : 0, "[Check 18] $validation_id has invalid Determinism '$determinism'.");
-
-        # Check 13: every source or test path a command names must exist, relative
-        # to the repository root or to the plan folder (for a file under design/
-        # or another plan-local folder). A URL is not a repository path.
-        my $path_pattern = qr/(?<![\w.-])([A-Za-z][A-Za-z0-9+.-]*:\/\/)?((?:[\w.-]+\/)+[\w.-]+\.([A-Za-z0-9]{1,10}))(?![\w\/-])/ia;
-        for my $target (matches($command, $path_pattern)) {
-            my $scheme = $target->[1] // '';
-            next if $scheme =~ /^https?:\/\/$/ia;
-            next if !grep { $_ eq lc $target->[3] } @command_path_extensions;
-            my $relative = $target->[2];
-            my $exists = fs_is_file("$repo_root/$relative") || fs_is_file("$plan_root/$relative");
-            $check->($exists, "[Check 13] $validation_id names missing path $relative.");
-        }
-
-        # Project-specific extension point, per row (checks 14-17).
-        if ($local_row_check) {
-            local $@;
-            eval {
-                $local_row_check->({ row => $row, command => $command, sandbox => $sandbox, %local_context });
-                1;
-            } or do {
-                my $error = $@ // 'unknown error';
-                $error =~ s/\s+$//a;
-                $check->(0, "[Local] check_validation_row failed on $validation_id: $error");
-            };
-        }
-    }
-    # Project-specific extension point, across rows (ordering invariants).
-    if ($local_matrix_check) {
-        local $@;
-        eval {
-            $local_matrix_check->({ rows => \@validation_rows, %local_context });
-            1;
-        } or do {
-            my $error = $@ // 'unknown error';
-            $error =~ s/\s+$//a;
-            $check->(0, "[Local] check_validation_matrix failed: $error");
-        };
-    }
+    check_validation_rows(\%context, \@validation_rows);
 
     # 24-26: contract source freshness, consumer census, and covering-test resolution.
     for my $contract (matches($packets, qr/^###\s+(C\d+):[^\r\n]*\r?\n(.*?)(?=^###\s+|^##\s|\z)/msa)) {
@@ -921,20 +1091,25 @@ sub main {
         }
 
         if ($body =~ /Covering tests:\s*(.+?)(?=^-\s|\z)/imsa) {
-            my $covering = $1;
-            for my $entry (matches($covering, qr/`([^`\r\n]+\.[A-Za-z0-9]+)(?::\d+)?`/a)) {
-                my $relative = $entry->[1];
-                $check->(fs_is_file("$repo_root/$relative"), "[Check 26] $contract_id covering test does not exist: $relative.");
-            }
+            check_covering_paths($check, $repo_root, $1, $contract_id);
         } else {
             push @warnings, "[Check 26] $contract_id lacks Covering tests; list the test scripts and scenes that reference the owned files, or None.";
         }
     }
 
-    if (@errors) {
-        return $finish->(sprintf('FAIL: %d shape error(s), %d checks. Shape validation never proves contract truth.', scalar @errors, $checks));
+    if ($has_brief) {
+        $check->(0, '[Files] BRIEF.md shares a folder with workspace files; a plan folder holds either BRIEF.md or the five workspace files.');
     }
-    return $finish->("PASS: $checks workspace-shape checks. This result does not validate contract truth.");
+
+    return $finish->(summary_line(scalar @errors, $checks));
+}
+
+sub summary_line {
+    my ($error_count, $checks) = @_;
+    if ($error_count) {
+        return sprintf('FAIL: %d shape error(s), %d checks. Shape validation never proves contract truth.', $error_count, $checks);
+    }
+    return "PASS: $checks workspace-shape checks. This result does not validate contract truth.";
 }
 
 # An uncaught error exits 1 with the wrapper's prefix, as the Node version

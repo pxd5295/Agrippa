@@ -51,6 +51,11 @@ first, then the `CLAUDE.md` in the subfolder you are about to edit.
    interfaces" needs a decision record from `engineering:architecture` first.
    Both are saved under `.agrippa/decisions/` before the first edit, in the shape
    `${CLAUDE_SKILL_DIR}/reference/decision-records.md` gives.
+5. **Which planning level**, by the floors in the core rules' "Planning
+   trigger", checked against what items 1 to 4 found. Check every floor,
+   including the one that no plan needs a one-sentence diff: two new
+   functions with tests are not one. If the level is a medium plan or a full
+   workspace, load `agrippa:plan` and make that plan before step 2.
 
 ## 2. Decide placement with these rules
 
@@ -88,8 +93,10 @@ first, then the `CLAUDE.md` in the subfolder you are about to edit.
 
 ## 3. Write the design statement
 
-Put this in the reply before the first edit. Three sentences, complete
-sentences, no headings:
+Put this in the reply before the first edit, not only in your reasoning.
+Open with one line that states the planning level from step 1, item 5, and
+why, even when it is no plan. Then three sentences, complete sentences, no
+headings:
 
 1. Where the change lives: ownership area, layer, and the `file:symbol` that
    owns it.
@@ -119,6 +126,18 @@ the core rules and state which you verified, with the exact validation command
 and outcome. Exact commands and run limits are in
 `.agrippa/validation-commands.md`. Run its "Session setup" step once
 per session before the first validation run.
+
+## Medium plans
+
+This section applies only when the planning level in the core rules is a
+medium plan; steps 1 to 5 above are the same at every level. Write the step 3
+design statement into the "Design statement" section of the plan's
+`BRIEF.md` before the first edit, as well as into the reply. Everything else
+a medium plan holds is listed once, in the `BRIEF.md` template of the
+`agrippa:plan` skill (`templates/BRIEF.md`); follow it rather than a list
+here. If step 1 finds a second ownership area or a shared-interface change,
+the change is not medium: stop and ask the user, as "Planning levels" in that
+skill's `agent-workflow.md` says.
 
 ## What this skill does not do
 
